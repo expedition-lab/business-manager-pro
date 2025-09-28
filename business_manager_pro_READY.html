@@ -1,0 +1,1561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Business Manager Pro — Live</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'><rect width='128' height='128' rx='24' fill='%232563eb'/><text x='50%' y='56%' dominant-baseline='middle' text-anchor='middle' font-family='Inter,Arial' font-weight='700' font-size='72' fill='white'>B</text></svg>">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- jsPDF for PDF download -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-Yk3m2QmXc8Cr3w4x0k9nQY8C2H0qO2qf4v9Jm2k0fF6kz3l1nVd8u9w2u6O8mS3iP6x5l8E9Q3Q5H2mJvUo2GQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <style>
+    .btn{padding:.6rem 1rem;border-radius:.65rem;font-weight:600;display:inline-flex;align-items:center;gap:.5rem;box-shadow:0 4px 12px rgba(0,0,0,.08)}
+    .btn-primary{background:#2563eb;color:#fff}
+    .btn-secondary{background:#eef2ff;color:#111827}
+    .btn-ghost{background:transparent;color:#2563eb}
+    .tab{padding:.5rem 1rem;border-radius:.6rem}
+    .tab.active{background:#2563eb;color:#fff}
+    .card{background:#fff;border:1px solid #e5e7eb;border-radius:1rem;padding:1rem}
+    .banner{background:#ecfeff;border:1px solid #06b6d4;color:#0e7490;padding:.6rem .8rem;border-radius:.6rem}
+    .kicker{font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:#64748b}
+    .form-input{width:100%;border:2px solid #e5e7eb;border-radius:.6rem;padding:.6rem .9rem}
+    .form-input:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+    .table th,.table td{padding:.75rem;border-bottom:1px solid #f1f5f9}
+    .chip{font-size:.75rem;padding:.2rem .5rem;border-radius:999px;background:#f1f5ff;color:#3730a3}
+    .toast{position:fixed;bottom:20px;right:20px;background:#111827;color:#fff;padding:.75rem 1rem;border-radius:.75rem;opacity:0;transform:translateY(8px);transition:all .2s;z-index:60}
+    .toast.show{opacity:1;transform:translateY(0)}
+    .hidden{display:none}
+    .plan{border:2px solid #e5e7eb;border-radius:1rem;padding:1.2rem}
+    .plan.recommended{border-color:#2563eb;background:#f8fbff;position:relative}
+    .plan.recommended::after{content:"Recommended";position:absolute;top:-10px;right:12px;background:#2563eb;color:#fff;font-size:.7rem;padding:.2rem .5rem;border-radius:.4rem}
+    details summary::-webkit-details-marker{display:none}
+    details summary{cursor:pointer}
+    /* Modal */
+    .modal{position:fixed;inset:0;background:rgba(2,6,23,.6);display:none;align-items:center;justify-content:center;z-index:50}
+    .modal.show{display:flex}
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<style>
+/* MOBILE-RESPONSIVE-TABLES */
+@media (max-width: 768px) {
+  .table-responsive{display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .table-mobile-stack td{display:block;text-align:right;padding-left:50%;position:relative}
+  .table-mobile-stack td:before{content:attr(data-label);position:absolute;left:6px;width:45%;text-align:left;font-weight:600}
+}
+/* Touch friendly buttons */
+.btn-mobile{min-height:44px;min-width:44px;padding:12px 16px}
+@media (max-width: 768px){ .btn{min-height:44px;min-width:44px;padding:12px 16px} }
+</style>
+
+<script>
+var demoMode=false;
+
+// Safe query helper + global error reporter
+function $(id){ return document.getElementById(id); }
+window.addEventListener('error', (e)=>{
+  try { console.error('[BMP ERROR]', e.message, '@', e.filename, e.lineno, e.colno); } catch(_){}
+  try { if (typeof showToast==='function') showToast('Error: '+e.message); } catch(__){}
+});
+</script>
+</head>
+<body class="bg-slate-50 min-h-screen">
+  <!-- Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-10">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold">B</div>
+        <div class="font-semibold">Business Manager Pro</div>
+      </div>
+      <nav class="flex items-center gap-2 text-sm">
+        <button id="tab-home" class="tab active">Home</button>
+        <button id="tab-receipts" class="tab">E-Receipts</button>
+        <button id="tab-clients" class="tab">Clients</button>
+        <button id="tab-plans" class="tab">Plans</button>
+        <button id="tab-account" class="tab">Account</button>
+      </nav>
+      <div class="flex items-center gap-3 text-sm">
+        <span class="px-2 py-1 rounded-md bg-slate-100">Currency: Rs (MUR)</span>
+        <span id="header-user" class="text-slate-600">Not signed in</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-6">
+    <!-- HOME -->
+    
+    <!-- HOME -->
+    <section id="view-home">
+      <div class="grid md:grid-cols-2 gap-6 items-start">
+        <div class="space-y-4">
+          <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 leading-tight">Generate <span class="text-blue-700">Professional E-Receipts</span> in Seconds</h1>
+          <p class="text-slate-600">Auto reference numbers, BRN support, and instant PDF receipts. Faster than Excel, simpler than accounting software.</p>
+          <ul class="list-disc ml-5 text-slate-700">
+            <li>Auto reference numbers — no typos.</li>
+            <li>BRN & business info saved once — always prefilled.</li>
+            <li>Professional PDF receipts ready for clients.</li>
+            <li>Access anywhere (phone, laptop).</li>
+            <li>Quick setup + affordable plans.</li>
+          </ul>
+
+          <div class="card banner mt-2">
+            <div class="flex items-start gap-2">
+              <i data-lucide="info"></i>
+              <p class="text-sm"><strong>We generate e-receipts only.</strong> Business Manager Pro replaces paper receipts. We are <strong>not responsible</strong> for the content you enter, external/security links you include, or any payments made outside this site.</p>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap gap-3 pt-4">
+            <button class="btn btn-secondary" onclick="activateTab('account')"><i data-lucide='user-plus'></i>Create Account</button>
+            <button class="btn btn-primary" onclick="activateTab('plans')"><i data-lucide='credit-card'></i>Activate Plan</button>
+          </div>
+        </div>
+
+        <!-- Right side visual -->
+        <div class="card">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2"><div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold">B</div><div class="font-semibold">Receipt Mock</div></div>
+            <span class="chip">Preview</span>
+          </div>
+          <div class="mt-3 text-sm text-slate-600">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <div class="text-slate-500 text-xs">Business</div>
+                <div class="font-medium">Your Business Name</div>
+                <div class="text-slate-500 text-xs">BRN: C20123456</div>
+              </div>
+              <div class="text-right text-slate-500 text-xs">Ref: REF-2025-0001<br/>Date: 2025-09-25</div>
+            </div>
+            <table class="table mt-3">
+              <thead class="bg-slate-50 text-xs uppercase text-slate-500"><tr><th>Description</th><th class="text-right">Total</th></tr></thead>
+              <tbody>
+                <tr><td>Service Example</td><td class="text-right">Rs 2,500</td></tr>
+                <tr><td>Extra Charge</td><td class="text-right">Rs 100</td></tr>
+              </tbody>
+            </table>
+            <div class="text-right mt-2 font-semibold">Grand Total: Rs 2,600</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Key Features -->
+      <div class="card mt-6">
+        <h2 class="text-xl font-semibold mb-2">Key Features</h2>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-slate-700">
+          <div><strong>E-Receipts in 10 seconds</strong><br>Fill items, taxes/discounts, and share.</div>
+          <div><strong>Smart client book</strong><br>Auto-remember clients; view their receipt history.</div>
+          <div><strong>Analytics</strong><br>Daily/weekly/monthly totals, top clients/items, outstanding amounts.</div>
+          <div><strong>Exports</strong><br>Excel/CSV for your accountant or tax filing.</div>
+          <div><strong>Sharing</strong><br>One-tap WhatsApp and Email with secure receipt link.</div>
+          <div><strong>Mobile-friendly</strong><br>Works great on any phone or tablet.</div>
+        </div>
+      </div>
+
+      <!-- FAQ -->
+      <div class="card mt-6">
+        <h2 class="text-xl font-semibold mb-2">FAQ</h2>
+        <div class="space-y-2 text-sm">
+          <details class="border border-slate-200 rounded-md p-3">
+            <summary class="font-medium">Do I need a plan to use it?</summary>
+            <div class="mt-2 text-slate-600">Yes. You must activate a paid plan to access the app.</div>
+          </details>
+          <details class="border border-slate-200 rounded-md p-3">
+            <summary class="font-medium">Can I use it on my phone?</summary>
+            <div class="mt-2 text-slate-600">Yes, it’s fully responsive.</div>
+          </details>
+          <details class="border border-slate-200 rounded-md p-3">
+            <summary class="font-medium">Do you store my card details?</summary>
+            <div class="mt-2 text-slate-600">No. Payments are handled by your provider (JUICE/PayPal/Card).</div>
+          </details>
+          <details class="border border-slate-200 rounded-md p-3">
+            <summary class="font-medium">Can I export my data?</summary>
+            <div class="mt-2 text-slate-600">Yes—Excel/CSV anytime. JSON backup/restore is also available.</div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- E-RECEIPTS -->
+    <section id="view-receipts" class="hidden">
+      <div id="access-guard" class="card banner hidden">Please log in, complete your business profile, and activate a plan in <button class="underline" onclick="activateTab('plans')">Plans</button>. </div>
+      <div class="card banner mb-4"><i data-lucide="shield-alert" class="inline mr-1"></i><strong>E-receipt generator:</strong> We replace paper receipts only. We are not responsible for the content you enter, external/security links you include, or off-platform payments.</div>
+      <div class="card mb-4">
+        <div class="grid md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium mb-1">Customer</label>
+            <input id="cust-name" class="form-input" placeholder="e.g. John Smith" maxlength="80">
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Reference</label>
+            <div class="flex gap-2">
+              <input id="ref" class="form-input flex-1" placeholder="Auto" readonly>
+              <button id="ref-refresh" class="btn btn-secondary" title="Regenerate"><i data-lucide='refresh-ccw'></i></button>
+            </div>
+            <p class="text-xs text-slate-500 mt-1">Auto-generated & sequential like REF-YYYY-0001.</p>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <div class="flex items-center justify-between mb-2">
+            <h4 class="font-semibold">Items</h4>
+            <button id="add-item" class="btn btn-ghost" type="button"><i data-lucide='plus'></i>Add item</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="table w-full text-sm" id="items-table">
+              <thead class="bg-slate-50 text-xs uppercase text-slate-500">
+                <tr><th style="width:40%">Description</th><th>Qty</th><th>Unit</th><th>Total</th><th></th></tr>
+              </thead>
+              <tbody id="items-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-5 gap-3 mt-4 items-end">
+          <div>
+            <label class="block text-sm">VAT %</label>
+            <input id="vat" class="form-input" type="number" min="0" max="100" value="15">
+          </div>
+          <div>
+            <label class="block text-sm">Discount (Rs)</label>
+            <input id="discount" class="form-input" type="number" min="0" value="0">
+          </div>
+          <div>
+            <label class="block text-sm">Service Fee (Rs)</label>
+            <input id="fee" class="form-input" type="number" min="0" value="0">
+          </div>
+          <div class="text-right md:col-span-2">
+            <div class="text-sm text-slate-500">Subtotal: <span id="subtotal">Rs 0</span></div>
+            <div class="text-sm text-slate-500">VAT: <span id="vat-amt">Rs 0</span></div>
+            <div class="text-base font-semibold">Grand Total: <span id="grand">Rs 0</span></div>
+          </div>
+        </div>
+
+        <div class="mt-4 flex flex-wrap gap-2 justify-end">
+          <button id="share-email" class="btn btn-secondary" type="button"><i data-lucide='mail'></i>Email</button>
+          <button id="share-wa" class="btn btn-secondary" type="button"><i data-lucide='send'></i>WhatsApp</button>
+          <button id="save-rcp" class="btn btn-secondary" type="button" disabled><i data-lucide='save'></i>Save</button>
+          <button id="download-pdf" class="btn btn-secondary" type="button" disabled><i data-lucide='file-down'></i>Download PDF</button>
+          <button id="generate" class="btn btn-primary" type="button" disabled><i data-lucide='printer'></i>Open Print View</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="font-semibold mb-2">Receipt History</h3>
+        <table class="table w-full text-sm">
+          <thead class="bg-slate-50 text-xs uppercase text-slate-500"><tr><th>#</th><th>Ref</th><th>Customer</th><th>Date</th><th>Total</th><th>Actions</th></tr></thead>
+          <tbody id="hist-body"></tbody>
+        </table>
+        <p id="hist-empty" class="text-center text-slate-500 text-sm py-4 hidden">No receipts yet.</p>
+      </div>
+    </section>
+
+    <!-- CLIENTS -->
+    <section id="view-clients" class="hidden">
+      <div class="card mb-4">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-semibold">Clients</h3>
+          <button id="add-client" class="btn btn-primary"><i data-lucide="user-plus"></i>Add Client</button>
+        </div>
+        <div class="overflow-x-auto mt-3">
+          <table class="table w-full text-sm">
+            <thead class="bg-slate-50 text-xs uppercase text-slate-500"><tr><th>Name</th><th>Phone</th><th>Email</th><th>Total Receipts</th><th>Last Receipt</th><th>Actions</th></tr></thead>
+            <tbody id="clients-body"></tbody>
+          </table>
+          <p id="clients-empty" class="text-center text-slate-500 text-sm py-4 hidden">No clients yet.</p>
+        </div>
+      </div>
+      <div class="card">
+        <h4 class="font-semibold mb-2">Import / Export Clients</h4>
+        <div class="flex flex-wrap gap-2">
+          <button id="clients-export" class="btn btn-secondary"><i data-lucide="download"></i>Export CSV</button>
+          <label class="btn btn-secondary cursor-pointer"><i data-lucide="upload"></i>Import CSV<input id="clients-import" type="file" accept=".csv" class="hidden"></label>
+        </div>
+      </div>
+    </section>
+
+    <!-- PLANS -->
+    <section id="view-plans" class="hidden">
+      <div class="card mb-4">
+        <label class="inline-flex items-center gap-2 text-sm">
+          <input id="agree-terms" type="checkbox" class="w-4 h-4">
+          <span>I agree to the <a href="privacy.html" class="underline" target="_blank">Privacy Policy</a> and <a href="terms.html" class="underline" target="_blank">Terms of Use</a>.</span>
+        </label>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="plan">
+          <div class="kicker">Starter</div>
+          <h3 class="text-xl font-semibold">Rs 699 / month</h3>
+          <ul class="text-sm text-slate-600 mt-2 list-disc ml-4">
+            <li>Up to 200 receipts / month</li>
+            <li>Client & item library</li>
+            <li>WhatsApp / Email share</li>
+            <li>Monthly Excel/CSV export</li>
+          </ul>
+          <div class="flex gap-2 mt-3">
+            <button class="btn btn-primary" data-plan="starter"><i data-lucide='zap'></i>Activate Starter</button>
+            <button class="btn btn-secondary" onclick="openJuice('Starter',699)"><i data-lucide='credit-card'></i>Pay (JUICE)</button> <button class="btn btn-secondary" onclick="openPaypal('Starter',699)"><i data-lucide='credit-card'></i>Pay (PayPal)</button>
+          </div>
+        </div>
+        <div class="plan recommended border-blue-600">
+          <div class="kicker">Pro</div>
+          <h3 class="text-xl font-semibold">Rs 999 / month</h3>
+          <ul class="text-sm text-slate-600 mt-2 list-disc ml-4">
+            <li>Unlimited receipts</li>
+            <li>Custom logo on receipts</li>
+            <li>Advanced dashboard</li>
+            <li>Filters & search</li>
+            <li>Bulk export</li>
+            <li>2 users included</li>
+          </ul>
+          <div class="flex gap-2 mt-3">
+            <button class="btn btn-primary" data-plan="pro"><i data-lucide='rocket'></i>Activate Pro</button>
+            <button class="btn btn-secondary" onclick="openJuice('Pro',999)"><i data-lucide='credit-card'></i>Pay (JUICE)</button> <button class="btn btn-secondary" onclick="openPaypal('Pro',999)"><i data-lucide='credit-card'></i>Pay (PayPal)</button>
+          </div>
+        </div>
+        <div class="plan">
+          <div class="kicker">Business+</div>
+          <h3 class="text-xl font-semibold">Rs 1,699 / month</h3>
+          <ul class="text-sm text-slate-600 mt-2 list-disc ml-4">
+            <li>5 users included</li>
+            <li>Role permissions</li>
+            <li>Auto cloud backups</li>
+            <li>Audit log</li>
+            <li>Dedicated onboarding</li>
+          </ul>
+          <div class="flex gap-2 mt-3">
+            <button class="btn btn-primary" data-plan="business"><i data-lucide='briefcase'></i>Activate Business+</button>
+            <button class="btn btn-secondary" onclick="openJuice('Business+',1699)"><i data-lucide='credit-card'></i>Pay (JUICE)</button> <button class="btn btn-secondary" onclick="openPaypal('Business+',1699)"><i data-lucide='credit-card'></i>Pay (PayPal)</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mt-6">
+        <h4 class="font-semibold mb-2">Compare plans</h4>
+        <div class="overflow-x-auto">
+          <table class="table w-full text-sm">
+            <thead class="bg-slate-50 text-xs uppercase text-slate-500">
+              <tr><th>Feature</th><th>Starter</th><th>Pro</th><th>Business+</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Receipts</td><td>200/mo</td><td>Unlimited</td><td>Unlimited</td></tr>
+              <tr><td>Users included</td><td>1</td><td>2</td><td>5</td></tr>
+              <tr><td>Advanced dashboard</td><td>—</td><td>✔</td><td>✔</td></tr>
+              <tr><td>Bulk export</td><td>—</td><td>✔</td><td>✔</td></tr>
+              <tr><td>Role permissions</td><td>—</td><td>—</td><td>✔</td></tr>
+              <tr><td>Auto cloud backups</td><td>—</td><td>—</td><td>✔</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card mt-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <div id="plan-status" class="text-sm text-slate-700">No active plan.</div>
+            <div id="trial-status" class="text-xs text-slate-500"></div>
+          </div>
+          <!-- trial disabled -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ACCOUNT -->
+    <section id="view-account" class="hidden">
+      <div class="grid grid-cols-1 gap-6">
+        <div class="card">
+          <h3 class="text-lg font-semibold mb-2">Login / Sign up</h3>
+          <form id="auth-form" class="space-y-3">
+            <div class="kicker">Account</div>
+            <input id="auth-name" class="form-input" placeholder="Your name" required>
+            <input id="auth-email" type="email" class="form-input" placeholder="you@email.com" required>
+            <div class="kicker pt-2">Business details</div>
+            <input id="signup-biz-name" class="form-input" maxlength="80" placeholder="Business name (optional)">
+            <input id="signup-biz-brn" class="form-input" maxlength="40" placeholder="BRN (optional)">
+            <textarea id="signup-biz-address" class="form-input" rows="3" maxlength="240" placeholder="Address (optional)"></textarea>
+            <input id="signup-biz-phone" class="form-input" maxlength="30" placeholder="Phone (optional)">
+            <input id="signup-biz-email" type="email" class="form-input" maxlength="80" placeholder="Billing email (optional)">
+            <button class="btn btn-primary" type="submit"><i data-lucide='log-in'></i>Continue</button>
+          </form>
+          <div id="auth-logged-in" class="hidden mt-3">
+            <div class="kicker">Signed in</div>
+            <div id="user-name" class="font-semibold"></div>
+            <div id="user-email" class="text-sm text-slate-600"></div>
+            <button id="btn-logout" class="btn btn-secondary mt-2"><i data-lucide='log-out'></i>Logout</button>
+          </div>
+        </div>
+
+        <div id="profile-card" class="card hidden">
+          <h3 class="text-lg font-semibold mb-2">Business Profile</h3>
+          <p class="text-xs text-slate-600 mb-3">Saved per account and prefilled on receipts.</p>
+          <form id="profile-form" class="grid grid-cols-1 gap-3">
+            <input id="biz-name" class="form-input" maxlength="80" placeholder="Business name (e.g., OceanView Guest House)">
+            <input id="biz-brn" class="form-input" maxlength="40" placeholder="BRN (e.g., C20XXXXXX)">
+            <input id="biz-phone" class="form-input" maxlength="30" placeholder="Phone (e.g., +230 5XXXXXX)">
+            <input id="biz-email" type="email" class="form-input" maxlength="80" placeholder="Billing email">
+            <textarea id="biz-address" class="form-input" rows="3" maxlength="240" placeholder="Address"></textarea>
+            <div class="flex gap-2 justify-end">
+              <button type="button" id="profile-save" class="btn btn-primary"><i data-lucide='save'></i>Save Profile</button>
+              <button type="button" id="profile-clear" class="btn btn-ghost">Clear</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <h3 class="text-lg font-semibold mb-2">Included tools (after login)</h3>
+          <ul class="list-disc ml-6 text-sm text-slate-700 space-y-1">
+            <li>WhatsApp / Email share</li>
+            <li>Basic dashboard</li>
+            <li>Excel/CSV export (monthly)</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3 class="text-lg font-semibold mb-2">Backup & Restore</h3>
+          <p class="text-xs text-slate-600 mb-3">Export or import your receipts as JSON (per account). Keep backups somewhere safe; JSON files are not encrypted.</p>
+          <div class="flex flex-wrap gap-2">
+            <button id="btn-export" class="btn btn-secondary"><i data-lucide='download'></i>Export JSON</button>
+            <label class="btn btn-secondary cursor-pointer"><i data-lucide='upload'></i>Import JSON<input id="file-import" type="file" accept="application/json" class="hidden"></label>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- JUICE Modal -->
+  <div id="juice-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="juice-title">
+    <div class="card max-w-md w-full">
+      <div class="flex items-center justify-between">
+        <h3 id="juice-title" class="text-lg font-semibold">Pay with JUICE</h3>
+        <button class="btn btn-ghost" onclick="closeJuice()"><i data-lucide='x'></i>Close</button>
+      </div>
+      <p class="text-sm text-slate-600 mt-1">This is a <strong>stub</strong> for demo. Replace with your real merchant QR / MIP flow.</p>
+      <div class="grid grid-cols-2 gap-3 mt-3">
+        <div class="card">
+          <div class="kicker">Plan</div>
+          <div id="juice-plan" class="text-lg font-semibold">—</div>
+        </div>
+        <div class="card">
+          <div class="kicker">Amount</div>
+          <div id="juice-amount" class="text-lg font-semibold">Rs 0</div>
+        </div>
+      </div>
+      <div class="mt-3">
+        <div class="kicker">Scan & Pay</div>
+        <div class="flex items-center gap-3">
+          <div id="juice-qr" class="w-32 h-32 bg-white border border-slate-200 flex items-center justify-center rounded-md"></div>
+          <div class="text-sm text-slate-600">
+            <div>JUICE Number: <span id="juice-merchant">23054960101</span> <button class="btn btn-ghost" onclick="copyJuice()">Copy</button></div>
+            <div>Ref: <span id="juice-ref">PLN-XXXX</span> <button class="btn btn-ghost" onclick="copyRef()">Copy</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="mt-3">
+        <label class="block text-sm font-medium mb-1">Payment reference (enter after you pay)</label>
+        <input id="juice-proof" class="form-input" placeholder="e.g. JUICE123456">
+        <div class="flex gap-2 mt-3 justify-end">
+          <button class="btn btn-secondary" onclick="markPaid()"><i data-lucide='check'></i>I have paid</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  
+  <!-- PayPal Modal (stub) -->
+  <div id="paypal-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="paypal-title">
+    <div class="card max-w-md w-full">
+      <div class="flex items-center justify-between">
+        <h3 id="paypal-title" class="text-lg font-semibold">Pay with PayPal</h3>
+        <button class="btn btn-ghost" onclick="closePaypal()"><i data-lucide='x'></i>Close</button>
+      </div>
+      <p class="text-sm text-slate-600 mt-1">Demo stub. Replace with PayPal Buttons SDK for production.</p>
+      <div class="grid grid-cols-2 gap-3 mt-3">
+        <div class="card">
+          <div class="kicker">Plan</div>
+          <div id="paypal-plan" class="text-lg font-semibold">—</div>
+        </div>
+        <div class="card">
+          <div class="kicker">Amount</div>
+          <div id="paypal-amount" class="text-lg font-semibold">Rs 0</div>
+        </div>
+      </div>
+      <div class="mt-3">
+        <label class="block text-sm font-medium mb-1">Transaction ID (demo)</label>
+        <input id="paypal-proof" class="form-input" placeholder="e.g. PAYPAL-12345">
+        <div class="flex gap-2 mt-3 justify-end">
+          <button class="btn btn-secondary" onclick="markPaidPaypal()"><i data-lucide='check'></i>I have paid</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite">Saved</div>
+  <footer class="max-w-6xl mx-auto px-4 pb-12 pt-6 text-xs text-slate-500">
+    <div class="flex flex-wrap items-center gap-4 justify-between">
+      <div>© <span id="year"></span> Business Manager Pro — Replace paper with e-receipts. We generate e-receipts only; issuer is responsible for content and any external links.</div>
+      <div class="flex gap-4">
+        <a href="privacy.html" class="underline" target="_blank">Privacy</a>
+        <a href="terms.html" class="underline" target="_blank">Terms</a>
+        <a href="contact.html" class="underline" target="_blank">Contact</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    try{ lucide.createIcons(); }catch(e){}
+
+    // ===== Tabs =====
+    const tabHome=document.getElementById('tab-home');
+    const tabReceipts=document.getElementById('tab-receipts');
+    const tabClients=document.getElementById('tab-clients');
+    const tabPlans=document.getElementById('tab-plans');
+    const tabAccount=document.getElementById('tab-account');
+    const viewHome=document.getElementById('view-home');
+    const viewReceipts=document.getElementById('view-receipts');
+    const viewClients=document.getElementById('view-clients');
+    const viewPlans=document.getElementById('view-plans');
+    const viewAccount=document.getElementById('view-account');
+
+    function activateTab(which){
+      [tabHome,tabReceipts,tabClients,tabPlans,tabAccount].forEach(t=>t.classList.remove('active'));
+      [viewHome,viewReceipts,viewClients,viewPlans,viewAccount].forEach(v=>v.classList.add('hidden'));
+      if(which==='home'){tabHome.classList.add('active');viewHome.classList.remove('hidden');}
+      if(which==='receipts'){tabReceipts.classList.add('active');viewReceipts.classList.remove('hidden');}
+      if(which==='clients'){tabClients.classList.add('active');viewClients.classList.remove('hidden');}
+      if(which==='plans'){tabPlans.classList.add('active');viewPlans.classList.remove('hidden');}
+      if(which==='account'){tabAccount.classList.add('active');viewAccount.classList.remove('hidden');}
+      enforceAccess();
+      const requirePlan = !isEligible();
+      if(requirePlan && (which==='receipts' || which==='clients')){
+        showToast('Please activate a plan to access the app');
+        activateTab('plans'); 
+        return;
+      }
+
+      try{ lucide.createIcons(); }catch(e){}
+
+    }
+    window.activateTab=activateTab;
+    tabHome.onclick=()=>activateTab('home');
+    tabReceipts.onclick=()=>activateTab('receipts');
+    tabClients.onclick=()=>activateTab('clients');
+    tabPlans.onclick=()=>activateTab('plans');
+    tabAccount.onclick=()=>activateTab('account');
+
+    // ===== Toast =====
+    const toast=document.getElementById('toast');
+    function showToast(m){ toast.textContent=m; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),1800); }
+
+    // ===== Auth & header =====
+    const LS_USER='bmp_user_v1';
+    function getUser(){ try{return JSON.parse(localStorage.getItem(LS_USER))||null}catch(e){return null} }
+    function setUser(u){ localStorage.setItem(LS_USER,JSON.stringify(u)); renderAuth(); updateHeader(); receipts=loadR(); renderHistory(); enforceAccess(); renderClients(); updateDashboard(); }
+    function clearUser(){ localStorage.removeItem(LS_USER); renderAuth(); updateHeader(); receipts=loadR(); renderHistory(); enforceAccess(); renderClients(); updateDashboard(); }
+    function updateHeader(){ const u=getUser(); document.getElementById('header-user').textContent=u?`Signed in: ${u.name}`:'Not signed in'; }
+
+    const LS_PROFILE='bmp_profile_v1';
+    function profileKey(){ const u=getUser(); return u? `${LS_PROFILE}:${u.email}` : `${LS_PROFILE}:__anon__`; }
+    function isProfileComplete(){ try{ const p=JSON.parse(localStorage.getItem(profileKey()))||{}; return !!(p.name||p.brn||p.address||p.phone||p.email);}catch(e){return false} }
+    function loadProfile(){ try{ const p=JSON.parse(localStorage.getItem(profileKey()))||{}; ['biz-name','biz-brn','biz-phone','biz-email','biz-address'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=p[id.split('-')[1]]||p[id.replace('biz-','')]||p[id]||''; }); }catch(e){} }
+    function saveProfile(){ const p={ name:val('biz-name'), brn:val('biz-brn'), phone:val('biz-phone'), email:val('biz-email'), address:val('biz-address') }; localStorage.setItem(profileKey(), JSON.stringify(p)); showToast('Profile saved'); }
+
+    function renderAuth(){
+      const u=getUser();
+      const form=document.getElementById('auth-form');
+      const logged=document.getElementById('auth-logged-in');
+      const profileCard=document.getElementById('profile-card');
+      if(u){
+        form.classList.add('hidden');
+        logged.classList.remove('hidden');
+        profileCard?.classList.remove('hidden');
+        document.getElementById('user-name').textContent=u.name;
+        document.getElementById('user-email').textContent=u.email;
+        loadProfile();
+      } else {
+        form.classList.remove('hidden');
+        logged.classList.add('hidden');
+        profileCard?.classList.add('hidden');
+        clearProfileUI();
+      }
+    }
+    function clearProfileUI(){ ['biz-name','biz-brn','biz-phone','biz-email','biz-address'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; }); }
+
+    updateHeader(); renderAuth();
+    document.getElementById('year').textContent=new Date().getFullYear();
+
+    document.getElementById('auth-form')?.addEventListener('submit',e=>{
+      e.preventDefault();
+      const u={ name:val('auth-name'), email:val('auth-email') };
+      const p={ name:val('signup-biz-name'), brn:val('signup-biz-brn'), address:val('signup-biz-address'), phone:val('signup-biz-phone'), email:val('signup-biz-email') };
+      if(!u.name||!u.email){ showToast('Enter your name and email'); return }
+      setUser(u);
+      if(p.name||p.brn||p.address||p.phone||p.email){
+        localStorage.setItem(profileKey(), JSON.stringify(p));
+      }
+      showToast('Signed in');
+      activateTab('plans');
+    });
+    document.getElementById('btn-logout')?.addEventListener('click',()=>{ clearUser(); showToast('Signed out'); activateTab('account'); });
+    document.getElementById('profile-save')?.addEventListener('click',saveProfile);
+    document.getElementById('profile-clear')?.addEventListener('click',()=>{ localStorage.removeItem(profileKey()); clearProfileUI(); showToast('Profile cleared'); });
+
+    // ===== Plans + Trial =====
+    const LS_PLAN='bmp_plan_v1', LS_TRIAL='bmp_trial_v1';
+    let pendingPay=null; // for JUICE stub
+    function getPlan(){ try{return JSON.parse(localStorage.getItem(LS_PLAN))||null}catch(e){return null} }
+    function setPlan(p){ localStorage.setItem(LS_PLAN,JSON.stringify(p)); renderPlanStatus(); renderTrialStatus(); enforceAccess(); }
+    function isPlanActive(){ const u=getUser(); const p=getPlan(); return !!(u && p && p.userEmail===u.email && new Date(p.end)>new Date()); }
+    function getTrial(){ try{return JSON.parse(localStorage.getItem(LS_TRIAL))||null}catch(e){return null} }
+    function setTrial(t){ if(t) localStorage.setItem(LS_TRIAL,JSON.stringify(t)); else localStorage.removeItem(LS_TRIAL); renderTrialStatus(); enforceAccess(); }
+    function isTrialActive(){ const u=getUser(); const t=getTrial(); return !!(u && t && t.userEmail===u.email && new Date(t.end)>new Date()); }
+    function isEligible(){ return isPlanActive(); }
+
+    document.querySelectorAll('[data-plan]').forEach(btn=>btn.addEventListener('click',()=>{
+      const plan=btn.getAttribute('data-plan');
+      const agree=document.getElementById('agree-terms');
+      if(agree && !agree.checked){ showToast('Please agree to Terms first'); return; }
+      const u=getUser(); if(!u){ showToast('Please log in first'); activateTab('account'); return; }
+      const start=new Date(), end=new Date(start); end.setMonth(end.getMonth()+1); // demo: 1 month access
+      setPlan({type:plan,start:start.toISOString(),end:end.toISOString(),userEmail:u.email});
+      showToast(`${plan.charAt(0).toUpperCase()+plan.slice(1)} plan activated (demo)`);
+      activateTab('receipts');
+    }));
+
+    function togglePlanButtons(){
+      const agree=document.getElementById('agree-terms');
+      const enabled = (agree ? agree.checked : true);
+      document.querySelectorAll('[data-plan],#btn-start-trial').forEach(b=>{ if(b) b.disabled=!enabled; });
+    }
+    document.addEventListener('DOMContentLoaded', togglePlanButtons);
+    document.getElementById('agree-terms')?.addEventListener('change',togglePlanButtons);
+
+    document.getElementById('btn-start-trial')?.addEventListener('click',()=>{
+      const agree=document.getElementById('agree-terms');
+      if(agree && !agree.checked){ showToast('Please agree to Terms first'); return; }
+      const u=getUser(); if(!u){ showToast('Please log in first'); activateTab('account'); return; }
+      const start=new Date(), end=new Date(start); end.setDate(end.getDate()+3);
+      setTrial({start:start.toISOString(), end:end.toISOString(), userEmail:u.email});
+      showToast('3-day demo started');
+      activateTab('receipts');
+    });
+
+    function renderPlanStatus(){
+      const p=getPlan(); const el=document.getElementById('plan-status'); if(!el) return;
+      if(!p){ el.textContent='No active plan.'; return }
+      const end=new Date(p.end); const days=Math.max(0,Math.ceil((end-new Date())/86400000));
+      const planName={starter:'Starter',pro:'Pro',business:'Business+'}[p.type]||p.type;
+      el.textContent=`Active: ${planName} • Expires ${end.toLocaleDateString()} • ${days} days left`;
+    }
+    function renderTrialStatus(){
+      const t=getTrial(); const el=document.getElementById('trial-status'); if(!el) return;
+      if(!t){ el.textContent=''; return }
+      const end=new Date(t.end); const days=Math.max(0,Math.ceil((end-new Date())/86400000));
+      el.textContent=`Demo active — expires ${end.toLocaleDateString()} • ${days} days left`;
+    }
+    renderPlanStatus(); renderTrialStatus();
+
+    // ===== Access Guard =====
+    function enforceAccess(){
+      const u=getUser();
+      const onReceipts=!viewReceipts.classList.contains('hidden');
+      const eligible=isEligible();
+      const profileOK=isProfileComplete();
+      const guard=document.getElementById('access-guard');
+      if(!u){ guard.classList.add('hidden'); if(onReceipts) activateTab('home'); return; }
+      if(onReceipts && !profileOK){ showToast('Complete your business profile first'); activateTab('account'); return; }
+      guard.classList.toggle('hidden', eligible && profileOK);
+      if(onReceipts && (!eligible || !profileOK)) activateTab('plans');
+    }
+
+    // ===== Helpers =====
+    function money(n){ n=Number(n||0); return `Rs ${n.toLocaleString('en-MU',{maximumFractionDigits:2})}`; }
+    function val(id){ const el=document.getElementById(id); return el?el.value.trim():''; }
+
+    // ===== Dashboard =====
+    function updateDashboard(){
+      const recs=loadR();
+      const todayStr=new Date().toISOString().slice(0,10);
+      const ym=new Date().toISOString().slice(0,7);
+      let tday=0, tmonth=0;
+      recs.forEach(r=>{
+        if(r.date===todayStr) tday+=Number(r.grand||0);
+        if((r.date||'').startsWith(ym)) tmonth+=Number(r.grand||0);
+      });
+      document.getElementById('dash-today').textContent=money(tday);
+      document.getElementById('dash-month').textContent=money(tmonth);
+      document.getElementById('dash-count').textContent=String(recs.length);
+    }
+
+    // ===== Receipts =====
+    const LS_R='bmp_receipts_v1', LS_REF='bmp_ref_seq_v1';
+    function refKey(){ const u=getUser(); return u? `${LS_REF}:${u.email}` : LS_REF; }
+    function rKey(){ const u=getUser(); return u ? `${LS_R}:${u.email}` : `${LS_R}:__anon__`; }
+    function loadR(){ try{ return JSON.parse(localStorage.getItem(rKey())) || [] }catch(e){ return [] } }
+    function saveR(list){ localStorage.setItem(rKey(), JSON.stringify(list)); updateDashboard(); }
+    let receipts=loadR();
+    function loadRefState(){ try{ return JSON.parse(localStorage.getItem(refKey()))||null }catch(e){ return null } }
+    function saveRefState(o){ localStorage.setItem(refKey(), JSON.stringify(o)); }
+    function pad(n){ return String(n).padStart(4,'0'); }
+    function previewNextRef(){ const y=new Date().getFullYear(); const s=loadRefState(); const c=(!s||s.year!==y)?1:(s.counter+1); return `REF-${y}-${pad(c)}`; }
+    function consumeNextRef(){ const y=new Date().getFullYear(); const s=loadRefState(); let c; if(!s||s.year!==y){ c=1 } else { c=s.counter+1 } saveRefState({year:y,counter:c}); return `REF-${y}-${pad(c)}`; }
+
+    const refInput=document.getElementById('ref');
+    function refreshPreviewRef(){ if(refInput) refInput.value=previewNextRef(); }
+    refreshPreviewRef();
+    document.getElementById('ref-refresh')?.addEventListener('click',refreshPreviewRef);
+
+    function newId(){ const t=new Date(); const y=t.getFullYear(),m=String(t.getMonth()+1).padStart(2,'0'),d=String(t.getDate()).padStart(2,'0'); const rnd=Math.floor(Math.random()*900)+100; return `RCP-${y}${m}${d}-${rnd}`; }
+
+    const itemsBody=document.getElementById('items-body');
+    function addItemRow(d='',q=1,u=0){
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td><input class='form-input desc' maxlength='120' placeholder='Description' value='${d.replace(/'/g,"&#39;")}'></td>
+        <td><input class='form-input qty' type='number' min='0' step='1' value='${q}'></td>
+        <td><input class='form-input unit' type='number' min='0' step='0.01' value='${u}'></td>
+        <td class='row-total text-right'>Rs 0</td>
+        <td><button type='button' class='btn btn-ghost remove'>Remove</button></td>`;
+      itemsBody.appendChild(tr);
+      tr.addEventListener('input',()=>{ recalcTotals(); updateActionButtons(); });
+      tr.querySelector('.remove').addEventListener('click',()=>{ tr.remove(); recalcTotals(); updateActionButtons(); });
+      recalcTotals(); updateActionButtons();
+    }
+    document.getElementById('add-item')?.addEventListener('click',()=>{ addItemRow(); updateActionButtons(); });
+
+    function getItems(){
+      const rows=[...itemsBody.querySelectorAll('tr')];
+      return rows.map(r=>({
+        desc:r.querySelector('.desc').value.trim(),
+        qty:Number(r.querySelector('.qty').value||0),
+        unit:Number(r.querySelector('.unit').value||0),
+        total: Number(r.querySelector('.qty').value||0)*Number(r.querySelector('.unit').value||0)
+      })).filter(x=>x.desc||x.total>0);
+    }
+    function recalcTotals(){
+      const items=getItems();
+      const subtotal=items.reduce((s,i)=>s+i.total,0);
+      const vatPct=Number(val('vat')||0); const vatAmt=subtotal*vatPct/100;
+      const discount=Number(val('discount')||0); const fee=Number(val('fee')||0);
+      const grand=Math.max(0, subtotal+vatAmt+fee-discount);
+      document.getElementById('subtotal').textContent=money(subtotal);
+      document.getElementById('vat-amt').textContent=money(vatAmt);
+      document.getElementById('grand').textContent=money(grand);
+      [...itemsBody.querySelectorAll('tr')].forEach(r=>{
+        const qty=Number(r.querySelector('.qty').value||0), unit=Number(r.querySelector('.unit').value||0);
+        r.querySelector('.row-total').textContent = money(qty*unit);
+      });
+      // enable/disable buttons
+      updateActionButtons();
+      return {items, subtotal, vatPct, vatAmt, discount, fee, grand};
+    }
+    ['vat','discount','fee'].forEach(id=>document.getElementById(id)?.addEventListener('input',()=>{ recalcTotals(); }));
+
+    function hasValidItems(){ const items=getItems(); return items.length>0 && items.some(i=>i.total>0); }
+    function updateActionButtons(){ const ok=hasValidItems(); ['save-rcp','generate','download-pdf'].forEach(id=>{ const b=document.getElementById(id); if(b) b.disabled=!ok; }); }
+
+    function collectReceipt(consume){
+      const customer = (document.getElementById('cust-name').value||'').trim();
+      if(!customer){ throw new Error('Please enter a customer name'); }
+      if(!hasValidItems()) { throw new Error('Add at least one item'); }
+      const ref=consume?consumeNextRef():(refInput.value||previewNextRef());
+      if(refInput) refInput.value=ref;
+      const totals=recalcTotals();
+      return {id:newId(), date:new Date().toISOString().slice(0,10), customer, ref, ...totals};
+    }
+
+    
+function openReceiptWindow(r){
+  const p=(function(){
+    try { return JSON.parse(localStorage.getItem(profileKey()))||{}; }
+    catch(e){ return {}; }
+  })();
+  const id   = r && r.id   ? r.id   : '';
+  const ref  = r && r.ref  ? r.ref  : '—';
+  const date = r && r.date ? r.date : new Date().toISOString().slice(0,10);
+  const w = window.open('', '_blank', 'noopener,noreferrer');
+  if(!w){ try{ showToast('Popup blocked — allow popups'); }catch(_){} return; }
+
+  const rows = (r.items||[]).map(it=>{
+    const d = String(it.desc||'');
+    const q = Number(it.qty||0);
+    const u = Number(it.unit||0).toFixed(2);
+    const t = Number(it.total||q*u).toFixed(2);
+    return `<tr><td>${d}</td><td class="right">${q}</td><td class="right">${u}</td><td class="right">${t}</td></tr>`;
+  }).join('');
+
+  w.document.write(`
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Receipt ${ref}</title>
+  <style>
+    body{font:12px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial;color:#111;padding:24px;}
+    h1,h2,h3{margin:0}
+    .muted{color:#555}
+    .hdr{margin-bottom:12px}
+    table{width:100%;border-collapse:collapse;margin-top:8px}
+    th,td{border-bottom:1px solid #e5e7eb;padding:6px 4px;text-align:left}
+    th:nth-child(2),td:nth-child(2),th:nth-child(3),td:nth-child(3),th:nth-child(4),td:nth-child(4){text-align:right}
+    .totals{margin-top:14px;width:100%}
+    .totals td{padding:3px 4px}
+    .right{text-align:right}
+    .stamp{font-size:64px;color:#e5e7eb;position:absolute;top:160px;left:140px;transform:rotate(-25deg)}
+    .footer{margin-top:18px;color:#555;font-size:11px}
+  </style>
+</head>
+<body>
+  ${r && r.__demo ? `<div class="stamp">DEMO</div>` : ``}
+  <div class="hdr">
+    <h2>${(p.name||'Your Business')}</h2>
+    <div class="muted">BRN: ${(p.brn||'—')}</div>
+    ${p.address?`<div class="muted">${p.address}</div>`:''}
+    ${p.phone?`<div class="muted">${p.phone}</div>`:''}
+    ${p.email?`<div class="muted">${p.email}</div>`:''}
+  </div>
+
+  <div style="display:flex;justify-content:space-between;gap:12px;margin-bottom:6px">
+    <div>
+      <div><strong>Customer:</strong> ${(r.customer||'Customer')}</div>
+      ${id?`<div class="muted"># ${id}</div>`:''}
+    </div>
+    <div class="right">
+      <div><strong>Ref:</strong> ${ref}</div>
+      <div class="muted">Date: ${date}</div>
+    </div>
+  </div>
+
+  <table>
+    <thead><tr><th>Description</th><th>Qty</th><th>Unit</th><th>Total</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+
+  <table class="totals">
+    <tr><td class="right" style="width:80%"><strong>Subtotal:</strong></td><td class="right">${money(r.subtotal||0)}</td></tr>
+    <tr><td class="right">VAT (${r.vatPct||0}%):</td><td class="right">${money(r.vatAmt||0)}</td></tr>
+    <tr><td class="right">Discount:</td><td class="right">-${money(r.discount||0)}</td></tr>
+    <tr><td class="right">Service Fee:</td><td class="right">${money(r.fee||0)}</td></tr>
+    <tr><td class="right"><strong>Grand Total:</strong></td><td class="right"><strong>${money(r.grand||0)}</strong></td></tr>
+  </table>
+
+  <div class="footer">
+    Generated by Business Manager Pro — e-receipt generator. Issuer is responsible for accuracy.
+  </div>
+</body>
+</html>`);
+  w.document.close();
+}
+function downloadPdfFromCurrent(demo=false){
+      if(!hasValidItems()){ showToast('Add items first'); return; }
+      const { jsPDF } = window.jspdf || {};
+      if(!jsPDF){ showToast('PDF library not loaded'); return; }
+      const p=(function(){ try{return JSON.parse(localStorage.getItem(profileKey()))||{} }catch(e){ return {} } })();
+      const {items,subtotal,vatPct,vatAmt,discount,fee,grand}=recalcTotals();
+      const refText = (document.getElementById('ref').value)||previewNextRef();
+      const doc = new jsPDF({unit:'pt', format:'a4'});
+      let y=40, x=40;
+      const isDemo = !!(r && r.__demo);
+if(isDemo){ doc.setFont('helvetica','bold'); doc.setTextColor(200,200,200); doc.setFontSize(80); doc.text('DEMO', 150, 400, {angle:-25}); doc.setTextColor(0,0,0);} 
+      doc.setFont('helvetica','bold'); doc.setFontSize(16);
+      doc.text(p.name||'Your Business', x, y); y+=18;
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      doc.text(`BRN: ${p.brn||'—'}`, x, y); y+=14;
+      if(p.address) { doc.text(String(p.address), x, y); y+=14; }
+      if(p.phone) { doc.text(String(p.phone), x, y); y+=14; }
+      if(p.email) { doc.text(String(p.email), x, y); y+=18; }
+      doc.text(`Ref: ${refText}`, 420, 40);
+      const date = new Date().toISOString().slice(0,10);
+      doc.text(`Date: ${date}`, 420, 56);
+      doc.text(`Customer: ${document.getElementById('cust-name').value||'Customer'}`, x, y); y+=18;
+      // table header
+      doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text('Description', x, y); doc.text('Qty', 350, y); doc.text('Unit', 400, y); doc.text('Total', 470, y); y+=10;
+      doc.setLineWidth(0.5); doc.line(x, y, 555, y); y+=14;
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      items.forEach(i=>{
+        doc.text(String(i.desc), x, y); doc.text(String(i.qty), 350, y, {align:'right'}); doc.text(String(i.unit), 430, y, {align:'right'}); doc.text(String(i.total), 520, y, {align:'right'}); y+=14;
+      });
+      y+=6; doc.line(x, y, 555, y); y+=18;
+      doc.setFont('helvetica','bold');
+      doc.text(`Subtotal: Rs ${subtotal.toFixed(2)}`, 420, y); y+=14;
+      doc.text(`VAT (${vatPct}%): Rs ${vatAmt.toFixed(2)}`, 420, y); y+=14;
+      doc.text(`Discount: - Rs ${discount.toFixed(2)}`, 420, y); y+=14;
+      doc.text(`Service Fee: Rs ${fee.toFixed(2)}`, 420, y); y+=14;
+      doc.setFontSize(12);
+      doc.text(`Grand Total: Rs ${grand.toFixed(2)}`, 420, y);
+      y+=24;
+      doc.setFont('helvetica','normal'); doc.setFontSize(9);
+      doc.text('Generated by Business Manager Pro — e-receipt generator. Issuer is responsible for accuracy.', x, y, {maxWidth:520});
+      doc.save(`${refText}.pdf`);
+    }
+
+    const histBody=document.getElementById('hist-body'); const histEmpty=document.getElementById('hist-empty');
+    
+function renderHistory(){
+  const body = document.getElementById('hist-body');
+  const empty = document.getElementById('hist-empty');
+  if(!body) return;
+  body.textContent = '';
+
+  const recs = loadR();
+  if(!recs.length){
+    if (empty) empty.classList.remove('hidden');
+    return;
+  }
+  if (empty) empty.classList.add('hidden');
+
+  recs.slice().reverse().forEach(r=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${r.id||''}</td>
+      <td>${r.ref||''}</td>
+      <td>${r.customer||''}</td>
+      <td>${r.date||''}</td>
+      <td class="right">${money(r.grand||0)}</td>
+      <td class="right">
+        <button class="btn view">View</button>
+        <button class="btn pdf">PDF</button>
+        <button class="btn del">Delete</button>
+      </td>`;
+    tr.querySelector('.view').addEventListener('click',()=>openReceiptWindow(r));
+    tr.querySelector('.pdf').addEventListener('click',()=>downloadPdfFromRecord(r));
+    tr.querySelector('.del').addEventListener('click',()=>{
+      const list = loadR().filter(x=>x.id!==r.id);
+      saveR(list);
+      renderHistory();
+      try{ renderDashboard && renderDashboard(); }catch(_){}
+      try{ populateMonthFilter && populateMonthFilter(); }catch(_){}
+      try{ showToast && showToast('Receipt deleted'); }catch(_){}
+    });
+    body.appendChild(tr);
+  });
+
+  try{ lucide && lucide.createIcons(); }catch(e){}
+}
+// Init once
+document.addEventListener('DOMContentLoaded', ()=>{ try{ renderHistory(); }catch(e){} }, {once:true});
+function downloadPdfFromRecord(r){
+      const { jsPDF } = window.jspdf || {};
+      if(!jsPDF){ showToast('PDF library not loaded'); return; }
+      const p=(function(){ try{return JSON.parse(localStorage.getItem(profileKey()))||{} }catch(e){ return {} } })();
+      const doc = new jsPDF({unit:'pt', format:'a4'});
+      let y=40, x=40;
+      if(demo){ doc.setFont('helvetica','bold'); doc.setTextColor(200,200,200); doc.setFontSize(80); doc.text('DEMO', 150, 400, {angle:-25}); doc.setTextColor(0,0,0);} 
+      doc.setFont('helvetica','bold'); doc.setFontSize(16);
+      doc.text(p.name||'Your Business', x, y); y+=18;
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      doc.text(`BRN: ${p.brn||'—'}`, x, y); y+=14;
+      if(p.address) { doc.text(String(p.address), x, y); y+=14; }
+      if(p.phone) { doc.text(String(p.phone), x, y); y+=14; }
+      if(p.email) { doc.text(String(p.email), x, y); y+=18; }
+      doc.text(`Ref: ${r.ref}`, 420, 40);
+      doc.text(`Date: ${r.date}`, 420, 56);
+      doc.text(`Customer: ${r.customer}`, x, y); y+=18;
+      // table header
+      doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text('Description', x, y); doc.text('Qty', 350, y); doc.text('Unit', 400, y); doc.text('Total', 470, y); y+=10;
+      doc.setLineWidth(0.5); doc.line(x, y, 555, y); y+=14;
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      r.items.forEach(i=>{
+        doc.text(String(i.desc), x, y); doc.text(String(i.qty), 350, y, {align:'right'}); doc.text(String(i.unit), 430, y, {align:'right'}); doc.text(String(i.total), 520, y, {align:'right'}); y+=14;
+      });
+      y+=6; doc.line(x, y, 555, y); y+=18;
+      doc.setFont('helvetica','bold');
+      doc.text(`Subtotal: Rs ${Number(r.subtotal||0).toFixed(2)}`, 420, y); y+=14;
+      doc.text(`VAT (${r.vatPct}%): Rs ${Number(r.vatAmt||0).toFixed(2)}`, 420, y); y+=14;
+      doc.text(`Discount: - Rs ${Number(r.discount||0).toFixed(2)}`, 420, y); y+=14;
+      doc.text(`Service Fee: Rs ${Number(r.fee||0).toFixed(2)}`, 420, y); y+=14;
+      doc.setFontSize(12);
+      doc.text(`Grand Total: Rs ${Number(r.grand||0).toFixed(2)}`, 420, y);
+      y+=24;
+      doc.setFont('helvetica','normal'); doc.setFontSize(9);
+      doc.text('Generated by Business Manager Pro — e-receipt generator. Issuer is responsible for accuracy.', x, y, {maxWidth:520});
+      doc.save(`${r.ref}.pdf`);
+    }
+
+    // Save / Generate / Share
+    (function(){
+      let busy=false;
+      document.getElementById('save-rcp')?.addEventListener('click',()=>{
+        if(busy) return; busy=true; setTimeout(()=>busy=false,400);
+        if(!getUser()){showToast('Log in first');activateTab('account');return}
+        if(!isEligible()){showToast('Activate a plan');activateTab('plans');return}
+        try{
+          const data=collectReceipt(true);
+          const list=loadR(); list.push(data); saveR(list); receipts=list; renderHistory(); showToast('Receipt saved'); refreshPreviewRef();
+          upsertClientFromReceipt(data);
+        }catch(err){ showToast(err.message||'Please complete the form'); }
+      });
+      document.getElementById('generate')?.addEventListener('click',()=>{
+                if(busy) return; busy=true; setTimeout(()=>busy=false,400);
+        if(!getUser()){showToast('Log in first');activateTab('account');return}
+        if(!isEligible()){showToast('Activate a plan');activateTab('plans');return}
+        try{
+          const data=collectReceipt(true);
+          openReceiptWindow({...data, __demo: demoMode});
+          if(!demoMode){ const list=loadR(); list.push(data); saveR(list); receipts=list; renderHistory(); refreshPreviewRef(); upsertClientFromReceipt(data);} else { refreshPreviewRef(); showToast('Opened demo receipt (not saved)'); }
+        }catch(err){ showToast(err.message||'Please complete the form'); }
+      });
+      document.getElementById('download-pdf')?.addEventListener('click',()=>{
+                if(!getUser()){showToast('Log in first');activateTab('account');return}
+        if(!isEligible()){showToast('Activate a plan');activateTab('plans');return}
+        downloadPdfFromCurrent(false);
+      });
+      document.getElementById('share-email')?.addEventListener('click',()=>{
+        try{
+          const {items,subtotal,vatPct,vatAmt,discount,fee,grand}=recalcTotals();
+          const p=(function(){ try{return JSON.parse(localStorage.getItem(profileKey()))||{} }catch(e){ return {} } })();
+          const refText = val('ref')||previewNextRef();
+          const cust = val('cust-name')||'Customer';
+          const date = new Date().toISOString().slice(0,10);
+          const lines = items.map(i=>`• ${i.desc} — ${i.qty} x Rs ${i.unit.toFixed(2)} = Rs ${i.total.toFixed(2)}`);
+          const body = encodeURIComponent([
+            `Business: ${p.name||''}`,
+            `BRN: ${p.brn||''}`,
+            `Address: ${p.address||''}`,
+            `Phone: ${p.phone||''}`,
+            `Email: ${p.email||''}`,
+            ``,
+            `Customer: ${cust}`,
+            `Reference: ${refText}`,
+            `Date: ${date}`,
+            ``,
+            ...lines,
+            ``,
+            `Subtotal: Rs ${subtotal.toFixed(2)}`,
+            `VAT (${vatPct}%): Rs ${vatAmt.toFixed(2)}`,
+            `Discount: -Rs ${discount.toFixed(2)}`,
+            `Service Fee: Rs ${fee.toFixed(2)}`,
+            `Grand Total: Rs ${grand.toFixed(2)}`,
+            ``,
+            `Generated by Business Manager Pro (e-receipt generator).`
+          ].join('\n'));
+          const subject=encodeURIComponent(`Receipt ${refText} — ${cust}`);
+          window.location.href=`mailto:?subject=${subject}&body=${body}`;
+        }catch(e){ showToast('Nothing to share yet'); }
+      });
+      document.getElementById('share-wa')?.addEventListener('click',()=>{
+        try{
+          const {items,subtotal,vatPct,vatAmt,discount,fee,grand}=recalcTotals();
+          const p=(function(){ try{return JSON.parse(localStorage.getItem(profileKey()))||{} }catch(e){ return {} } })();
+          const refText = val('ref')||previewNextRef();
+          const cust = val('cust-name')||'Customer';
+          const date = new Date().toISOString().slice(0,10);
+          const lines = items.map(i=>`• ${i.desc} — ${i.qty} x Rs ${i.unit.toFixed(2)} = Rs ${i.total.toFixed(2)}`);
+          const text = encodeURIComponent([
+            `Business: ${p.name||''}`,
+            `BRN: ${p.brn||''}`,
+            `Phone: ${p.phone||''}`,
+            `Email: ${p.email||''}`,
+            `Customer: ${cust}`,
+            `Reference: ${refText}`,
+            `Date: ${date}`,
+            ``,
+            ...lines,
+            ``,
+            `Subtotal: Rs ${subtotal.toFixed(2)}`,
+            `VAT (${vatPct}%): Rs ${vatAmt.toFixed(2)}`,
+            `Discount: -Rs ${discount.toFixed(2)}`,
+            `Service Fee: Rs ${fee.toFixed(2)}`,
+            `Grand Total: Rs ${grand.toFixed(2)}`,
+            ``,
+            `Generated by Business Manager Pro (e-receipt generator).`
+          ].join('\n'));
+          window.open(`https://wa.me/?text=${text}`,'_blank');
+        }catch(e){ showToast('Nothing to share yet'); }
+      });
+    })();
+
+    // ===== Clients =====
+    const LS_C='bmp_clients_v1';
+    function cKey(){ const u=getUser(); return u ? `${LS_C}:${u.email}` : `${LS_C}:__anon__`; }
+    function loadClients(){ try{ return JSON.parse(localStorage.getItem(cKey()))||[] }catch(e){ return [] } }
+    function saveClients(list){ localStorage.setItem(cKey(), JSON.stringify(list)); }
+    function renderClients(){
+      const body=document.getElementById('clients-body'); const empty=document.getElementById('clients-empty');
+      if(!body) return;
+      const list=loadClients();
+      body.innerHTML='';
+      if(!list.length){ empty.classList.remove('hidden'); return; }
+      empty.classList.add('hidden');
+      list.forEach(c=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`
+          <td>${c.name||''}</td>
+          <td>${c.phone||''}</td>
+          <td>${c.email||''}</td>
+          <td>${c.total||0}</td>
+          <td>${c.last||'—'}</td>
+          <td class="flex gap-2">
+            <button class="btn btn-ghost edit">Edit</button>
+            <button class="btn btn-ghost del">Delete</button>
+          </td>`;
+        tr.querySelector('.edit').addEventListener('click',()=>editClient(c.id));
+        tr.querySelector('.del').addEventListener('click',()=>{ saveClients(loadClients().filter(x=>x.id!==c.id)); renderClients(); showToast('Client deleted'); });
+        body.appendChild(tr);
+      });
+    }
+    function newClientId(){ return 'C'+Math.random().toString(36).slice(2,9); }
+    function addClientPrompt(){
+      const name=prompt('Client name'); if(!name) return;
+      const phone=prompt('Phone (optional)')||'';
+      const email=prompt('Email (optional)')||'';
+      const list=loadClients(); list.push({id:newClientId(), name, phone, email, total:0, last:'—'}); saveClients(list); renderClients(); showToast('Client added');
+    }
+    function editClient(id){
+      const list=loadClients(); const c=list.find(x=>x.id===id); if(!c) return;
+      const name=prompt('Client name', c.name)||c.name;
+      const phone=prompt('Phone', c.phone)||c.phone;
+      const email=prompt('Email', c.email)||c.email;
+      c.name=name; c.phone=phone; c.email=email;
+      saveClients(list); renderClients(); showToast('Client updated');
+    }
+    function upsertClientFromReceipt(r){
+      const list=loadClients();
+      const name=r.customer;
+      let c=list.find(x=>x.name.toLowerCase()===name.toLowerCase());
+      if(!c){ c={id:newClientId(), name, phone:'', email:'', total:0, last:'—'}; list.push(c); }
+      c.total=(c.total||0)+1; c.last=r.date;
+      saveClients(list); renderClients();
+    }
+    document.getElementById('add-client')?.addEventListener('click',addClientPrompt);
+    document.getElementById('clients-export')?.addEventListener('click',()=>{
+      const list=loadClients();
+      const rows=[['Name','Phone','Email','Total Receipts','Last Receipt']].concat(list.map(c=>[c.name,c.phone,c.email,c.total,c.last]));
+      const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+      const blob=new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob);
+      const a=document.createElement('a'); a.href=url; a.download='clients.csv'; a.click(); URL.revokeObjectURL(url);
+    });
+    document.getElementById('clients-import')?.addEventListener('change',e=>{
+      const file=e.target.files[0]; if(!file) return;
+      const reader=new FileReader();
+      reader.onload=()=>{
+        const lines=String(reader.result).split(/\r?\n/).slice(1).filter(Boolean);
+        const list=loadClients();
+        lines.forEach(line=>{
+          const cols=line.split(',').map(s=>s.replace(/^"|"$/g,'').replace(/""/g,'"'));
+          const [name,phone,email,total,last]=cols;
+          if(name){ list.push({id:newClientId(), name, phone, email, total: Number(total||0), last: last||'—'}); }
+        });
+        saveClients(list); renderClients(); showToast('Clients imported');
+      };
+      reader.readAsText(file);
+    });
+
+    // ===== JUICE Flow (stub) =====
+function copyJuice(){ navigator.clipboard.writeText('23054960101').then(()=>showToast('JUICE number copied')); }
+function copyRef(){ const t=document.getElementById('juice-ref')?.textContent||''; if(t) navigator.clipboard.writeText(t).then(()=>showToast('Reference copied')); }
+
+    function openJuice(planName, amount){
+      const JUICE_NUMBER = '23054960101';
+      const agree=document.getElementById('agree-terms');
+      if(agree && !agree.checked){ showToast('Please agree to Terms first'); return; }
+      const u=getUser(); if(!u){ showToast('Please log in first'); activateTab('account'); return; }
+      pendingPay={ plan: planName.toLowerCase().replace('+','').replace(/\s+/g,''), amount, userEmail: u.email };
+      document.getElementById('juice-plan').textContent=planName;
+      // generate QR payload (placeholder format)
+      const payload = `JUICE:${JUICE_NUMBER}|AMOUNT:${amount}|PLAN:${planName}|REF:${Math.floor(Math.random()*899999+100000)}`;
+      document.getElementById('juice-qr').innerHTML='';
+      try { new QRCode(document.getElementById('juice-qr'), { text: payload, width: 128, height: 128 }); } catch(e) {}
+      document.getElementById('juice-amount').textContent=`Rs ${amount}`;
+      const refCode = `PLN-${Math.floor(Math.random()*899999+100000)}`;
+      document.getElementById('juice-ref').textContent=refCode;
+      document.getElementById('juice-modal').classList.add('show');
+    }
+    function closeJuice(){ document.getElementById('juice-modal').classList.remove('show'); }
+    function markPaid(){
+      const proof = document.getElementById('juice-proof').value.trim();
+      if(!proof){ showToast('Enter payment reference'); return; }
+      if(!pendingPay){ closeJuice(); return; }
+      const start=new Date(), end=new Date(start); end.setMonth(end.getMonth()+1);
+      setPlan({type:pendingPay.plan.includes('business')?'business':pendingPay.plan, start:start.toISOString(), end:end.toISOString(), userEmail: pendingPay.userEmail, method:'JUICE', proof});
+      closeJuice();
+      showToast('Payment recorded — plan activated');
+      activateTab('receipts');
+    }
+
+    // Developer sanity tests
+    (function runTests(){
+      try{
+        console.debug('[TEST] activateTab exists:', typeof window.activateTab==='function');
+        activateTab('home');
+        const homeVisible = !document.getElementById('view-home').classList.contains('hidden');
+        console.debug('[TEST] activateTab("home") visible:', homeVisible);
+      }catch(e){}
+    })();
+  
+    // ===== PayPal (stub) =====
+    function openPaypal(planName, amount){
+      const agree=document.getElementById('agree-terms');
+      if(agree && !agree.checked){ showToast('Please agree to Terms first'); return; }
+      const u=getUser(); if(!u){ showToast('Please log in first'); activateTab('account'); return; }
+      pendingPay={ plan: planName.toLowerCase().replace('+','').replace(/\s+/g,''), amount, userEmail: u.email };
+      document.getElementById('paypal-plan').textContent=planName;
+      document.getElementById('paypal-amount').textContent='Rs '+amount;
+      document.getElementById('paypal-modal').classList.add('show');
+    }
+    function closePaypal(){ document.getElementById('paypal-modal').classList.remove('show'); }
+    function markPaidPaypal(){
+      const proof = (document.getElementById('paypal-proof')||{}).value||'';
+      if(!proof){ showToast('Enter transaction ID'); return; }
+      if(!pendingPay){ closePaypal(); return; }
+      const start=new Date(), end=new Date(start); end.setMonth(end.getMonth()+1);
+      setPlan({type:pendingPay.plan.includes('business')?'business':pendingPay.plan, start:start.toISOString(), end:end.toISOString(), userEmail: pendingPay.userEmail, method:'PAYPAL', proof});
+      closePaypal();
+      showToast('Payment recorded — plan activated (PayPal)');
+      activateTab('receipts');
+    }
+
+    // ===== Monthly Chart =====
+    function monthlySeries(monthsBack=6){
+      const recs=loadR();
+      const now=new Date();
+      const map=new Map();
+      for(let i=monthsBack-1;i>=0;i--){
+        const d=new Date(now.getFullYear(), now.getMonth()-i, 1);
+        const key = d.toISOString().slice(0,7);
+        map.set(key, 0);
+      }
+      recs.forEach(r=>{
+        const key=(r.date||'').slice(0,7);
+        if(map.has(key)) map.set(key, map.get(key)+Number(r.grand||0));
+      });
+      const labels=[...map.keys()];
+      const data=[...map.values()];
+      return {labels, data};
+    }
+    let chartMonthly=null;
+    function renderMonthlyChart(){
+      const el=document.getElementById('chart-monthly');
+      if(!el || typeof Chart==='undefined') return;
+      const {labels, data} = monthlySeries(6);
+      if(chartMonthly){ chartMonthly.destroy(); }
+      chartMonthly = new Chart(el.getContext('2d'), {
+        type: 'bar',
+        data: { labels, datasets: [{ label:'Monthly total (Rs)', data }] },
+        options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ y:{ beginAtZero:true } } }
+      });
+    }
+    // Re-render chart when data changes
+    (function(){
+      const _saveR = saveR;
+      window.saveR = function(list){ _saveR(list); try{ renderMonthlyChart(); }catch(e){} }
+      document.addEventListener('DOMContentLoaded', ()=>{ try{ renderMonthlyChart(); }catch(e){} });
+    })();
+    
+</script>
+
+<script>
+/* ===== SECURITY & FEATURES PACK (guarded) ===== */
+(function(){
+  // ---------- 1) VALIDATION & SANITIZATION ----------
+  if(!window.validators){
+    window.validators = {
+      email: (email)=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email||'')),
+      phone: (phone)=>/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/.test(String(phone||'')),
+      brn:   (brn)=>/^[Cc]\d{8}$/.test(String(brn||'')),
+      money: (n)=>!isNaN(n) && Number(n) >= 0,
+      sanitizeHTML: (s)=>String(s||'').replace(/[<>\"']/g,''),
+      sanitizeForStorage: (s)=>String(s||'').trim().substring(0,500)
+    };
+  }
+  if(!window.validateReceiptData){
+    window.validateReceiptData = function(data){
+      if(!data) throw new Error('No data');
+      if(!data.customer || data.customer.length<2) throw new Error('Valid customer name required');
+      if(!Array.isArray(data.items) || !data.items.length) throw new Error('At least one item required');
+      if(!validators.money(data.grand)) throw new Error('Invalid amount');
+      // sanitize strings
+      data.customer = validators.sanitizeHTML(data.customer);
+      data.items.forEach(it=>{ it.desc = validators.sanitizeHTML(it.desc); });
+      return data;
+    };
+  }
+
+  // ---------- 1.2) localStorage "encryption" (simple base64 wrapper) ----------
+  if(!window.dataProtection){
+    window.dataProtection = {
+      encrypt: (obj)=>{ try{ return btoa(encodeURIComponent(JSON.stringify(obj))); }catch(e){ return ''; } },
+      decrypt: (str)=>{
+        try{ return JSON.parse(decodeURIComponent(atob(String(str||'')))); }catch(e){ return null; }
+      }
+    };
+  }
+
+  // Wrap loadR/saveR if present, else define secure versions
+  function rKey(){ try{ const u=JSON.parse(localStorage.getItem('bmp_user_v1')||'null'); return u?`bmp_receipts_v1:${u.email}`:'bmp_receipts_v1:__anon__'; }catch(e){ return 'bmp_receipts_v1:__anon__'; } }
+  if(typeof window.loadR==='function'){
+    const _loadR = window.loadR;
+    window.loadR = function(){
+      // try encrypted first
+      const raw = localStorage.getItem(rKey());
+      if(raw && /^[A-Za-z0-9+/=]+$/.test(raw)){
+        const dec = dataProtection.decrypt(raw);
+        if(Array.isArray(dec)) return dec;
+      }
+      // fallback to original
+      return _loadR();
+    };
+  }else{
+    window.loadR = function(){ try{
+      const raw = localStorage.getItem(rKey());
+      if(!raw) return [];
+      const dec = dataProtection.decrypt(raw);
+      return Array.isArray(dec) ? dec : (JSON.parse(raw)||[]);
+    }catch(e){ return []; } };
+  }
+  if(typeof window.saveR==='function'){
+    const _saveR = window.saveR;
+    window.saveR = function(list){
+      try{ localStorage.setItem(rKey(), dataProtection.encrypt(list||[])); }
+      catch(e){ /* quota */ }
+      return _saveR(list);
+    };
+  }else{
+    window.saveR = function(list){ try{ localStorage.setItem(rKey(), dataProtection.encrypt(list||[])); }catch(e){} };
+  }
+
+  // Inject safe element helper (for future use)
+  if(!window.createSafeElement){
+    window.createSafeElement = function(tag, attrs, text){
+      const el=document.createElement(tag);
+      Object.keys(attrs||{}).forEach(k=>{ if(k==='className') el.className=attrs[k]; else el.setAttribute(k, attrs[k]); });
+      if(text!=null) el.textContent=String(text);
+      return el;
+    };
+  }
+
+  // ---------- 2) PAYMENT GATEWAY STRUCTURE (placeholders) ----------
+  if(!window.paymentGateway){
+    window.paymentGateway = {
+      API_KEY: (window.ENV_API_KEY||'[set in env]'),
+      MERCHANT_ID: (window.ENV_MERCHANT_ID||'[set in env]'),
+      async initiatePayment(plan, amount, userId){
+        try{
+          const res = await fetch('/api/create-payment', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ plan, amount, userId, returnUrl: window.location.href, webhookUrl:'/api/payment-webhook'})
+          });
+          const data = await res.json();
+          return data.paymentUrl;
+        }catch(e){ throw new Error('Payment initialization failed'); }
+      },
+      async verifyPayment(paymentId){
+        const res = await fetch(`/api/verify-payment/${paymentId}`);
+        return res.json();
+      }
+    };
+  }
+
+  // ---------- 3) MULTI-CURRENCY ----------
+  const currencies = {
+    MUR:{ symbol:'Rs', name:'Mauritian Rupee', decimals:2 },
+    USD:{ symbol:'$',  name:'US Dollar',       decimals:2 },
+    EUR:{ symbol:'€',  name:'Euro',            decimals:2 },
+    GBP:{ symbol:'£',  name:'British Pound',   decimals:2 },
+  };
+  function currencyKey(){ return 'bmp_currency_v1'; }
+  function getCurrency(){ return localStorage.getItem(currencyKey()) || 'MUR'; }
+  function setCurrency(c){ localStorage.setItem(currencyKey(), c); try{ if(typeof renderDashboard==='function') renderDashboard(); }catch(e){} try{ if(typeof renderMonthlyChart==='function') renderMonthlyChart(); }catch(e){} }
+  function moneyFmt(n){ const cur=currencies[getCurrency()]||currencies.MUR; const v = (Number(n)||0).toFixed(cur.decimals); return `${cur.symbol} ${v}`; }
+  // Patch global money() if present
+  if(typeof window.money==='function'){
+    const _money = window.money;
+    window.money = function(n){ try{ return moneyFmt(n); }catch(e){ return _money(n); } };
+  }else{
+    window.money = moneyFmt;
+  }
+  // Bind currency dropdown
+  (function(){
+    const sel = document.getElementById('currency-select');
+    if(!sel) return;
+    sel.value = getCurrency();
+    sel.addEventListener('change', ()=>setCurrency(sel.value));
+  })();
+
+  // ---------- 3.3) EDIT RECEIPT ----------
+  if(!window.editReceipt){
+    window.editReceipt = function(receiptId){
+      try{
+        const recs = loadR();
+        const r = recs.find(x=>x.id===receiptId);
+        if(!r) return;
+        const cust = document.getElementById('cust-name'); if(cust) cust.value = r.customer||'';
+        const ref  = document.getElementById('ref'); if(ref) ref.value = r.ref||'';
+        // items
+        const tbody = document.getElementById('items-body') || document.querySelector('#items tbody') || null;
+        if(tbody) tbody.innerHTML='';
+        (r.items||[]).forEach(it=>{ if(typeof addItemRow==='function') addItemRow(it.desc, it.qty, it.unit); });
+        const saveBtn = document.getElementById('save-rcp'); if(saveBtn){ saveBtn.dataset.editId = r.id; saveBtn.textContent='Update Receipt'; }
+        if(typeof activateTab==='function') activateTab('receipts');
+      }catch(e){ console.error(e); }
+    };
+  }
+
+  // Hook save button to update vs create
+  (function(){
+    const btn = document.getElementById('save-rcp');
+    if(!btn) return;
+    const _clicks = btn.getAttribute('data-wired');
+    if(_clicks==='1') return;
+    btn.setAttribute('data-wired','1');
+    btn.addEventListener('click', function(){
+      try{
+        if(!window.collectReceipt) return;
+        let data = collectReceipt(true);
+        data = validateReceiptData(data);
+        // editing?
+        const editId = btn.dataset.editId;
+        const list = loadR();
+        if(editId){
+          const idx = list.findIndex(x=>x.id===editId);
+          if(idx>=0) list[idx]=data;
+          btn.textContent='Save Receipt'; btn.dataset.editId='';
+        }else{
+          list.push(data);
+        }
+        saveR(list);
+        if(typeof renderHistory==='function') renderHistory();
+        if(typeof renderDashboard==='function') renderDashboard();
+        if(typeof populateMonthFilter==='function') populateMonthFilter();
+        if(typeof showToast==='function') showToast(editId?'Receipt updated':'Receipt saved');
+      }catch(err){
+        try{ showToast(err.message||'Please complete the form'); }catch(e){ alert(err.message||'Please complete the form'); }
+      }
+    });
+  })();
+
+  // ---------- 3.4) PAYMENT STATUS FIELDS (defaults) ----------
+  if(!window.ensureReceiptPaymentFields){
+    window.ensureReceiptPaymentFields = function(r){
+      r.paymentStatus = r.paymentStatus || 'unpaid';
+      r.amountPaid = Number(r.amountPaid||0);
+      r.paymentDate = r.paymentDate||null;
+      r.paymentMethod = r.paymentMethod||null;
+      r.dueDate = r.dueDate||null;
+      r.notes = r.notes||'';
+      return r;
+    };
+  }
+
+  // Wrap collectReceipt to add defaults and sanitization
+  if(typeof window.collectReceipt==='function'){
+    const _collect = window.collectReceipt;
+    window.collectReceipt = function(strict){
+      const r = _collect(strict);
+      return ensureReceiptPaymentFields(validateReceiptData(r));
+    };
+  }
+
+  // ---------- 5) ANALYTICS ----------
+  if(!window.analytics){
+    window.analytics = {
+      getMetrics(period='month'){
+        const recs = loadR();
+        const now = new Date();
+        const start = new Date(now.getFullYear(), now.getMonth(), 1);
+        const inPeriod = recs.filter(r=> new Date(r.date)>=start );
+        const revenue = inPeriod.reduce((s,r)=>s+Number(r.grand||0),0);
+        const count = inPeriod.length;
+        const aov = count? revenue/count : 0;
+        const topClients = (()=>{
+          const m = new Map();
+          recs.forEach(r=> m.set(r.customer, (m.get(r.customer)||0) + Number(r.grand||0)));
+          return [...m.entries()].sort((a,b)=>b[1]-a[1]).slice(0,5).map(([name,amt])=>({name,amt}));
+        })();
+        const revenueByDay = (()=>{
+          const arr=[]; for(let i=29;i>=0;i--){ const d=new Date(now); d.setDate(now.getDate()-i); const key=d.toISOString().slice(0,10); const sum=recs.filter(r=>(r.date||'').slice(0,10)===key).reduce((s,r)=>s+Number(r.grand||0),0); arr.push({date:key, value:sum}); } return arr;
+        })();
+        const vatCollected = inPeriod.reduce((s,r)=>s+Number(r.vatAmt||0),0);
+        return { revenue, receiptsCount: count, averageOrderValue: aov, topClients, revenueByDay, vatCollected };
+      }
+    };
+  }
+  // Revenue chart render
+  if(!window.renderRevenueChart){
+    window.renderRevenueChart = function(){
+      try{
+        const el = document.getElementById('revenueChart'); if(!el || typeof Chart==='undefined') return;
+        const data = analytics.getMetrics();
+        const labels = data.revenueByDay.map(x=>x.date.slice(5));
+        const values = data.revenueByDay.map(x=>x.value);
+        if(window._revChart){ window._revChart.destroy(); }
+        window._revChart = new Chart(el.getContext('2d'), {
+          type:'line',
+          data:{ labels, datasets:[{ label:'Revenue (last 30 days)', data: values, fill:true }]},
+          options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ y:{ beginAtZero:true } } }
+        });
+      }catch(e){}
+    };
+  }
+  document.addEventListener('DOMContentLoaded', ()=>{ try{ renderRevenueChart(); }catch(e){} });
+
+  // ---------- 7) OFFLINE: Service Worker register ----------
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', ()=>{ try{ navigator.serviceWorker.register('sw.js'); }catch(e){} });
+  }
+
+  // ---------- 8) AUTO-SAVE DRAFT ----------
+  function getItems(){ try{ return (window.recalcTotals?recalcTotals():{items:[]}).items||[] }catch(e){ return []; } }
+  let autoSaveTimer;
+  function saveDraft(){
+    const draft = {
+      customer: (document.getElementById('cust-name')||{}).value||'',
+      items: getItems(),
+      vat: (document.getElementById('vat')||{}).value||'',
+      discount: (document.getElementById('discount')||{}).value||'',
+      fee: (document.getElementById('fee')||{}).value||'',
+      timestamp: new Date().toISOString()
+    };
+    try{ localStorage.setItem('bmp_draft', JSON.stringify(draft)); }catch(e){}
+    try{ showToast('Draft saved'); }catch(e){}
+  }
+  window.enableAutoSave = function(){
+    const scope = document.getElementById('view-receipts')||document;
+    scope.querySelectorAll('input, textarea').forEach(inp=>{
+      inp.addEventListener('input', ()=>{ clearTimeout(autoSaveTimer); autoSaveTimer = setTimeout(saveDraft, 800); });
+    });
+  };
+  window.loadDraft = function(){
+    try{
+      const draft = JSON.parse(localStorage.getItem('bmp_draft')||'null'); if(!draft) return;
+      if(!confirm('Load previous draft?')) return;
+      if(draft.customer) (document.getElementById('cust-name')||{}).value=draft.customer;
+      (draft.items||[]).forEach(it=>{ if(typeof addItemRow==='function') addItemRow(it.desc, it.qty, it.unit); });
+      if(draft.vat) (document.getElementById('vat')||{}).value=draft.vat;
+      if(draft.discount) (document.getElementById('discount')||{}).value=draft.discount;
+      if(draft.fee) (document.getElementById('fee')||{}).value=draft.fee;
+    }catch(e){}
+  };
+  document.addEventListener('DOMContentLoaded', ()=>{ try{ enableAutoSave(); }catch(e){} });
+
+  // ---------- 9) KEYBOARD SHORTCUTS ----------
+  document.addEventListener('keydown', (e)=>{
+    if((e.ctrlKey||e.metaKey) && e.key==='s'){ e.preventDefault(); document.getElementById('save-rcp')?.click(); }
+    if((e.ctrlKey||e.metaKey) && e.key==='p'){ e.preventDefault(); document.getElementById('generate')?.click(); }
+    if((e.ctrlKey||e.metaKey) && e.key==='n'){ e.preventDefault(); if(typeof activateTab==='function') activateTab('receipts'); if(typeof clearReceiptForm==='function') clearReceiptForm(); }
+  });
+
+  // ---------- 10) ERROR LOGGING ----------
+  if(!window.errorLog){
+    window.errorLog = {
+      log(level, message, context){
+        const entry = { timestamp:new Date().toISOString(), level, message, context: context||{}, userAgent:navigator.userAgent, url:location.href };
+        const logs = JSON.parse(localStorage.getItem('error_logs')||'[]');
+        logs.push(entry); if(logs.length>100) logs.shift();
+        localStorage.setItem('error_logs', JSON.stringify(logs));
+        if(level==='error' || level==='critical'){ this.sendToServer(entry); }
+      },
+      async sendToServer(entry){
+        try{ await fetch('/api/logs', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(entry) }); }catch(e){}
+      }
+    };
+  }
+  window.addEventListener('error', (e)=>{ try{ errorLog.log('error', e.message, { filename:e.filename, lineno:e.lineno, colno:e.colno }); }catch(_){} });
+})();
+</script>
+
+</body>
+</html>
