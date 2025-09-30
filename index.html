@@ -861,25 +861,33 @@ function runSelfTests(){
 }
 
 
-/* ========= Boot ========= */
-document.addEventListener('DOMContentLoaded', ()=>{
-  // Show correct account view
+<!-- ========= Boot (REPLACE THIS WHOLE BLOCK) ========= -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // keep startup super safe
+  try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch(e) {}
+  try { if (location.hash) history.replaceState(null, '', location.pathname + location.search); } catch(e) {}
+  window.scrollTo(0, 0);
+
+  // account view
   const user = getUser();
   if (user) { showLoggedIn(); } else { showLogin(); }
 
-  renderHistory(); renderClients(); renderDashboard();
+  // initial renders
+  renderHistory();
+  renderClients();
+  renderDashboard();
 
-  // Default route: always start on Home and drop any #hash
+  // always start at Home once
+  go('home');
+
+  // hash nav (go() will gate private tabs)
   const restricted = ['plans','dashboard','receipts','clients','test'];
-  let initial = 'home';
-  try { history.replaceState(null, '', location.pathname); } catch (e) {}
-  go(initial);
-
-  // If someone types a restricted hash later & not signed in, bounce to Home
-  window.addEventListener('hashchange', ()=>{
-    let h = (location.hash || '').replace('#','') || 'home';
+  window.addEventListener('hashchange', (ev) => {
+    ev.preventDefault();
+    const h = (location.hash || '').slice(1) || 'home';
     if (!getUser() && restricted.includes(h)) {
-      history.replaceState(null, '', location.pathname);
+      try { history.replaceState(null, '', location.pathname + location.search); } catch(e) {}
       go('home');
     } else {
       go(h);
@@ -887,17 +895,20 @@ document.addEventListener('DOMContentLoaded', ()=>{
   });
 
   // Prefill date today
-  const d=$('date'); if(d) d.value=new Date().toISOString().slice(0,10);
+  const d = $('date'); 
+  if (d) d.value = new Date().toISOString().slice(0,10);
 
   // Run self-tests ONLY when '?test=1' is in the URL
   if (location.search.includes('test=1')) setTimeout(runSelfTests, 0);
 
-  // Safety: after everything settles, ensure we're on Home and clear any #hash
-  setTimeout(function () {
-    try { history.replaceState(null, '', location.pathname); } catch (e) {}
-    if (typeof go === 'function') go('home');
-  }, 25);
+  // optional: show first JS error instead of silent failure
+  window.addEventListener('error', (e)=>{
+    console.error('JS error:', e.message, e.filename+':'+e.lineno);
+    toast('Error: ' + e.message);
+  });
+  window.addEventListener('unhandledrejection', (e)=>{
+    console.error('Unhandled promise:', e.reason);
+    toast('Error: ' + (e.reason && e.reason.message || 'Unhandled promise'));
+  });
 });
 </script>
-</body>
-</html>
