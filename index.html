@@ -1,874 +1,365 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<script>
-/* HARD NUKE (temporary): unregister SWs + delete caches each load */
-(function(){
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(rs => {
-      rs.forEach(r => r.unregister());
-    }).then(() => {
-      if (window.caches && caches.keys) {
-        caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
-      }
-    });
-  }
-})();
-</script>
-<title>Business Manager Pro</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<!-- Note: PayPal SDK below uses sandbox client-id=sb (internal). No user-facing sandbox text shown. -->
-<script id="paypal-sdk" src="https://www.paypal.com/sdk/js?client-id=sb&currency=USD"></script>
-<style>
-  .tab{display:none}.tab.active{display:block}
-  .card{background:#fff;border:1px solid #e5e7eb;border-radius:1rem;padding:1rem}
-  .pill{padding:.25rem .5rem;border-radius:.5rem;border:1px solid #e5e7eb}
-  .btn{padding:.6rem 1rem;border-radius:.6rem;font-weight:600}
-  .btn-primary{background:#2563eb;color:#fff}
-  .btn-ghost{background:#f3f4f6}
-  .toast{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:.7rem 1rem;border-radius:.6rem;opacity:0;transition:opacity .2s}
-  .toast.show{opacity:1}
-  table{width:100%} th,td{padding:.5rem .6rem} th{background:#f9fafb;text-align:left;font-weight:700}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Business Manager Pro — Smart E‑Receipts for Modern Businesses</title>
+  <meta name="description" content="Generate professional e‑receipts in seconds. Analytics, client library, exports, and JUICE/PayPal payments. Free 3‑day trial." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .container{max-width:1100px}
+    .glass{backdrop-filter:saturate(160%) blur(8px)}
+    .shadow-soft{box-shadow:0 10px 20px rgba(0,0,0,.06),0 6px 6px rgba(0,0,0,.06)}
+  </style>
 </head>
-<body class="bg-gray-50 text-gray-800">
-
-<!-- ===== NAV ===== -->
-<header class="bg-white border-b">
-  <div class="max-w-6xl mx-auto px-4 py-3 flex items-center gap-4">
-    <div class="w-9 h-9 rounded-full bg-blue-600 text-white grid place-items-center font-bold">B</div>
-    <div class="font-bold">Business Manager Pro</div>
-    <nav class="ml-4 flex gap-4 text-sm">
-      <button class="hover:text-blue-600" onclick="go('home')">Home</button>
-      <button class="hover:text-blue-600" onclick="go('receipts')">E-Receipts</button>
-      <button class="hover:text-blue-600" onclick="go('clients')">Clients</button>
-      <button class="hover:text-blue-600" onclick="go('dashboard')">Dashboard</button>
-      <button class="hover:text-blue-600" onclick="go('plans')">Plans</button>
-      <button class="hover:text-blue-600" onclick="go('account')">Account</button>
-    </nav>
-    <div class="ml-auto text-sm flex items-center gap-2">
-      <span class="pill" id="currency-pill">Currency: Rs (MUR)</span>
-      <span id="auth-pill" class="text-gray-600">Not signed in</span>
+<body class="bg-slate-50 text-slate-800">
+  <!-- Header -->
+  <header class="sticky top-0 z-30 bg-white/80 glass border-b border-slate-200">
+    <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+      <a href="#" class="flex items-center gap-2">
+        <span class="inline-flex h-8 w-8 rounded-xl bg-blue-600"></span>
+        <span class="font-semibold tracking-tight">Business Manager Pro</span>
+      </a>
+      <nav class="hidden md:flex items-center gap-6 text-sm">
+        <a href="#features" class="hover:text-blue-700">Features</a>
+        <a href="#how" class="hover:text-blue-700">How it works</a>
+        <a href="#pricing" class="hover:text-blue-700">Pricing</a>
+        <a href="#faq" class="hover:text-blue-700">FAQ</a>
+      </nav>
+      <div class="flex items-center gap-2">
+        <a href="/app/#login" class="hidden sm:inline-block px-3 py-2 text-sm rounded-lg border border-slate-300 hover:bg-slate-100">Sign in</a>
+        <a href="/app/#signup" class="px-3 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700">Start free trial</a>
+      </div>
     </div>
-  </div>
-</header>
+  </header>
 
-<main class="max-w-6xl mx-auto px-4 py-8">
-
-  <!-- ===== HOME ===== -->
-  <section id="view-home" class="tab active">
-    <div class="grid gap-6 lg:grid-cols-2 items-start">
-      <div>
-        <h1 class="text-4xl sm:text-5xl font-extrabold leading-tight">
-          Generate <span class="text-blue-600">Professional E-Receipts</span> in Seconds
-        </h1>
-        <p class="mt-4 text-gray-700">Auto reference numbers, BRN support, and instant PDF receipts. Faster than Excel, simpler than accounting software.</p>
-        <ul class="mt-4 list-disc pl-5 space-y-2">
-          <li>Auto reference numbers — no typos.</li>
-          <li>BRN & business info saved once — always prefilled.</li>
-          <li>Professional PDF receipts ready for clients.</li>
-          <li>Access anywhere (phone, laptop).</li>
-          <li>Quick setup + affordable plans.</li>
-        </ul>
-        <div class="mt-5 p-3 card bg-blue-50 border-blue-200 text-blue-900 text-sm">
-          We generate e-receipts only. Issuer is responsible for content and any external links/payments.
+  <!-- Hero -->
+  <section class="relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-b from-blue-50 to-transparent"></div>
+    <div class="container mx-auto px-4 py-14 md:py-20 relative">
+      <div class="grid md:grid-cols-2 items-center gap-10">
+        <div>
+          <h1 class="text-3xl md:text-5xl font-bold tracking-tight leading-tight">
+            Smart E‑Receipts for <span class="text-blue-700">Modern Businesses</span>
+          </h1>
+          <p class="mt-4 text-slate-600 md:text-lg">
+            Create and send professional e‑receipts in seconds. Track revenue, export to Excel, and pay your subscription via JUICE or PayPal.
+          </p>
+          <ul class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+            <li class="flex items-start gap-2"><span class="mt-1 h-5 w-5 rounded-full bg-green-500"></span> Instant PDF receipts</li>
+            <li class="flex items-start gap-2"><span class="mt-1 h-5 w-5 rounded-full bg-green-500"></span> Client & item library</li>
+            <li class="flex items-start gap-2"><span class="mt-1 h-5 w-5 rounded-full bg-green-500"></span> Analytics dashboard</li>
+            <li class="flex items-start gap-2"><span class="mt-1 h-5 w-5 rounded-full bg-green-500"></span> MUR + multi‑currency</li>
+          </ul>
+          <div class="mt-8 flex flex-wrap items-center gap-3">
+            <a href="/app/#signup" class="px-5 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 shadow-soft">Start 3‑day trial</a>
+            <a href="/app/#receipts" class="px-5 py-3 rounded-xl border border-slate-300 hover:bg-slate-100">See demo</a>
+            <p class="w-full sm:w-auto text-xs text-slate-500">No credit card needed.</p>
+          </div>
         </div>
-        <div class="mt-5 flex flex-wrap gap-3">
-          <button class="btn btn-ghost" onclick="go('account')">Create Account</button>
-          <button class="btn btn-primary" onclick="go('plans')">Activate Plan</button>
+        <div class="relative">
+          <div class="rounded-2xl border bg-white shadow-soft p-4">
+            <!-- Dashboard mock -->
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-xs text-slate-500">This month</p>
+                <p class="text-2xl font-semibold">Rs 124,560</p>
+              </div>
+              <div class="text-xs text-green-600">+12.4%</div>
+            </div>
+            <div aria-hidden="true" class="mt-3 h-32 rounded-xl bg-gradient-to-r from-blue-100 to-blue-200"></div>
+            <div class="mt-4 grid grid-cols-3 gap-3 text-sm">
+              <div class="rounded-xl border p-3">
+                <p class="text-xs text-slate-500">Receipts</p>
+                <p class="font-semibold">328</p>
+              </div>
+              <div class="rounded-xl border p-3">
+                <p class="text-xs text-slate-500">Clients</p>
+                <p class="font-semibold">142</p>
+              </div>
+              <div class="rounded-xl border p-3">
+                <p class="text-xs text-slate-500">Exports</p>
+                <p class="font-semibold">27</p>
+              </div>
+            </div>
+            <div class="mt-6 rounded-2xl border p-4">
+              <div class="flex items-center justify-between">
+                <p class="font-medium">Receipt preview</p>
+                <button class="text-sm px-3 py-1 rounded-lg border hover:bg-slate-100">Download PDF</button>
+              </div>
+              <div class="mt-3 h-44 rounded-xl bg-slate-100 grid place-content-center text-slate-400 text-sm">PDF preview</div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Mock receipt -->
-      <div class="card">
-        <div class="flex items-center gap-2 mb-3">
-          <div class="w-9 h-9 rounded-full bg-blue-600 text-white grid place-items-center font-semibold">B</div>
-          <div class="font-semibold">Receipt Mock</div>
-          <span class="ml-auto text-blue-700 text-xs pill">Preview</span>
+      <!-- Social proof strip -->
+      <div class="mt-12 flex flex-wrap items-center gap-6 text-slate-500 text-sm">
+        <span class="inline-flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full bg-green-500"></span> Trusted by 500+ businesses</span>
+        <span>10,000+ receipts generated</span>
+        <span>Bank‑grade encryption</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section id="how" class="py-14 md:py-20">
+    <div class="container mx-auto px-4">
+      <h2 class="text-2xl md:text-3xl font-semibold tracking-tight">How it works</h2>
+      <p class="mt-2 text-slate-600">Three quick steps to your first receipt.</p>
+      <div class="mt-8 grid md:grid-cols-3 gap-6">
+        <div class="rounded-2xl border bg-white p-6 shadow-soft">
+          <div class="h-10 w-10 rounded-xl bg-blue-600"></div>
+          <h3 class="mt-4 font-semibold">1) Create</h3>
+          <p class="text-sm text-slate-600">Enter client and items, auto‑generate reference numbers and dates.</p>
+        </div>
+        <div class="rounded-2xl border bg-white p-6 shadow-soft">
+          <div class="h-10 w-10 rounded-xl bg-blue-600"></div>
+          <h3 class="mt-4 font-semibold">2) Send</h3>
+          <p class="text-sm text-slate-600">Share via Email or WhatsApp, or download a branded PDF.</p>
+        </div>
+        <div class="rounded-2xl border bg-white p-6 shadow-soft">
+          <div class="h-10 w-10 rounded-xl bg-blue-600"></div>
+          <h3 class="mt-4 font-semibold">3) Track</h3>
+          <p class="text-sm text-slate-600">See revenue analytics and export CSV/Excel for accounting.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="py-14 md:py-20 bg-white">
+    <div class="container mx-auto px-4">
+      <h2 class="text-2xl md:text-3xl font-semibold tracking-tight">Everything you need to issue receipts</h2>
+      <p class="mt-2 text-slate-600">Built for freelancers, SMBs, and agencies in Mauritius and beyond.</p>
+
+      <div class="mt-8 grid md:grid-cols-3 gap-6 text-sm">
+        <div class="rounded-2xl border p-6">
+          <h3 class="font-semibold">Professional templates</h3>
+          <p class="mt-1 text-slate-600">Branded PDFs with logo, address, BRN, and signatures.</p>
+        </div>
+        <div class="rounded-2xl border p-6">
+          <h3 class="font-semibold">Client & item library</h3>
+          <p class="mt-1 text-slate-600">Save frequent clients and services; auto‑fill details.</p>
+        </div>
+        <div class="rounded-2xl border p-6">
+          <h3 class="font-semibold">Analytics dashboard</h3>
+          <p class="mt-1 text-slate-600">Track totals, categories, and payment status at a glance.</p>
+        </div>
+        <div class="rounded-2xl border p-6">
+          <h3 class="font-semibold">Exports & backups</h3>
+          <p class="mt-1 text-slate-600">CSV/Excel exports and secure cloud backups.</p>
+        </div>
+        <div class="rounded-2xl border p-6">
+          <h3 class="font-semibold">Payments</h3>
+          <p class="mt-1 text-slate-600">Accept JUICE and PayPal. Stripe coming soon.</p>
+        </div>
+        <div class="rounded-2xl border p-6">
+          <h3 class="font-semibold">Multi‑currency</h3>
+          <p class="mt-1 text-slate-600">MUR first, with USD/EUR/GBP support for foreign clients.</p>
+        </div>
+      </div>
+
+      <div id="demo" class="mt-10 rounded-2xl border bg-slate-100 p-4">
+        <div class="flex items-center justify-between gap-3">
+          <p class="font-medium">Interactive demo</p>
+          <div class="flex gap-2 text-sm">
+            <button class="px-3 py-1 rounded-lg border bg-white" data-demo="form">Receipt form</button>
+            <button class="px-3 py-1 rounded-lg border bg-white" data-demo="dash">Dashboard</button>
+            <button class="px-3 py-1 rounded-lg border bg-white" data-demo="pdf">PDF preview</button>
+          </div>
+        </div>
+        <div class="mt-4 grid md:grid-cols-2 gap-4">
+          <div id="demo-viewport" class="h-72 rounded-xl bg-white grid place-content-center text-slate-400">
+            Select a demo above
+          </div>
+          <div class="rounded-xl bg-white p-4">
+            <h4 class="font-semibold">Tips</h4>
+            <ul class="mt-2 list-disc list-inside text-sm text-slate-600">
+              <li>Use your logo for branded PDFs.</li>
+              <li>Save clients/items to move faster.</li>
+              <li>Export monthly for tax filing.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials / Social proof -->
+  <section class="py-14 md:py-20">
+    <div class="container mx-auto px-4">
+      <h2 class="text-2xl md:text-3xl font-semibold tracking-tight">Loved by growing businesses</h2>
+      <div class="mt-8 grid md:grid-cols-3 gap-6 text-sm">
+        <blockquote class="rounded-2xl border bg-white p-6 shadow-soft">
+          <p>“I issue receipts in under a minute now. Huge time saver.”</p>
+          <footer class="mt-3 text-slate-500">— Sarah, Freelancer</footer>
+        </blockquote>
+        <blockquote class="rounded-2xl border bg-white p-6 shadow-soft">
+          <p>“We replaced messy Excel files. The exports are perfect.”</p>
+          <footer class="mt-3 text-slate-500">— Raj, Retail owner</footer>
+        </blockquote>
+        <blockquote class="rounded-2xl border bg-white p-6 shadow-soft">
+          <p>“The JUICE payment link is a game changer for us.”</p>
+          <footer class="mt-3 text-slate-500">— Aisha, Tour operator</footer>
+        </blockquote>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section id="pricing" class="py-14 md:py-20 bg-white">
+    <div class="container mx-auto px-4">
+      <div class="flex items-end justify-between gap-4">
+        <div>
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight">Simple pricing</h2>
+          <p class="mt-2 text-slate-600">Start free. Upgrade when you’re ready.</p>
         </div>
         <div class="text-sm">
-          <div class="font-semibold">Business</div>
-          <div>Your Business Name</div>
-          <div class="text-gray-500">BRN: C20123456</div>
-          <div class="mt-3 border rounded">
-            <div class="grid grid-cols-2 text-xs bg-gray-50 px-3 py-2 font-semibold">
-              <div>DESCRIPTION</div><div class="text-right">TOTAL</div>
-            </div>
-            <div class="grid grid-cols-2 px-3 py-2 text-sm border-t">
-              <div>Service Example</div><div class="text-right">Rs 2,500</div>
-            </div>
-            <div class="grid grid-cols-2 px-3 py-2 text-sm border-t">
-              <div>Extra Charge</div><div class="text-right">Rs 100</div>
-            </div>
-            <div class="px-3 py-3 text-right font-semibold border-t">Grand Total: Rs 2,600</div>
+          <div class="inline-flex rounded-xl border overflow-hidden">
+            <button class="px-3 py-2 bg-white" data-bill="monthly">Monthly</button>
+            <button class="px-3 py-2 bg-slate-100" data-bill="semi">6 months</button>
+            <button class="px-3 py-2 bg-slate-100" data-bill="yearly">Yearly</button>
           </div>
         </div>
-        <div class="mt-3 text-xs text-gray-500 grid grid-cols-2">
-          <div>Ref: REF-2025-0001</div><div class="text-right">Date: 2025-09-25</div>
+      </div>
+
+      <div class="mt-8 grid md:grid-cols-2 gap-6">
+        <!-- Starter -->
+        <div class="rounded-2xl border bg-gradient-to-b from-slate-50 to-white p-6 shadow-soft">
+          <h3 class="text-xl font-semibold">Starter</h3>
+          <p class="mt-1 text-slate-600">Everything to issue receipts fast.</p>
+          <p class="mt-4 text-3xl font-bold"><span class="price" data-monthly="Rs 999" data-semi="Rs 5,394" data-yearly="Rs 10,788">Rs 999</span> <span class="text-base font-normal text-slate-500">/ plan</span></p>
+          <ul class="mt-4 space-y-2 text-sm">
+            <li>Up to 200 receipts / month</li>
+            <li>1 user</li>
+            <li>PDF exports</li>
+            <li>Email or WhatsApp share</li>
+          </ul>
+          <a href="/app/#signup" class="mt-6 inline-block px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">Start free</a>
+        </div>
+        <!-- Pro -->
+        <div class="rounded-2xl border bg-gradient-to-b from-blue-50 to-white p-6 shadow-soft">
+          <div class="inline-block mb-2 text-xs px-2 py-1 rounded-full bg-blue-600 text-white">Most popular</div>
+          <h3 class="text-xl font-semibold">Pro</h3>
+          <p class="mt-1 text-slate-600">Advanced features for teams.</p>
+          <p class="mt-4 text-3xl font-bold"><span class="price" data-monthly="Rs 1,499" data-semi="Rs 8,094" data-yearly="Rs 16,188">Rs 1,499</span> <span class="text-base font-normal text-slate-500">/ plan</span></p>
+          <ul class="mt-4 space-y-2 text-sm">
+            <li>Unlimited receipts</li>
+            <li>Up to 5 users</li>
+            <li>Client & item library</li>
+            <li>Analytics dashboard</li>
+            <li>JUICE & PayPal payments</li>
+          </ul>
+          <a href="/app/#signup?plan=pro" class="mt-6 inline-block px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">Go Pro</a>
         </div>
       </div>
-    </div>
-
-    <!-- Key features + FAQ -->
-    <div class="grid sm:grid-cols-2 gap-4 mt-10">
-      <div class="card"><div class="font-semibold">E-Receipts in 10 seconds</div><div class="text-sm text-gray-600">Fill items, taxes/discounts, and share.</div></div>
-      <div class="card"><div class="font-semibold">Smart client book</div><div class="text-sm text-gray-600">Auto-remember clients; view their receipt history.</div></div>
-      <div class="card"><div class="font-semibold">Exports</div><div class="text-sm text-gray-600">Excel/CSV for accountant or tax filing.</div></div>
-      <div class="card"><div class="font-semibold">Analytics</div><div class="text-sm text-gray-600">Daily/weekly/monthly totals, top clients/items.</div></div>
-    </div>
-
-    <div class="card mt-8">
-      <details class="border-b p-3"><summary class="font-medium">Do I need a plan to use it?</summary>
-        <p class="pt-2 text-sm text-gray-700">Yes — create an account and activate a plan or start a free 3-day trial.</p>
-      </details>
-      <details class="border-b p-3"><summary class="font-medium">Can I use it on my phone?</summary>
-        <p class="pt-2 text-sm text-gray-700">Yes. Works on any modern phone or tablet.</p>
-      </details>
-      <details class="p-3"><summary class="font-medium">Can I export my data?</summary>
-        <p class="pt-2 text-sm text-gray-700">Yes — CSV/Excel exports are supported.</p>
-      </details>
+      <p class="mt-4 text-xs text-slate-500">Prices shown include ~10% off when billed yearly. Adjust with the toggle.</p>
     </div>
   </section>
 
-  <!-- ===== ACCOUNT ===== -->
-  <section id="view-account" class="tab">
-    <h2 class="text-xl font-bold mb-4">Account</h2>
-    <!-- Login -->
-    <div id="login-view" class="card grid gap-3">
-      <h3 class="font-semibold">Login</h3>
-      <input id="login-email" type="email" placeholder="Email" class="w-full p-2 border rounded" />
-      <input id="login-password" type="password" placeholder="Password" class="w-full p-2 border rounded" />
-      <div class="flex gap-3">
-        <button class="btn btn-primary" onclick="loginUser()">Login</button>
-        <button class="btn btn-ghost" onclick="showSignup()">Create Account</button>
+  <!-- FAQ -->
+  <section id="faq" class="py-14 md:py-20">
+    <div class="container mx-auto px-4">
+      <h2 class="text-2xl md:text-3xl font-semibold tracking-tight">Frequently asked</h2>
+      <div class="mt-6 grid md:grid-cols-2 gap-6 text-sm">
+        <div class="rounded-2xl border bg-white p-6">
+          <h3 class="font-semibold">Is there a free trial?</h3>
+          <p class="mt-1 text-slate-600">Yes, enjoy a 3‑day free trial. No credit card required.</p>
+        </div>
+        <div class="rounded-2xl border bg-white p-6">
+          <h3 class="font-semibold">Do you support JUICE/PayPal?</h3>
+          <p class="mt-1 text-slate-600">Yes. JUICE and PayPal are available in Pro. Stripe is on the roadmap.</p>
+        </div>
+        <div class="rounded-2xl border bg-white p-6">
+          <h3 class="font-semibold">Can I export my data?</h3>
+          <p class="mt-1 text-slate-600">Any time. Export CSV/Excel and PDF receipts on all plans.</p>
+        </div>
+        <div class="rounded-2xl border bg-white p-6">
+          <h3 class="font-semibold">Is my data secure?</h3>
+          <p class="mt-1 text-slate-600">We use encryption at rest and in transit. Role‑based access for teams.</p>
+        </div>
       </div>
     </div>
-    <!-- Signup -->
-    <form id="account-form" class="card grid gap-3" style="display:none">
-      <h3 class="font-semibold">Create Account</h3>
+  </section>
+
+  <!-- CTA -->
+  <section id="cta" class="py-16 bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+    <div class="container mx-auto px-4 text-center">
+      <h2 class="text-2xl md:text-3xl font-semibold">Start issuing receipts in minutes</h2>
+      <p class="mt-2 text-blue-100">Free 3‑day trial • Cancel anytime • No credit card</p>
+      <a href="/app/#signup" class="mt-6 inline-block px-6 py-3 rounded-xl bg-white text-blue-700 hover:bg-blue-50 font-medium">Create my account</a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-10 text-sm">
+    <div class="container mx-auto px-4 grid md:grid-cols-4 gap-6">
       <div>
-        <label class="text-xs text-gray-500">ACCOUNT</label>
-        <input id="acc-name" required placeholder="Your name" class="w-full mt-1 p-2 border rounded" />
-        <input id="acc-email" required type="email" placeholder="you@email.com" class="w-full mt-2 p-2 border rounded" />
-        <input id="acc-password" required type="password" placeholder="Password (min 6 characters)" class="w-full mt-2 p-2 border rounded" />
+        <p class="font-semibold">Business Manager Pro</p>
+        <p class="mt-2 text-slate-600">Modern e‑receipts for small businesses.</p>
       </div>
       <div>
-        <label class="text-xs text-gray-500">BUSINESS DETAILS (Optional)</label>
-        <input id="biz-name" placeholder="Business name" class="w-full mt-1 p-2 border rounded" />
-        <input id="biz-brn" placeholder="BRN" class="w-full mt-2 p-2 border rounded" />
-        <textarea id="biz-address" placeholder="Address" class="w-full mt-2 p-2 border rounded"></textarea>
-        <input id="biz-phone" placeholder="Phone" class="w-full mt-2 p-2 border rounded" />
-        <input id="biz-bill" placeholder="Billing email" class="w-full mt-2 p-2 border rounded" />
-      </div>
-      <div class="flex gap-3">
-        <button class="btn btn-primary" type="submit">Create Account</button>
-        <button class="btn btn-ghost" type="button" onclick="showLogin()">Back to Login</button>
-      </div>
-    </form>
-    <!-- Logged In -->
-    <div id="logged-in-view" class="card" style="display:none">
-      <h3 class="font-semibold mb-2">Account Details</h3>
-      <div id="account-details" class="text-sm space-y-1"></div>
-      <button class="btn btn-ghost mt-3" onclick="logout()">Sign Out</button>
-    </div>
-  </section>
-
-  <!-- ===== PLANS ===== -->
-  <section id="view-plans" class="tab">
-    <h2 class="text-xl font-bold mb-4">Plans</h2>
-    <div class="grid sm:grid-cols-2 gap-4">
-      <!-- Starter -->
-      <div class="card">
-        <div class="font-bold">Starter</div>
-        <div class="text-sm text-gray-500">Everything you need to generate and share receipts.</div>
-        <div class="mt-3 grid gap-2 text-sm">
-          <label class="flex items-center gap-2"><input type="radio" name="starter-billing" value="monthly" checked> Monthly: <span class="font-semibold">Rs 999</span></label>
-          <label class="flex items-center gap-2"><input type="radio" name="starter-billing" value="6m"> 6 Months (save ~10%): <span class="font-semibold">Rs 5,400</span></label>
-          <label class="flex items-center gap-2"><input type="radio" name="starter-billing" value="year"> 1 Year (save ~20%): <span class="font-semibold">Rs 9,600</span></label>
-        </div>
-        <ul class="mt-3 text-sm list-disc pl-5">
-          <li>User account (login/signup)</li>
-          <li>Create e-receipts with items, taxes & discounts</li>
-          <li>Client & item library (basic save)</li>
-          <li>Share via WhatsApp / Email link</li>
-          <li>Export receipts to CSV</li>
-          <li>Mobile-friendly access</li>
+        <p class="font-semibold">Product</p>
+        <ul class="mt-2 space-y-1 text-slate-600">
+          <li><a class="hover:text-blue-700" href="#features">Features</a></li>
+          <li><a class="hover:text-blue-700" href="#pricing">Pricing</a></li>
+          <li><a class="hover:text-blue-700" href="#how">How it works</a></li>
+          <li><a class="hover:text-blue-700" href="#faq">FAQ</a></li>
         </ul>
-        <div class="mt-4">
-          <label class="text-sm"><input type="checkbox" id="agree-terms" class="mr-1">I agree to Terms</label>
-          <div class="mt-3 flex flex-wrap gap-2">
-            <button class="btn btn-primary" onclick="startTrial()">Start 3-day Trial</button>
-            <button class="btn btn-ghost" onclick="openJuice('starter')">Pay with JUICE</button>
-            <div id="paypal-btn-starter" class="inline-block"></div>
-            <button class="btn btn-ghost" onclick="activateDemo('Starter',getSelectedAmount('starter'))">Activate</button>
-          </div>
-        </div>
       </div>
-      <!-- Pro -->
-      <div class="card">
-        <div class="font-bold">Pro</div>
-        <div class="text-sm text-gray-500">For growing teams needing analytics and higher limits.</div>
-        <div class="mt-3 grid gap-2 text-sm">
-          <label class="flex items-center gap-2"><input type="radio" name="pro-billing" value="monthly" checked> Monthly: <span class="font-semibold">Rs 1,499</span></label>
-          <label class="flex items-center gap-2"><input type="radio" name="pro-billing" value="6m"> 6 Months (save ~10%): <span class="font-semibold">Rs 8,100</span></label>
-          <label class="flex items-center gap-2"><input type="radio" name="pro-billing" value="year"> 1 Year (save ~20%): <span class="font-semibold">Rs 14,400</span></label>
-        </div>
-        <ul class="mt-3 text-sm list-disc pl-5">
-          <li>Everything in Starter, plus:</li>
-          <li>Analytics dashboard (totals, top clients/items)</li>
-          <li>More receipt storage (higher limits)</li>
-          <li>PayPal payment option (integration planned)</li>
-          <li>Juice payment (integration planned)</li>
-          <li>Priority support (WhatsApp line / faster response)</li>
+      <div>
+        <p class="font-semibold">Company</p>
+        <ul class="mt-2 space-y-1 text-slate-600">
+          <li><a class="hover:text-blue-700" href="#">About</a></li>
+          <li><a class="hover:text-blue-700" href="#">Contact</a></li>
+          <li><a class="hover:text-blue-700" href="/privacy.html">Privacy</a></li>
+          <li><a class="hover:text-blue-700" href="/terms.html">Terms</a></li>
         </ul>
-        <div class="mt-4">
-          <label class="text-sm"><input type="checkbox" id="agree-terms2" class="mr-1">I agree to Terms</label>
-          <div class="mt-3 flex flex-wrap gap-2">
-            <button class="btn btn-primary" onclick="startTrial()">Start 3-day Trial</button>
-            <button class="btn btn-ghost" onclick="openJuice('pro')">Pay with JUICE</button>
-            <div id="paypal-btn-pro" class="inline-block"></div>
-            <button class="btn btn-ghost" onclick="activateDemo('Pro',getSelectedAmount('pro'))">Activate</button>
-          </div>
-        </div>
+      </div>
+      <div>
+        <p class="font-semibold">Get help</p>
+        <p class="mt-2 text-slate-600">WhatsApp +230 5X XX XX XX</p>
+        <p class="text-slate-600"><a href="mailto:support@businessmanager.pro" class="hover:text-blue-700">support@businessmanager.pro</a></p>
       </div>
     </div>
+    <div class="container mx-auto px-4 mt-8 text-slate-500">© <span id="year"></span> Business Manager Pro</div>
+  </footer>
 
-    <!-- JUICE Modal -->
-    <dialog id="juice-modal" class="p-0 rounded-2xl w-full max-w-md">
-      <div class="card !border-0">
-        <div class="flex items-center gap-2 mb-2">
-          <div class="w-8 h-8 rounded bg-blue-600 text-white grid place-items-center">J</div>
-          <div class="font-semibold">JUICE Payment</div>
-        </div>
-        <div id="juice-body" class="text-sm text-gray-700"></div>
-        <div class="mt-4 flex justify-end gap-2">
-          <button class="btn btn-ghost" onclick="closeJuice()">Close</button>
-          <button class="btn btn-primary" onclick="confirmJuicePaid()">Mark as Paid</button>
-        </div>
-      </div>
-    </dialog>
-  </section>
+  <script>
+    // Year
+    document.getElementById('year').textContent = new Date().getFullYear();
 
-  <!-- ===== RECEIPTS ===== -->
-  <section id="view-receipts" class="tab">
-    <h2 class="text-xl font-bold mb-4">E-Receipts</h2>
-    <div class="grid lg:grid-cols-2 gap-4">
-      <div class="card">
-        <div class="grid gap-2">
-          <input id="ref" class="p-2 border rounded" placeholder="Reference (auto if blank)" />
-          <input id="cust-name" class="p-2 border rounded" placeholder="Customer name" />
-          <div class="grid grid-cols-3 gap-2">
-            <input id="item-desc" class="p-2 border rounded" placeholder="Item description" />
-            <input id="item-qty" type="number" step="1" min="1" class="p-2 border rounded" placeholder="Qty" />
-            <input id="item-unit" type="number" step="0.01" min="0" class="p-2 border rounded" placeholder="Unit price" />
-          </div>
-          <button class="btn btn-ghost" onclick="addItem()">Add item</button>
-          <div class="overflow-auto">
-            <table class="border mt-2">
-              <thead><tr><th>Description</th><th>Qty</th><th>Unit</th><th>Total</th><th></th></tr></thead>
-              <tbody id="items-body"></tbody>
-            </table>
-          </div>
-          <div class="grid grid-cols-4 gap-2 mt-2">
-            <input id="vat" type="number" step="0.01" min="0" class="p-2 border rounded" placeholder="VAT %" />
-            <input id="discount" type="number" step="0.01" min="0" class="p-2 border rounded" placeholder="Discount (Rs)" />
-            <input id="fee" type="number" step="0.01" min="0" class="p-2 border rounded" placeholder="Service fee (Rs)" />
-            <input id="date" type="date" class="p-2 border rounded" />
-          </div>
-          <div class="text-right font-semibold mt-2" id="totals">Subtotal: Rs 0 • Grand: Rs 0</div>
-          <div class="flex flex-wrap gap-2 mt-2">
-            <button id="save-rcp" class="btn btn-primary" onclick="saveReceipt()">Save Receipt</button>
-            <button id="download-pdf" class="btn btn-ghost" onclick="downloadPdfFromCurrent()">Download PDF</button>
-          </div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="font-semibold mb-2">History</div>
-        <div class="overflow-auto">
-          <table class="border">
-            <thead><tr><th>ID</th><th>Ref</th><th>Customer</th><th>Date</th><th>Total</th><th>Actions</th></tr></thead>
-            <tbody id="hist-body"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===== CLIENTS ===== -->
-  <section id="view-clients" class="tab">
-    <h2 class="text-xl font-bold mb-4">Clients</h2>
-    <div class="card">
-      <div class="flex gap-2 mb-3">
-        <button class="btn btn-primary" onclick="addClientPrompt()">Add Client</button>
-        <button class="btn btn-ghost" onclick="exportClients()">Export CSV</button>
-      </div>
-      <div class="overflow-auto">
-        <table class="border">
-          <thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Total Receipts</th><th>Last Receipt</th><th></th></tr></thead>
-          <tbody id="clients-body"></tbody>
-        </table>
-      </div>
-      <div id="clients-empty" class="text-sm text-gray-500 mt-2">No clients yet.</div>
-    </div>
-  </section>
-
-  <!-- ===== DASHBOARD ===== -->
-  <section id="view-dashboard" class="tab">
-    <h2 class="text-xl font-bold mb-4">Dashboard</h2>
-    <div class="grid md:grid-cols-3 gap-4">
-      <div class="card"><div class="text-sm text-gray-500">This Month</div><div id="dash-month" class="text-2xl font-extrabold">Rs 0</div></div>
-      <div class="card"><div class="text-sm text-gray-500">Receipts (month)</div><div id="dash-count" class="text-2xl font-extrabold">0</div></div>
-      <div class="card"><div class="text-sm text-gray-500">Top Customer</div><div id="dash-top" class="text-2xl font-extrabold">—</div></div>
-    </div>
-    <div class="card mt-4" style="height:320px">
-      <canvas id="chart-monthly"></canvas>
-    </div>
-  </section>
-
-  <!-- Hidden test view -->
-  <section id="view-test" class="tab">
-    <div class="card">Test view</div>
-  </section>
-
-</main>
-
-<div id="toast" class="toast"></div>
-
-<script>
-const JUICE_NUMBER = '+230 5496 0101';
-
-/* ========= Utilities ========= */
-const $ = (id)=>document.getElementById(id);
-const money = (n)=>'Rs '+Number(n||0).toFixed(2);
-function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1600); }
-
-/* ========= Auth, Plan & Trial ========= */
-function getUser(){ try{return JSON.parse(localStorage.getItem('bmp_user'))||null}catch(e){return null} }
-function setUser(u){ localStorage.setItem('bmp_user', JSON.stringify(u)); updateHeaderAuth(); }
-function logout(){ 
-  localStorage.removeItem('bmp_user'); 
-  updateHeaderAuth(); 
-  showLogin();
-  toast('Signed out'); 
-  go('home'); 
-}
-
-function isPlanActive(){ return localStorage.getItem('bmp_plan_active')==='1'; }
-function setPlanActive(){ localStorage.setItem('bmp_plan_active','1'); updateHeaderAuth(); }
-
-const LS_TRIAL='bmp_trial_v1';
-function getTrial(){ try{return JSON.parse(localStorage.getItem(LS_TRIAL))||null}catch(e){return null} }
-function setTrial(t){ localStorage.setItem(LS_TRIAL, JSON.stringify(t||{})); updateHeaderAuth(); }
-function isTrialActive(){ const t=getTrial(); if(!t||!t.end) return false; return new Date(t.end)>new Date(); }
-function trialDaysLeft(){ const t=getTrial(); if(!t||!t.end) return 0; const ms=new Date(t.end)-new Date(); return ms>0?Math.ceil(ms/86400000):0; }
-
-/* ========= Header pill ========= */
-function updateHeaderAuth(){
-  const u=getUser(); const pill=$('auth-pill');
-  if(!u){ pill.textContent='Not signed in'; return; }
-  let status = isPlanActive() ? 'Active plan' : (isTrialActive()? `Trial (${trialDaysLeft()}d left)` : 'No plan');
-  pill.textContent = `Signed in: ${u.email} • ${status}`;
-}
-updateHeaderAuth();
-
-/* ========= Tab activator ========= */
-function activateTab(name){
-  document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
-  const v=$('view-'+name); if(v) v.classList.add('active');
-  window.scrollTo(0,0);
-}
-
-/* ========= Router ========= */
-function go(target){
-  const publicTabs = ['home','plans','account'];
-  let dest = target;
-
-  // Gate private tabs
-  if (!publicTabs.includes(target)) {
-    if (!getUser()) { toast('Please create an account first'); dest = 'account'; }
-    else if (!(isPlanActive() || isTrialActive())) { toast('Activate a plan or start trial'); dest = 'plans'; }
-  }
-
-  activateTab(dest);
-
-  // Clean URL for home; hash for others
-  if (dest === 'home') {
-    history.replaceState(null, '', location.pathname);
-  } else {
-    history.replaceState(null, '', location.pathname + '#' + dest);
-  }
-}
-
-/* ========= Password Hashing ========= */
-async function hashPassword(password) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hash = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-/* ========= View Toggles ========= */
-function showLogin() {
-  $('login-view').style.display = 'block';
-  $('account-form').style.display = 'none';
-  $('logged-in-view').style.display = 'none';
-}
-function showSignup() {
-  $('login-view').style.display = 'none';
-  $('account-form').style.display = 'block';
-  $('logged-in-view').style.display = 'none';
-}
-function showLoggedIn() {
-  $('login-view').style.display = 'none';
-  $('account-form').style.display = 'none';
-  $('logged-in-view').style.display = 'block';
-  const u = getUser();
-  if (u) {
-    $('account-details').innerHTML = `
-      <p><strong>Name:</strong> ${u.name}</p>
-      <p><strong>Email:</strong> ${u.email}</p>
-      <p><strong>Business:</strong> ${u.business || 'Not set'}</p>
-      <p><strong>BRN:</strong> ${u.brn || 'Not set'}</p>
-    `;
-  }
-}
-
-/* ========= Login ========= */
-async function loginUser() {
-  const email = $('login-email').value.trim();
-  const password = $('login-password').value;
-  if (!email || !password) { toast('Enter email and password'); return; }
-  const allUsers = JSON.parse(localStorage.getItem('bmp_all_users') || '{}');
-  const user = allUsers[email];
-  if (!user) { toast('Account not found'); return; }
-  const hashedInput = await hashPassword(password);
-  if (hashedInput !== user.passwordHash) { toast('Incorrect password'); return; }
-  setUser(user);
-  toast('Logged in successfully');
-  showLoggedIn();
-  go('home');
-}
-
-/* ========= Signup ========= */
-document.addEventListener('DOMContentLoaded', ()=>{
-  const form = document.getElementById('account-form');
-  form.addEventListener('submit', async (e)=>{
-    e.preventDefault();
-    const email = $('acc-email').value.trim();
-    const password = $('acc-password').value;
-    if (!password || password.length < 6) { toast('Password must be at least 6 characters'); return; }
-    const hashedPassword = await hashPassword(password);
-    const u = {
-      name: $('acc-name').value.trim(),
-      email: email,
-      passwordHash: hashedPassword,
-      business: $('biz-name').value.trim(),
-      brn: $('biz-brn').value.trim(),
-      address: $('biz-address').value.trim(),
-      phone: $('biz-phone').value.trim(),
-      bill: $('biz-bill').value.trim()
+    // Demo viewport placeholder switcher
+    const demoBtns = document.querySelectorAll('[data-demo]');
+    const viewport = document.getElementById('demo-viewport');
+    const demoViews = {
+      form: '<div class="p-6"><div class="text-sm text-slate-500 mb-2">Receipt form</div><div class="grid grid-cols-2 gap-3"><input class="border rounded-lg px-3 py-2" placeholder="Client name"/><input class="border rounded-lg px-3 py-2" placeholder="Email"/><input class="border rounded-lg px-3 py-2 col-span-2" placeholder="Address"/><input class="border rounded-lg px-3 py-2" placeholder="Item"/><input class="border rounded-lg px-3 py-2" placeholder="Amount"/></div><button class="mt-4 px-4 py-2 rounded-lg bg-blue-600 text-white">Generate PDF</button></div>',
+      dash: '<div class="p-6"><div class="text-sm text-slate-500 mb-2">Dashboard</div><div class="h-28 rounded-xl bg-gradient-to-r from-blue-100 to-blue-200"></div><div class="grid grid-cols-3 gap-3 mt-3"><div class="rounded-xl border p-3"><p class="text-xs text-slate-500">Receipts</p><p class="font-semibold">328</p></div><div class="rounded-xl border p-3"><p class="text-xs text-slate-500">Clients</p><p class="font-semibold">142</p></div><div class="rounded-xl border p-3"><p class="text-xs text-slate-500">Exports</p><p class="font-semibold">27</p></div></div></div>',
+      pdf: '<div class="p-6"><div class="text-sm text-slate-500 mb-2">PDF preview</div><div class="h-52 rounded-xl bg-slate-100 grid place-content-center text-slate-400">A4 Receipt</div><button class="mt-4 px-4 py-2 rounded-lg border">Download</button></div>'
     };
-    if(!u.name || !u.email){ toast('Enter name and email'); return; }
-    const allUsers = JSON.parse(localStorage.getItem('bmp_all_users') || '{}');
-    if (allUsers[email]) { toast('Email already registered'); return; }
-    allUsers[email] = u;
-    localStorage.setItem('bmp_all_users', JSON.stringify(allUsers));
-    setUser(u);
-    toast('Account created');
-    showLoggedIn();
-    go('home');
-  });
-});
-/* ========= Plans (+ payments) ========= */
-const PRICE_MUR = {
-  starter: { monthly: 999, '6m': 5400, year: 9600 },
-  pro: { monthly: 1499, '6m': 8100, year: 14400 },
-};
-const MUR_TO_USD = 0.022; // internal conversion used for PayPal sandbox
-function agreed(){ return ($('agree-terms') && $('agree-terms').checked) || ($('agree-terms2') && $('agree-terms2').checked); }
-function getSelectedAmount(plan){
-  const grp = plan==='starter' ? document.querySelector('input[name="starter-billing"]:checked') : document.querySelector('input[name="pro-billing"]:checked');
-  const key = grp? grp.value : 'monthly';
-  return PRICE_MUR[plan][key];
-}
-function startTrial(){
-  if(!agreed()){ toast('Please agree to Terms'); return; }
-  if(!getUser()){ toast('Log in first'); go('account'); return; }
-  const end=new Date(); end.setDate(end.getDate()+3);
-  setTrial({start:new Date().toISOString(), end:end.toISOString()});
-  toast('Trial started (3 days)');
-  go('receipts');
-}
-function activateDemo(planName, amount){
-  if(!agreed()){ toast('Please agree to Terms'); return; }
-  if(!getUser()){ toast('Log in first'); go('account'); return; }
-  setPlanActive();
-  toast(`${planName} plan activated — Rs ${amount}`);
-  go('receipts');
-}
+    demoBtns.forEach(btn => btn.addEventListener('click', () => {
+      demoBtns.forEach(b=>b.classList.remove('bg-blue-600','text-white'));
+      btn.classList.add('bg-blue-600','text-white');
+      const key = btn.getAttribute('data-demo');
+      viewport.innerHTML = demoViews[key] || 'Select a demo above';
+    }));
 
-/* JUICE modal */
-let pendingPlan=null;
-function openJuice(plan){
-  if(!agreed()){ toast('Please agree to Terms'); return; }
-  if(!getUser()){ toast('Log in first'); go('account'); return; }
-  pendingPlan=plan;
-  const amt=getSelectedAmount(plan);
-  const ref = `JUICE-${plan.toUpperCase()}-${Date.now().toString().slice(-6)}`;
-  const n = (typeof JUICE_NUMBER!=='undefined') ? JUICE_NUMBER : '+230 5496 0101';
-  const sms = `JUICE Payment — ${plan} Rs ${amt} | Ref ${ref}`;
-  const el=$('juice-body');
-  el.innerHTML = `
-    <div class='space-y-2'>
-      <div>Send <span class='font-semibold'>Rs ${amt}</span> via <span class='font-semibold'>MCB JUICE</span>.</div>
-      <div class='p-2 rounded border'>
-        <div class='text-xs text-gray-500'>Send to (JUICE number)</div>
-        <div class='flex items-center gap-2 mt-1'><span class='font-semibold'>${n}</span>
-          <button class='pill' onclick="navigator.clipboard&&navigator.clipboard.writeText('${n}')">Copy</button>
-        </div>
-      </div>
-      <div class='p-2 rounded border'>
-        <div class='text-xs text-gray-500'>Reference</div>
-        <div class='flex items-center gap-2 mt-1'><span class='font-mono'>${ref}</span>
-          <button class='pill' onclick="navigator.clipboard&&navigator.clipboard.writeText('${ref}')">Copy</button>
-        </div>
-      </div>
-      <a class='pill inline-block' href='sms:+23054960101?body=${encodeURIComponent(sms)}'>Send SMS confirmation</a>
-    </div>`;
-  $('juice-modal').showModal();
-}
-function closeJuice(){ $('juice-modal').close(); }
-function confirmJuicePaid(){
-  if(!pendingPlan) return closeJuice();
-  setPlanActive(); toast(`${pendingPlan==='starter'?'Starter':'Pro'} plan activated`);
-  closeJuice(); go('receipts');
-}
-
-/* PayPal buttons (SDK is sandbox internally) */
-function renderPayPal(){
-  if(!window.paypal) return;
-  const targets=[['paypal-btn-starter','starter'],['paypal-btn-pro','pro']];
-  targets.forEach(([id,plan])=>{
-    const mount=document.getElementById(id); if(!mount || mount.hasChildNodes()) return;
-    window.paypal.Buttons({
-      style:{ layout:'horizontal', height:35 },
-      createOrder: (_, actions)=>{
-        const mur=getSelectedAmount(plan); const usd=parseFloat((mur*MUR_TO_USD).toFixed(2));
-        return actions.order.create({ purchase_units:[{ amount:{ value:String(usd) } }] });
-      },
-      onApprove: async (_, actions)=>{
-        try{
-          await actions.order.capture();
-          setPlanActive();
-          toast(`${plan==='starter'?'Starter':'Pro'} activated (PayPal)`);
-          go('receipts');
-        }catch(e){ toast('Payment capture failed'); }
-      },
-      onError: ()=>toast('PayPal error')
-    }).render('#'+id);
-  });
-}
-if(window.paypal){ renderPayPal(); }
-else{ window.addEventListener('load', ()=>{ setTimeout(renderPayPal, 600); }); }
-
-/* ========= Receipts ========= */
-const LS_R='bmp_receipts_v1';
-function rKey(){ const u=getUser(); return u? `${LS_R}:${u.email}` : `${LS_R}:__anon__`; }
-function loadR(){ try{return JSON.parse(localStorage.getItem(rKey()))||[]}catch(e){return[]} }
-function saveR(list){ localStorage.setItem(rKey(), JSON.stringify(list)); renderHistory(); renderDashboard(); }
-
-const items=[];
-function addItem(){
-  const d=$('item-desc').value.trim(), q=Number($('item-qty').value||0), u=Number($('item-unit').value||0);
-  if(!d||q<=0||u<0){ toast('Enter item, qty, unit'); return; }
-  items.push({desc:d, qty:q, unit:u, total:q*u});
-  $('item-desc').value=''; $('item-qty').value=''; $('item-unit').value='';
-  renderItems(); recalcTotals();
-}
-function removeItem(ix){ items.splice(ix,1); renderItems(); recalcTotals(); }
-function renderItems(){
-  const tbody=$('items-body'); if(!tbody) return; tbody.innerHTML='';
-  items.forEach((it,ix)=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${it.desc}</td><td>${it.qty}</td><td>${money(it.unit)}</td><td>${money(it.total)}</td>
-      <td><button class="text-blue-600" onclick="removeItem(${ix})">Remove</button></td>`;
-    tbody.appendChild(tr);
-  });
-}
-function recalcTotals(){
-  const subtotal = items.reduce((s,i)=>s+i.total,0);
-  const vat = Number($('vat').value||0);
-  const discount = Number($('discount').value||0);
-  const fee = Number($('fee').value||0);
-  const vatAmt = subtotal * (vat/100);
-  const grand = Math.max(0, subtotal + vatAmt + fee - discount);
-  $('totals').textContent = `Subtotal: ${money(subtotal)} • Grand: ${money(grand)}`;
-  return {items:[...items], subtotal, vatPct:vat, vatAmt, discount, fee, grand};
-}
-function previewNextRef(){
-  const y=new Date().getFullYear();
-  const seq = (loadR().length+1).toString().padStart(4,'0');
-  return `REF-${y}-${seq}`;
-}
-function saveReceipt(){
-  if(!getUser()){ toast('Log in first'); go('account'); return; }
-  if(!(isPlanActive()||isTrialActive())){ toast('Activate a plan'); go('plans'); return; }
-  if(items.length===0){ toast('Add at least one item'); return; }
-  const calc = recalcTotals();
-  const rec={
-    id: 'R'+Date.now(),
-    ref: $('ref').value.trim() || previewNextRef(),
-    customer: $('cust-name').value.trim()||'Customer',
-    date: $('date').value || new Date().toISOString().slice(0,10),
-    ...calc
-  };
-  const list=loadR(); list.push(rec); saveR(list);
-  upsertClientFromReceipt(rec);
-  $('ref').value=''; $('cust-name').value=''; $('date').value=''; items.length=0; renderItems(); recalcTotals();
-  toast('Receipt saved');
-}
-function renderHistory(){
-  const body=$('hist-body'); if(!body) return;
-  body.innerHTML='';
-  const list=loadR().slice().reverse();
-  list.forEach(r=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${r.id}</td><td>${r.ref}</td><td>${r.customer}</td><td>${r.date}</td><td>${money(r.grand)}</td>
-      <td class="whitespace-nowrap">
-        <button class="text-blue-600" onclick="pdfFromRecord('${r.id}')">PDF</button> |
-        <button class="text-green-600" onclick="shareWhatsAppFromRecord('${r.id}')">WhatsApp</button> |
-        <button class="text-indigo-600" onclick="shareEmailFromRecord('${r.id}')">Email</button> |
-        <button class="text-red-600" onclick="delReceipt('${r.id}')">Delete</button>
-      </td>`;
-    body.appendChild(tr);
-  });
-}
-function delReceipt(id){
-  const list=loadR();
-  const idx=list.findIndex(r=>r.id===id);
-  if(idx===-1){ toast('Not found'); return; }
-  const rec=list[idx];
-  const newList=list.filter(r=>r.id!==id); saveR(newList);
-  adjustClientAfterDelete(rec);
-  toast('Deleted');
-}
-function pdfFromRecord(id){
-  const r=loadR().find(x=>x.id===id); if(!r){toast('Not found');return;}
-  const { jsPDF } = window.jspdf||{}; if(!jsPDF){toast('PDF lib missing');return;}
-  const p=getUser()||{};
-  const doc=new jsPDF({unit:'pt',format:'a4'}); let y=40,x=40;
-  doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.text(p.business||'Your Business',x,y); y+=18;
-  doc.setFont('helvetica','normal'); doc.setFontSize(10);
-  if(p.brn) { doc.text(`BRN: ${p.brn}`,x,y); y+=14; }
-  if(p.address){ doc.text(String(p.address),x,y); y+=14; }
-  if(p.phone){ doc.text(String(p.phone),x,y); y+=14; }
-  if(p.bill){ doc.text(String(p.bill),x,y); y+=14; }
-  doc.text(`Ref: ${r.ref}`,420,40); doc.text(`Date: ${r.date}`,420,56);
-  doc.text(`Customer: ${r.customer}`, x, y); y+=18;
-  doc.setFont('helvetica','bold'); doc.setFontSize(11);
-  doc.text('Description',x,y); doc.text('Qty',350,y); doc.text('Unit',420,y); doc.text('Total',500,y); y+=10;
-  doc.setLineWidth(.5); doc.line(x,y,555,y); y+=14;
-  doc.setFont('helvetica','normal'); doc.setFontSize(10);
-  r.items.forEach(i=>{ doc.text(String(i.desc),x,y); doc.text(String(i.qty),350,y,{align:'right'});
-    doc.text(String(i.unit.toFixed(2)),440,y,{align:'right'}); doc.text(String(i.total.toFixed(2)),520,y,{align:'right'}); y+=14;});
-  y+=6; doc.line(x,y,555,y); y+=18; doc.setFont('helvetica','bold');
-  doc.text(`Subtotal: ${money(r.subtotal)}`,420,y); y+=14;
-  doc.text(`VAT (${r.vatPct}%): ${money(r.vatAmt)}`,420,y); y+=14;
-  doc.text(`Discount: - ${money(r.discount)}`,420,y); y+=14;
-  doc.text(`Service Fee: ${money(r.fee)}`,420,y); y+=14;
-  doc.setFontSize(12); doc.text(`Grand Total: ${money(r.grand)}`,420,y); y+=24;
-  doc.setFont('helvetica','normal'); doc.setFontSize(9);
-  doc.text('Generated by Business Manager Pro — e-receipt generator. Issuer is responsible for accuracy.', x, y, {maxWidth:520});
-  doc.save(`${r.ref}.pdf`);
-}
-function downloadPdfFromCurrent(){
-  if(items.length===0){ toast('Add items first'); return; }
-  const tmp={
-    id:'TMP', ref:$('ref').value.trim()||previewNextRef(), customer:$('cust-name').value.trim()||'Customer',
-    date:$('date').value||new Date().toISOString().slice(0,10), ...recalcTotals()
-  };
-  const list=loadR(); list.push(tmp); saveR(list); pdfFromRecord(tmp.id);
-  saveR(loadR().filter(x=>x.id!==tmp.id));
-}
-
-/* Share helpers */
-function shareFromRecord(id){
-  const r=loadR().find(x=>x.id===id); if(!r){toast('Not found');return;}
-  const p=getUser()||{};
-  const title = `Receipt ${r.ref}`;
-  const text = shareTextFromReceipt(r, p);
-  if(navigator.share){ navigator.share({title, text}).catch(()=>{}); return; }
-  const wa=`https://wa.me/?text=${encodeURIComponent(text)}`;
-  const mail=`mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(text)}`;
-  window.open(wa,'_blank') || (window.location.href=mail);
-}
-function shareTextFromReceipt(r,p){
-  const lines = [];
-  lines.push((p.business||'Your Business')+(p.brn?` • BRN ${p.brn}`:''));
-  lines.push(`Ref: ${r.ref} • Date: ${r.date}`);
-  lines.push(`Customer: ${r.customer}`);
-  lines.push('Items:');
-  r.items.forEach(i=>lines.push(`- ${i.desc} x${i.qty} @ ${i.unit.toFixed(2)} = ${i.total.toFixed(2)}`));
-  lines.push(`Subtotal: ${r.subtotal.toFixed(2)}`);
-  lines.push(`VAT ${r.vatPct}%: ${r.vatAmt.toFixed(2)}`);
-  if(Number(r.fee)) lines.push(`Service fee: ${r.fee.toFixed(2)}`);
-  if(Number(r.discount)) lines.push(`Discount: -${r.discount.toFixed(2)}`);
-  lines.push(`Grand Total: ${r.grand.toFixed(2)} MUR`);
-  lines.push('— Sent from Business Manager Pro');
-  return lines.join('\n');
-}
-function shareWhatsAppFromRecord(id){
-  const r=loadR().find(x=>x.id===id); if(!r){toast('Not found');return;}
-  const p=getUser()||{}; const text=shareTextFromReceipt(r,p);
-  const wa=`https://wa.me/?text=${encodeURIComponent(text)}`; window.open(wa,'_blank');
-}
-function shareEmailFromRecord(id){
-  const r=loadR().find(x=>x.id===id); if(!r){toast('Not found');return;}
-  const p=getUser()||{}; const text=shareTextFromReceipt(r,p); const title=`Receipt ${r.ref}`;
-  const mail=`mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(text)}`; window.location.href=mail;
-}
-
-/* ========= Clients ========= */
-const LS_C='bmp_clients_v1';
-function cKey(){ const u=getUser(); return u? `${LS_C}:${u.email}` : `${LS_C}:__anon__`; }
-function loadClients(){ try{return JSON.parse(localStorage.getItem(cKey()))||[]}catch(e){return[]} }
-function saveClients(list){ localStorage.setItem(cKey(), JSON.stringify(list)); renderClients(); }
-function renderClients(){
-  const body=$('clients-body'); if(!body) return;
-  const list=loadClients(); body.innerHTML='';
-  $('clients-empty').style.display = list.length? 'none' : 'block';
-  list.forEach(c=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${c.name||''}</td><td>${c.phone||''}</td><td>${c.email||''}</td>
-      <td>${c.total||0}</td><td>${c.last||'—'}</td>
-      <td><button class="text-red-600" onclick="delClient('${c.id}')">Delete</button></td>`;
-    body.appendChild(tr);
-  });
-}
-function newClientId(){ return 'C'+Math.random().toString(36).slice(2,9); }
-function addClientPrompt(){
-  const name=prompt('Client name'); if(!name) return;
-  const phone=prompt('Phone (optional)')||''; const email=prompt('Email (optional)')||'';
-  const list=loadClients(); list.push({id:newClientId(), name, phone, email, total:0, last:'—'}); saveClients(list); toast('Client added');
-}
-function delClient(id){ saveClients(loadClients().filter(c=>c.id!==id)); toast('Client deleted'); }
-function upsertClientFromReceipt(r){
-  const list=loadClients(); let c=list.find(x=>x.name.toLowerCase()===r.customer.toLowerCase());
-  if(!c){ c={id:newClientId(), name:r.customer, phone:'', email:'', total:0, last:'—'}; list.push(c); }
-  c.total=(c.total||0)+1; c.last=r.date; saveClients(list);
-}
-function adjustClientAfterDelete(r){
-  const list=loadClients(); const idx=list.findIndex(x=>x.name.toLowerCase()===r.customer.toLowerCase());
-  if(idx===-1){ renderClients(); return; }
-  list[idx].total=Math.max(0,(list[idx].total||0)-1);
-  const remain=loadR().filter(x=>x.customer.toLowerCase()===r.customer.toLowerCase());
-  list[idx].last = remain.length? remain.sort((a,b)=>b.date.localeCompare(a.date))[0].date : '—';
-  saveClients(list);
-}
-function exportClients(){
-  const list=loadClients(); const rows=[["Name","Phone","Email","Total Receipts","Last Receipt"]].concat(list.map(c=>[c.name,c.phone,c.email,c.total,c.last]));
-  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const blob=new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob);
-  const a=document.createElement('a'); a.href=url; a.download='clients.csv'; a.click(); URL.revokeObjectURL(url);
-}
-
-/* ========= Dashboard ========= */
-let chartMonthly=null;
-function monthlySeries(monthsBack=6){
-  const recs=loadR(); const now=new Date(); const map=new Map();
-  for(let i=monthsBack-1;i>=0;i--){ const d=new Date(now.getFullYear(), now.getMonth()-i, 1); map.set(d.toISOString().slice(0,7),0); }
-  recs.forEach(r=>{ const key=(r.date||'').slice(0,7); if(map.has(key)) map.set(key, map.get(key)+Number(r.grand||0)); });
-  const labels=[...map.keys()], data=[...map.values()]; return {labels,data};
-}
-function renderDashboard(){
-  const recs=loadR(); const month=new Date().toISOString().slice(0,7);
-  const inMonth=recs.filter(r=>(r.date||'').slice(0,7)===month);
-  const sum=inMonth.reduce((s,r)=>s+Number(r.grand||0),0);
-  if($('dash-month')) $('dash-month').textContent = money(sum);
-  if($('dash-count')) $('dash-count').textContent = inMonth.length;
-  const byCust={}; inMonth.forEach(r=>{byCust[r.customer]=(byCust[r.customer]||0)+r.grand});
-  const top=Object.entries(byCust).sort((a,b)=>b[1]-a[1])[0];
-  if($('dash-top')) $('dash-top').textContent = top? `${top[0]} (${money(top[1])})` : '—';
-  const el=$('chart-monthly'); if(!el || !window.Chart) return;
-  const {labels,data}=monthlySeries(6);
-  if(chartMonthly) { try{ chartMonthly.destroy(); }catch(e){} }
-  chartMonthly=new Chart(el.getContext('2d'),{
-    type:'bar', data:{labels, datasets:[{label:'Monthly total (Rs)', data}]},
-    options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}
-  });
-}
-
-/* ========= Self-tests ========= */
-function runSelfTests(){
-  const fails=[]; const pass=(name)=>console.log('✔',name); const fail=(name,msg)=>{console.error('✘',name,msg); fails.push(name+': '+msg);} 
-  try{
-    go('home');
-    if(!document.getElementById('view-home').classList.contains('active')) fail('go(home)','home not active'); else pass('go(home)');
-    go('plans');
-    if(!document.getElementById('view-plans').classList.contains('active')) fail('go(plans)','plans not active'); else pass('go(plans)');
-  }catch(e){ fail('go()', e.message); }
-  try{
-    const mockR={ref:'T-1', date:'2025-09-30', customer:'Alice', items:[{desc:'X',qty:1,unit:100,total:100}], subtotal:100, vatPct:0, vatAmt:0, fee:0, discount:0, grand:100};
-    const txt=shareTextFromReceipt(mockR,{business:'Biz',brn:'C20'});
-    if(!(txt.includes('Grand Total: 100.00 MUR') && txt.includes('\n'))) fail('shareTextFromReceipt','formatting missing'); else pass('shareTextFromReceipt');
-  }catch(e){ fail('shareTextFromReceipt', e.message); }
-  try{
-    const ref=previewNextRef(); if(!/^REF-\d{4}-\d{4}$/.test(ref)) fail('previewNextRef','pattern mismatch'); else pass('previewNextRef');
-  }catch(e){ fail('previewNextRef', e.message); }
-  if(fails.length){ toast('Self-tests failed'); console.warn('Self-test failures:', fails); }
-  else{ console.info('All self-tests passed'); }
-}
-
-/* ========= Boot (final) ========= */
-document.addEventListener('DOMContentLoaded', ()=>{
-  // Keep startup safe: stop browser from restoring old hash/scroll
-  try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch(e) {}
-  try { if (location.hash) history.replaceState(null, '', location.pathname + location.search); } catch(e) {}
-  window.scrollTo(0, 0);
-
-  // Account view
-  const user = getUser();
-  if (user) { showLoggedIn(); } else { showLogin(); }
-
-  // Initial renders
-  renderHistory(); renderClients(); renderDashboard();
-
-  // Default route: always Home
-  go('home');
-
-  // Hash navigation (gated inside go())
-  const restricted = ['plans','dashboard','receipts','clients','test'];
-  window.addEventListener('hashchange', (ev)=>{
-    ev.preventDefault();
-    const h = (location.hash || '').slice(1) || 'home';
-    if (!getUser() && restricted.includes(h)) {
-      try { history.replaceState(null, '', location.pathname + location.search); } catch(e) {}
-      go('home');
-    } else {
-      go(h);
-    }
-  });
-
-  // Prefill date today
-  const d=$('date'); if(d) d.value=new Date().toISOString().slice(0,10);
-
-  // Run self-tests ONLY when '?test=1'
-  if (location.search.includes('test=1')) setTimeout(runSelfTests, 0);
-
-  // Optional: surface first JS error as toast (helps diagnose)
-  window.addEventListener('error', (e)=>{
-    console.error('JS error:', e.message, e.filename+':'+e.lineno);
-    // toast('Error: ' + e.message); // uncomment if you want visible toasts on errors
-  });
-  window.addEventListener('unhandledrejection', (e)=>{
-    console.error('Unhandled promise:', e.reason);
-    // toast('Error: ' + (e.reason && e.reason.message || 'Unhandled promise'));
-  });
-});
-</script>
+    // Billing toggle
+    const billBtns = document.querySelectorAll('[data-bill]');
+    const prices = document.querySelectorAll('.price');
+    billBtns.forEach(b => b.addEventListener('click', () => {
+      billBtns.forEach(x=>x.classList.remove('bg-white'));
+      billBtns.forEach(x=>x.classList.add('bg-slate-100'));
+      b.classList.remove('bg-slate-100');
+      b.classList.add('bg-white');
+      const key = b.getAttribute('data-bill');
+      prices.forEach(p => {
+        p.textContent = p.getAttribute(`data-${key}`);
+      });
+    }));
+  </script>
 </body>
 </html>
