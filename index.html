@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <script>
-// HARD NUKE: unregister all SWs + delete all caches on every load (temporary)
+<script>
+/* HARD NUKE (temporary): unregister SWs + delete caches each load */
 (function(){
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(rs => {
@@ -21,6 +21,7 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Note: PayPal SDK below uses sandbox client-id=sb (internal). No user-facing sandbox text shown. -->
 <script id="paypal-sdk" src="https://www.paypal.com/sdk/js?client-id=sb&currency=USD"></script>
 <style>
   .tab{display:none}.tab.active{display:block}
@@ -134,57 +135,53 @@
   </section>
 
   <!-- ===== ACCOUNT ===== -->
-<section id="view-account" class="tab">
-  <h2 class="text-xl font-bold mb-4">Account</h2>
-  
-  <!-- Login Form -->
-  <div id="login-view" class="card grid gap-3">
-    <h3 class="font-semibold">Login</h3>
-    <input id="login-email" type="email" placeholder="Email" class="w-full p-2 border rounded" />
-    <input id="login-password" type="password" placeholder="Password" class="w-full p-2 border rounded" />
-    <div class="flex gap-3">
-      <button class="btn btn-primary" onclick="loginUser()">Login</button>
-      <button class="btn btn-ghost" onclick="showSignup()">Create Account</button>
+  <section id="view-account" class="tab">
+    <h2 class="text-xl font-bold mb-4">Account</h2>
+    <!-- Login -->
+    <div id="login-view" class="card grid gap-3">
+      <h3 class="font-semibold">Login</h3>
+      <input id="login-email" type="email" placeholder="Email" class="w-full p-2 border rounded" />
+      <input id="login-password" type="password" placeholder="Password" class="w-full p-2 border rounded" />
+      <div class="flex gap-3">
+        <button class="btn btn-primary" onclick="loginUser()">Login</button>
+        <button class="btn btn-ghost" onclick="showSignup()">Create Account</button>
+      </div>
     </div>
-  </div>
-  
-  <!-- Signup Form -->
-  <form id="account-form" class="card grid gap-3" style="display:none">
-    <h3 class="font-semibold">Create Account</h3>
-    <div>
-      <label class="text-xs text-gray-500">ACCOUNT</label>
-      <input id="acc-name" required placeholder="Your name" class="w-full mt-1 p-2 border rounded" />
-      <input id="acc-email" required type="email" placeholder="you@email.com" class="w-full mt-2 p-2 border rounded" />
-      <input id="acc-password" required type="password" placeholder="Password (min 6 characters)" class="w-full mt-2 p-2 border rounded" />
+    <!-- Signup -->
+    <form id="account-form" class="card grid gap-3" style="display:none">
+      <h3 class="font-semibold">Create Account</h3>
+      <div>
+        <label class="text-xs text-gray-500">ACCOUNT</label>
+        <input id="acc-name" required placeholder="Your name" class="w-full mt-1 p-2 border rounded" />
+        <input id="acc-email" required type="email" placeholder="you@email.com" class="w-full mt-2 p-2 border rounded" />
+        <input id="acc-password" required type="password" placeholder="Password (min 6 characters)" class="w-full mt-2 p-2 border rounded" />
+      </div>
+      <div>
+        <label class="text-xs text-gray-500">BUSINESS DETAILS (Optional)</label>
+        <input id="biz-name" placeholder="Business name" class="w-full mt-1 p-2 border rounded" />
+        <input id="biz-brn" placeholder="BRN" class="w-full mt-2 p-2 border rounded" />
+        <textarea id="biz-address" placeholder="Address" class="w-full mt-2 p-2 border rounded"></textarea>
+        <input id="biz-phone" placeholder="Phone" class="w-full mt-2 p-2 border rounded" />
+        <input id="biz-bill" placeholder="Billing email" class="w-full mt-2 p-2 border rounded" />
+      </div>
+      <div class="flex gap-3">
+        <button class="btn btn-primary" type="submit">Create Account</button>
+        <button class="btn btn-ghost" type="button" onclick="showLogin()">Back to Login</button>
+      </div>
+    </form>
+    <!-- Logged In -->
+    <div id="logged-in-view" class="card" style="display:none">
+      <h3 class="font-semibold mb-2">Account Details</h3>
+      <div id="account-details" class="text-sm space-y-1"></div>
+      <button class="btn btn-ghost mt-3" onclick="logout()">Sign Out</button>
     </div>
-    <div>
-      <label class="text-xs text-gray-500">BUSINESS DETAILS (Optional)</label>
-      <input id="biz-name" placeholder="Business name" class="w-full mt-1 p-2 border rounded" />
-      <input id="biz-brn" placeholder="BRN" class="w-full mt-2 p-2 border rounded" />
-      <textarea id="biz-address" placeholder="Address" class="w-full mt-2 p-2 border rounded"></textarea>
-      <input id="biz-phone" placeholder="Phone" class="w-full mt-2 p-2 border rounded" />
-      <input id="biz-bill" placeholder="Billing email" class="w-full mt-2 p-2 border rounded" />
-    </div>
-    <div class="flex gap-3">
-      <button class="btn btn-primary" type="submit">Create Account</button>
-      <button class="btn btn-ghost" type="button" onclick="showLogin()">Back to Login</button>
-    </div>
-  </form>
-  
-  <!-- Logged In View -->
-  <div id="logged-in-view" class="card" style="display:none">
-    <h3 class="font-semibold mb-2">Account Details</h3>
-    <div id="account-details" class="text-sm space-y-1"></div>
-    <button class="btn btn-ghost mt-3" onclick="logout()">Sign Out</button>
-  </div>
-</section>
-
+  </section>
 
   <!-- ===== PLANS ===== -->
   <section id="view-plans" class="tab">
     <h2 class="text-xl font-bold mb-4">Plans</h2>
     <div class="grid sm:grid-cols-2 gap-4">
-      <!-- Starter Plan -->
+      <!-- Starter -->
       <div class="card">
         <div class="font-bold">Starter</div>
         <div class="text-sm text-gray-500">Everything you need to generate and share receipts.</div>
@@ -205,13 +202,13 @@
           <label class="text-sm"><input type="checkbox" id="agree-terms" class="mr-1">I agree to Terms</label>
           <div class="mt-3 flex flex-wrap gap-2">
             <button class="btn btn-primary" onclick="startTrial()">Start 3-day Trial</button>
-            <button class="btn btn-ghost" onclick="openJuice('starter')">Pay with JUICE (Demo)</button>
+            <button class="btn btn-ghost" onclick="openJuice('starter')">Pay with JUICE</button>
             <div id="paypal-btn-starter" class="inline-block"></div>
-            <button class="btn btn-ghost" onclick="activateDemo('Starter',getSelectedAmount('starter'))">Activate (Demo)</button>
+            <button class="btn btn-ghost" onclick="activateDemo('Starter',getSelectedAmount('starter'))">Activate</button>
           </div>
         </div>
       </div>
-      <!-- Pro Plan -->
+      <!-- Pro -->
       <div class="card">
         <div class="font-bold">Pro</div>
         <div class="text-sm text-gray-500">For growing teams needing analytics and higher limits.</div>
@@ -232,23 +229,25 @@
           <label class="text-sm"><input type="checkbox" id="agree-terms2" class="mr-1">I agree to Terms</label>
           <div class="mt-3 flex flex-wrap gap-2">
             <button class="btn btn-primary" onclick="startTrial()">Start 3-day Trial</button>
-            <button class="btn btn-ghost" onclick="openJuice('pro')">Pay with JUICE (Demo)</button>
+            <button class="btn btn-ghost" onclick="openJuice('pro')">Pay with JUICE</button>
             <div id="paypal-btn-pro" class="inline-block"></div>
-            <button class="btn btn-ghost" onclick="activateDemo('Pro',getSelectedAmount('pro'))">Activate (Demo)</button>
+            <button class="btn btn-ghost" onclick="activateDemo('Pro',getSelectedAmount('pro'))">Activate</button>
           </div>
         </div>
       </div>
     </div>
-    <div class="mt-4 text-sm text-gray-600">PayPal buttons run in Sandbox using USD for demo purposes. JUICE flow is a demo (reference/QR display + manual confirmation). No real charges.</div>
 
     <!-- JUICE Modal -->
     <dialog id="juice-modal" class="p-0 rounded-2xl w-full max-w-md">
       <div class="card !border-0">
-        <div class="flex items-center gap-2 mb-2"><div class="w-8 h-8 rounded bg-blue-600 text-white grid place-items-center">J</div><div class="font-semibold">JUICE Payment (Demo)</div></div>
+        <div class="flex items-center gap-2 mb-2">
+          <div class="w-8 h-8 rounded bg-blue-600 text-white grid place-items-center">J</div>
+          <div class="font-semibold">JUICE Payment</div>
+        </div>
         <div id="juice-body" class="text-sm text-gray-700"></div>
         <div class="mt-4 flex justify-end gap-2">
           <button class="btn btn-ghost" onclick="closeJuice()">Close</button>
-          <button class="btn btn-primary" onclick="confirmJuicePaid()">Mark as Paid (Demo)</button>
+          <button class="btn btn-primary" onclick="confirmJuicePaid()">Mark as Paid</button>
         </div>
       </div>
     </dialog>
@@ -330,7 +329,7 @@
     </div>
   </section>
 
-  <!-- Hidden test view (for self-tests) -->
+  <!-- Hidden test view -->
   <section id="view-test" class="tab">
     <div class="card">Test view</div>
   </section>
@@ -383,7 +382,7 @@ function activateTab(name){
   window.scrollTo(0,0);
 }
 
-/* ========= Router (FIXED: default Home + hash sync) ========= */
+/* ========= Router ========= */
 function go(target){
   const publicTabs = ['home','plans','account'];
   let dest = target;
@@ -396,41 +395,37 @@ function go(target){
 
   activateTab(dest);
 
-  // Keep URL clean: root for home, hash for others
+  // Clean URL for home; hash for others
   if (dest === 'home') {
     history.replaceState(null, '', location.pathname);
   } else {
     history.replaceState(null, '', location.pathname + '#' + dest);
   }
 }
+
 /* ========= Password Hashing ========= */
 async function hashPassword(password) {
   const encoder = new TextEncoder();
   const data = encoder.encode(password);
   const hash = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(hash))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-/* ========= View Toggle Functions ========= */
+/* ========= View Toggles ========= */
 function showLogin() {
   $('login-view').style.display = 'block';
   $('account-form').style.display = 'none';
   $('logged-in-view').style.display = 'none';
 }
-
 function showSignup() {
   $('login-view').style.display = 'none';
   $('account-form').style.display = 'block';
   $('logged-in-view').style.display = 'none';
 }
-
 function showLoggedIn() {
   $('login-view').style.display = 'none';
   $('account-form').style.display = 'none';
   $('logged-in-view').style.display = 'block';
-  
   const u = getUser();
   if (u) {
     $('account-details').innerHTML = `
@@ -442,83 +437,58 @@ function showLoggedIn() {
   }
 }
 
-/* ========= Login Function ========= */
+/* ========= Login ========= */
 async function loginUser() {
   const email = $('login-email').value.trim();
   const password = $('login-password').value;
-  
-  if (!email || !password) {
-    toast('Enter email and password');
-    return;
-  }
-  
+  if (!email || !password) { toast('Enter email and password'); return; }
   const allUsers = JSON.parse(localStorage.getItem('bmp_all_users') || '{}');
   const user = allUsers[email];
-  
-  if (!user) {
-    toast('Account not found');
-    return;
-  }
-  
+  if (!user) { toast('Account not found'); return; }
   const hashedInput = await hashPassword(password);
-  
-  if (hashedInput !== user.passwordHash) {
-    toast('Incorrect password');
-    return;
-  }
-  
+  if (hashedInput !== user.passwordHash) { toast('Incorrect password'); return; }
   setUser(user);
   toast('Logged in successfully');
   showLoggedIn();
   go('home');
 }
 
-/* ========= Account form ========= */
-$('account-form').addEventListener('submit', async (e)=>{
-  e.preventDefault();
-  const email = $('acc-email').value.trim();
-  const password = $('acc-password').value;
-  
-  if (!password || password.length < 6) {
-    toast('Password must be at least 6 characters');
-    return;
-  }
-  
-  const hashedPassword = await hashPassword(password);
-  
-  const u = {
-    name: $('acc-name').value.trim(),
-    email: email,
-    passwordHash: hashedPassword,
-    business: $('biz-name').value.trim(),
-    brn: $('biz-brn').value.trim(),
-    address: $('biz-address').value.trim(),
-    phone: $('biz-phone').value.trim(),
-    bill: $('biz-bill').value.trim()
-  };
-  
-  if(!u.name || !u.email){ toast('Enter name and email'); return; }
-  
-  const allUsers = JSON.parse(localStorage.getItem('bmp_all_users') || '{}');
-  if (allUsers[email]) {
-    toast('Email already registered');
-    return;
-  }
-  
-  allUsers[email] = u;
-  localStorage.setItem('bmp_all_users', JSON.stringify(allUsers));
-  setUser(u);
-  toast('Account created');
-  showLoggedIn();
-  go('home');
+/* ========= Signup ========= */
+document.addEventListener('DOMContentLoaded', ()=>{
+  const form = document.getElementById('account-form');
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const email = $('acc-email').value.trim();
+    const password = $('acc-password').value;
+    if (!password || password.length < 6) { toast('Password must be at least 6 characters'); return; }
+    const hashedPassword = await hashPassword(password);
+    const u = {
+      name: $('acc-name').value.trim(),
+      email: email,
+      passwordHash: hashedPassword,
+      business: $('biz-name').value.trim(),
+      brn: $('biz-brn').value.trim(),
+      address: $('biz-address').value.trim(),
+      phone: $('biz-phone').value.trim(),
+      bill: $('biz-bill').value.trim()
+    };
+    if(!u.name || !u.email){ toast('Enter name and email'); return; }
+    const allUsers = JSON.parse(localStorage.getItem('bmp_all_users') || '{}');
+    if (allUsers[email]) { toast('Email already registered'); return; }
+    allUsers[email] = u;
+    localStorage.setItem('bmp_all_users', JSON.stringify(allUsers));
+    setUser(u);
+    toast('Account created');
+    showLoggedIn();
+    go('home');
+  });
 });
-
-/* ========= Plans actions (+ payments) ========= */
+/* ========= Plans (+ payments) ========= */
 const PRICE_MUR = {
   starter: { monthly: 999, '6m': 5400, year: 9600 },
   pro: { monthly: 1499, '6m': 8100, year: 14400 },
 };
-const MUR_TO_USD = 0.022; // demo conversion for PayPal sandbox
+const MUR_TO_USD = 0.022; // internal conversion used for PayPal sandbox
 function agreed(){ return ($('agree-terms') && $('agree-terms').checked) || ($('agree-terms2') && $('agree-terms2').checked); }
 function getSelectedAmount(plan){
   const grp = plan==='starter' ? document.querySelector('input[name="starter-billing"]:checked') : document.querySelector('input[name="pro-billing"]:checked');
@@ -537,13 +507,12 @@ function activateDemo(planName, amount){
   if(!agreed()){ toast('Please agree to Terms'); return; }
   if(!getUser()){ toast('Log in first'); go('account'); return; }
   setPlanActive();
-  toast(`${planName} plan activated (demo) — Rs ${amount}`);
+  toast(`${planName} plan activated — Rs ${amount}`);
   go('receipts');
 }
 
-// JUICE  flow
+/* JUICE modal */
 let pendingPlan=null;
-
 function openJuice(plan){
   if(!agreed()){ toast('Please agree to Terms'); return; }
   if(!getUser()){ toast('Log in first'); go('account'); return; }
@@ -569,21 +538,19 @@ function openJuice(plan){
         </div>
       </div>
       <a class='pill inline-block' href='sms:+23054960101?body=${encodeURIComponent(sms)}'>Send SMS confirmation</a>
-      <div class='mt-2 text-xs text-gray-500'>This is a demo. No real payment is processed here.</div>
     </div>`;
   $('juice-modal').showModal();
 }
-
 function closeJuice(){ $('juice-modal').close(); }
 function confirmJuicePaid(){
   if(!pendingPlan) return closeJuice();
-  setPlanActive(); toast(`${pendingPlan==='starter'?'Starter':'Pro'} plan activated (JUICE demo)`);
+  setPlanActive(); toast(`${pendingPlan==='starter'?'Starter':'Pro'} plan activated`);
   closeJuice(); go('receipts');
 }
 
-// PayPal sandbox buttons (USD)
+/* PayPal buttons (SDK is sandbox internally) */
 function renderPayPal(){
-  if(!window.paypal) return; // SDK not loaded yet
+  if(!window.paypal) return;
   const targets=[['paypal-btn-starter','starter'],['paypal-btn-pro','pro']];
   targets.forEach(([id,plan])=>{
     const mount=document.getElementById(id); if(!mount || mount.hasChildNodes()) return;
@@ -593,12 +560,18 @@ function renderPayPal(){
         const mur=getSelectedAmount(plan); const usd=parseFloat((mur*MUR_TO_USD).toFixed(2));
         return actions.order.create({ purchase_units:[{ amount:{ value:String(usd) } }] });
       },
-      onApprove: async (_, actions)=>{ try{ await actions.order.capture(); setPlanActive(); toast(`${plan==='starter'?'Starter':'Pro'} activated (PayPal sandbox)`); go('receipts'); }catch(e){ toast('Payment capture failed'); } },
-      onError: ()=>toast('PayPal error (sandbox)')
+      onApprove: async (_, actions)=>{
+        try{
+          await actions.order.capture();
+          setPlanActive();
+          toast(`${plan==='starter'?'Starter':'Pro'} activated (PayPal)`);
+          go('receipts');
+        }catch(e){ toast('Payment capture failed'); }
+      },
+      onError: ()=>toast('PayPal error')
     }).render('#'+id);
   });
 }
-// Attempt render once SDK ready
 if(window.paypal){ renderPayPal(); }
 else{ window.addEventListener('load', ()=>{ setTimeout(renderPayPal, 600); }); }
 
@@ -636,13 +609,11 @@ function recalcTotals(){
   $('totals').textContent = `Subtotal: ${money(subtotal)} • Grand: ${money(grand)}`;
   return {items:[...items], subtotal, vatPct:vat, vatAmt, discount, fee, grand};
 }
-
 function previewNextRef(){
   const y=new Date().getFullYear();
   const seq = (loadR().length+1).toString().padStart(4,'0');
   return `REF-${y}-${seq}`;
 }
-
 function saveReceipt(){
   if(!getUser()){ toast('Log in first'); go('account'); return; }
   if(!(isPlanActive()||isTrialActive())){ toast('Activate a plan'); go('plans'); return; }
@@ -660,7 +631,6 @@ function saveReceipt(){
   $('ref').value=''; $('cust-name').value=''; $('date').value=''; items.length=0; renderItems(); recalcTotals();
   toast('Receipt saved');
 }
-
 function renderHistory(){
   const body=$('hist-body'); if(!body) return;
   body.innerHTML='';
@@ -722,18 +692,16 @@ function downloadPdfFromCurrent(){
     date:$('date').value||new Date().toISOString().slice(0,10), ...recalcTotals()
   };
   const list=loadR(); list.push(tmp); saveR(list); pdfFromRecord(tmp.id);
-  // remove the temp after export (and do NOT update clients)
   saveR(loadR().filter(x=>x.id!==tmp.id));
 }
 
-// Share helpers (Web Share / WhatsApp / Email)
+/* Share helpers */
 function shareFromRecord(id){
   const r=loadR().find(x=>x.id===id); if(!r){toast('Not found');return;}
   const p=getUser()||{};
   const title = `Receipt ${r.ref}`;
   const text = shareTextFromReceipt(r, p);
   if(navigator.share){ navigator.share({title, text}).catch(()=>{}); return; }
-  // Fallback: try WhatsApp, else mailto
   const wa=`https://wa.me/?text=${encodeURIComponent(text)}`;
   const mail=`mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(text)}`;
   window.open(wa,'_blank') || (window.location.href=mail);
@@ -797,7 +765,6 @@ function adjustClientAfterDelete(r){
   const list=loadClients(); const idx=list.findIndex(x=>x.name.toLowerCase()===r.customer.toLowerCase());
   if(idx===-1){ renderClients(); return; }
   list[idx].total=Math.max(0,(list[idx].total||0)-1);
-  // recompute last from remaining receipts for that customer
   const remain=loadR().filter(x=>x.customer.toLowerCase()===r.customer.toLowerCase());
   list[idx].last = remain.length? remain.sort((a,b)=>b.date.localeCompare(a.date))[0].date : '—';
   saveClients(list);
@@ -823,11 +790,9 @@ function renderDashboard(){
   const sum=inMonth.reduce((s,r)=>s+Number(r.grand||0),0);
   if($('dash-month')) $('dash-month').textContent = money(sum);
   if($('dash-count')) $('dash-count').textContent = inMonth.length;
-  // top customer
   const byCust={}; inMonth.forEach(r=>{byCust[r.customer]=(byCust[r.customer]||0)+r.grand});
   const top=Object.entries(byCust).sort((a,b)=>b[1]-a[1])[0];
   if($('dash-top')) $('dash-top').textContent = top? `${top[0]} (${money(top[1])})` : '—';
-  // chart (guard if Chart not loaded)
   const el=$('chart-monthly'); if(!el || !window.Chart) return;
   const {labels,data}=monthlySeries(6);
   if(chartMonthly) { try{ chartMonthly.destroy(); }catch(e){} }
@@ -837,15 +802,14 @@ function renderDashboard(){
   });
 }
 
-<script>
-// ========= Self-tests (lightweight) =========
+/* ========= Self-tests ========= */
 function runSelfTests(){
-  const fails=[]; const pass=(n)=>console.log('✔',n); const fail=(n,m)=>{console.error('✘',n,m); fails.push(n+': '+m);};
+  const fails=[]; const pass=(name)=>console.log('✔',name); const fail=(name,msg)=>{console.error('✘',name,msg); fails.push(name+': '+msg);} 
   try{
     go('home');
-    const homeOk = document.getElementById('view-home').classList.contains('active');
-    if(!homeOk) fail('go(home)','home not active'); else pass('go(home)');
-    // go('plans'); // disabled in production so we don't land on Plans
+    if(!document.getElementById('view-home').classList.contains('active')) fail('go(home)','home not active'); else pass('go(home)');
+    go('plans');
+    if(!document.getElementById('view-plans').classList.contains('active')) fail('go(plans)','plans not active'); else pass('go(plans)');
   }catch(e){ fail('go()', e.message); }
   try{
     const mockR={ref:'T-1', date:'2025-09-30', customer:'Alice', items:[{desc:'X',qty:1,unit:100,total:100}], subtotal:100, vatPct:0, vatAmt:0, fee:0, discount:0, grand:100};
@@ -857,33 +821,28 @@ function runSelfTests(){
   }catch(e){ fail('previewNextRef', e.message); }
   if(fails.length){ toast('Self-tests failed'); console.warn('Self-test failures:', fails); }
   else{ console.info('All self-tests passed'); }
-  go('home'); // ensure we finish on Home
 }
 
-
-<!-- ========= Boot (REPLACE THIS WHOLE BLOCK) ========= -->
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  // keep startup super safe
+/* ========= Boot (final) ========= */
+document.addEventListener('DOMContentLoaded', ()=>{
+  // Keep startup safe: stop browser from restoring old hash/scroll
   try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch(e) {}
   try { if (location.hash) history.replaceState(null, '', location.pathname + location.search); } catch(e) {}
   window.scrollTo(0, 0);
 
-  // account view
+  // Account view
   const user = getUser();
   if (user) { showLoggedIn(); } else { showLogin(); }
 
-  // initial renders
-  renderHistory();
-  renderClients();
-  renderDashboard();
+  // Initial renders
+  renderHistory(); renderClients(); renderDashboard();
 
-  // always start at Home once
+  // Default route: always Home
   go('home');
 
-  // hash nav (go() will gate private tabs)
+  // Hash navigation (gated inside go())
   const restricted = ['plans','dashboard','receipts','clients','test'];
-  window.addEventListener('hashchange', (ev) => {
+  window.addEventListener('hashchange', (ev)=>{
     ev.preventDefault();
     const h = (location.hash || '').slice(1) || 'home';
     if (!getUser() && restricted.includes(h)) {
@@ -895,20 +854,21 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Prefill date today
-  const d = $('date'); 
-  if (d) d.value = new Date().toISOString().slice(0,10);
+  const d=$('date'); if(d) d.value=new Date().toISOString().slice(0,10);
 
-  // Run self-tests ONLY when '?test=1' is in the URL
+  // Run self-tests ONLY when '?test=1'
   if (location.search.includes('test=1')) setTimeout(runSelfTests, 0);
 
-  // optional: show first JS error instead of silent failure
+  // Optional: surface first JS error as toast (helps diagnose)
   window.addEventListener('error', (e)=>{
     console.error('JS error:', e.message, e.filename+':'+e.lineno);
-    toast('Error: ' + e.message);
+    // toast('Error: ' + e.message); // uncomment if you want visible toasts on errors
   });
   window.addEventListener('unhandledrejection', (e)=>{
     console.error('Unhandled promise:', e.reason);
-    toast('Error: ' + (e.reason && e.reason.message || 'Unhandled promise'));
+    // toast('Error: ' + (e.reason && e.reason.message || 'Unhandled promise'));
   });
 });
 </script>
+</body>
+</html>
