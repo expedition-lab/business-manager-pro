@@ -742,15 +742,26 @@ function runSelfTests(){
 document.addEventListener('DOMContentLoaded', ()=>{
   renderHistory(); renderClients(); renderDashboard();
 
-  // Default route: enforce Home if no hash; otherwise follow the hash
-  const initial = (location.hash || '').replace('#','') || 'home';
-  go(initial);
+  // Default route: prefer Home. If a restricted hash is present but user not signed in, ignore it.
+let initial = (location.hash || '').replace('#','') || 'home';
+const restricted = ['plans','dashboard','receipts','clients','test'];
 
-  // Respond to manual hash changes (#plans, #dashboard, etc.)
-  window.addEventListener('hashchange', ()=>{
-    const h = (location.hash || '').replace('#','') || 'home';
+if (!getUser() && restricted.includes(initial)) {
+  initial = 'home';
+  history.replaceState(null, '', location.pathname); // drop the hash
+}
+go(initial);
+
+// If someone types a restricted hash later & not signed in, bounce back to Home
+window.addEventListener('hashchange', ()=>{
+  let h = (location.hash || '').replace('#','') || 'home';
+  if (!getUser() && restricted.includes(h)) {
+    history.replaceState(null, '', location.pathname);
+    go('home');
+  } else {
     go(h);
-  });
+  }
+});
 
   // Prefill date today
   const d=$('date'); if(d) d.value=new Date().toISOString().slice(0,10);
