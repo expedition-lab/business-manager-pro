@@ -1,0 +1,4 @@
+
+User-agent: *
+Allow: /
+Sitemap: https://business-manager-pro.vercel.app/sitemap.txt
