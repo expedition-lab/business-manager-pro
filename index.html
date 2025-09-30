@@ -837,14 +837,15 @@ function renderDashboard(){
   });
 }
 
-/* ========= Self-tests (lightweight) ========= */
+<script>
+// ========= Self-tests (lightweight) =========
 function runSelfTests(){
-  const fails=[]; const pass=(name)=>console.log('✔',name); const fail=(name,msg)=>{console.error('✘',name,msg); fails.push(name+': '+msg);} 
+  const fails=[]; const pass=(n)=>console.log('✔',n); const fail=(n,m)=>{console.error('✘',n,m); fails.push(n+': '+m);};
   try{
     go('home');
-    if(!document.getElementById('view-home').classList.contains('active')) fail('go(home)','home not active'); else pass('go(home)');
-    go('plans');
-    if(!document.getElementById('view-plans').classList.contains('active')) fail('go(plans)','plans not active'); else pass('go(plans)');
+    const homeOk = document.getElementById('view-home').classList.contains('active');
+    if(!homeOk) fail('go(home)','home not active'); else pass('go(home)');
+    // go('plans'); // disabled in production so we don't land on Plans
   }catch(e){ fail('go()', e.message); }
   try{
     const mockR={ref:'T-1', date:'2025-09-30', customer:'Alice', items:[{desc:'X',qty:1,unit:100,total:100}], subtotal:100, vatPct:0, vatAmt:0, fee:0, discount:0, grand:100};
@@ -856,44 +857,46 @@ function runSelfTests(){
   }catch(e){ fail('previewNextRef', e.message); }
   if(fails.length){ toast('Self-tests failed'); console.warn('Self-test failures:', fails); }
   else{ console.info('All self-tests passed'); }
+  go('home'); // ensure we finish on Home
 }
+
 
 /* ========= Boot ========= */
 document.addEventListener('DOMContentLoaded', ()=>{
-  
-  // Check if user is logged in and show appropriate view
+  // Show correct account view
   const user = getUser();
-  if (user) {
-    showLoggedIn();
-  } else {
-    showLogin();
-  }
-  
+  if (user) { showLoggedIn(); } else { showLogin(); }
+
   renderHistory(); renderClients(); renderDashboard();
-  // Default route: prefer Home. If a restricted hash is present but user not signed in, ignore it.
-const restricted = ['plans','dashboard','receipts','clients','test']; // used later
 
-// Always start on Home and drop any #hash
-let initial = 'home';
-try { history.replaceState(null, '', location.pathname); } catch (e) {}
-go(initial);
+  // Default route: always start on Home and drop any #hash
+  const restricted = ['plans','dashboard','receipts','clients','test'];
+  let initial = 'home';
+  try { history.replaceState(null, '', location.pathname); } catch (e) {}
+  go(initial);
 
-// If someone types a restricted hash later & not signed in, bounce back to Home
-window.addEventListener('hashchange', ()=>{
-  let h = (location.hash || '').replace('#','') || 'home';
-  if (!getUser() && restricted.includes(h)) {
-    history.replaceState(null, '', location.pathname);
-    go('home');
-  } else {
-    go(h);
-  }
-});
+  // If someone types a restricted hash later & not signed in, bounce to Home
+  window.addEventListener('hashchange', ()=>{
+    let h = (location.hash || '').replace('#','') || 'home';
+    if (!getUser() && restricted.includes(h)) {
+      history.replaceState(null, '', location.pathname);
+      go('home');
+    } else {
+      go(h);
+    }
+  });
 
   // Prefill date today
   const d=$('date'); if(d) d.value=new Date().toISOString().slice(0,10);
 
-  // Run lightweight self-tests after initial render
-  setTimeout(runSelfTests, 0);
+  // Run self-tests ONLY when '?test=1' is in the URL
+  if (location.search.includes('test=1')) setTimeout(runSelfTests, 0);
+
+  // Safety: after everything settles, ensure we're on Home and clear any #hash
+  setTimeout(function () {
+    try { history.replaceState(null, '', location.pathname); } catch (e) {}
+    if (typeof go === 'function') go('home');
+  }, 25);
 });
 </script>
 </body>
