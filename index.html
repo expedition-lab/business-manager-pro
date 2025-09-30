@@ -158,16 +158,16 @@
         </div>
         <ul class="mt-3 text-sm list-disc pl-5">
           <li>User account (login/signup)</li>
-          <li>Create e‑receipts with items, taxes & discounts</li>
+          <li>Create e-receipts with items, taxes & discounts</li>
           <li>Client & item library (basic save)</li>
           <li>Share via WhatsApp / Email link</li>
           <li>Export receipts to CSV</li>
-          <li>Mobile‑friendly access</li>
+          <li>Mobile-friendly access</li>
         </ul>
         <div class="mt-4">
           <label class="text-sm"><input type="checkbox" id="agree-terms" class="mr-1">I agree to Terms</label>
           <div class="mt-3 flex flex-wrap gap-2">
-            <button class="btn btn-primary" onclick="startTrial()">Start 3‑day Trial</button>
+            <button class="btn btn-primary" onclick="startTrial()">Start 3-day Trial</button>
             <button class="btn btn-ghost" onclick="openJuice('starter')">Pay with JUICE (Demo)</button>
             <div id="paypal-btn-starter" class="inline-block"></div>
             <button class="btn btn-ghost" onclick="activateDemo('Starter',getSelectedAmount('starter'))">Activate (Demo)</button>
@@ -194,7 +194,7 @@
         <div class="mt-4">
           <label class="text-sm"><input type="checkbox" id="agree-terms2" class="mr-1">I agree to Terms</label>
           <div class="mt-3 flex flex-wrap gap-2">
-            <button class="btn btn-primary" onclick="startTrial()">Start 3‑day Trial</button>
+            <button class="btn btn-primary" onclick="startTrial()">Start 3-day Trial</button>
             <button class="btn btn-ghost" onclick="openJuice('pro')">Pay with JUICE (Demo)</button>
             <div id="paypal-btn-pro" class="inline-block"></div>
             <button class="btn btn-ghost" onclick="activateDemo('Pro',getSelectedAmount('pro'))">Activate (Demo)</button>
@@ -333,17 +333,32 @@ function updateHeaderAuth(){
 }
 updateHeaderAuth();
 
-/* ========= Router with guards ========= */
+/* ========= Tab activator ========= */
 function activateTab(name){
   document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
   const v=$('view-'+name); if(v) v.classList.add('active');
   window.scrollTo(0,0);
 }
+
+/* ========= Router (FIXED: default Home + hash sync) ========= */
 function go(target){
-  if(['home','plans','account'].includes(target)){ activateTab(target); return; }
-  if(!getUser()){ toast('Please create an account first'); activateTab('account'); return; }
-  if(!(isPlanActive()||isTrialActive())){ toast('Activate a plan or start trial'); activateTab('plans'); return; }
-  activateTab(target);
+  const publicTabs = ['home','plans','account'];
+  let dest = target;
+
+  // Gate private tabs
+  if (!publicTabs.includes(target)) {
+    if (!getUser()) { toast('Please create an account first'); dest = 'account'; }
+    else if (!(isPlanActive() || isTrialActive())) { toast('Activate a plan or start trial'); dest = 'plans'; }
+  }
+
+  activateTab(dest);
+
+  // Keep URL clean: root for home, hash for others
+  if (dest === 'home') {
+    history.replaceState(null, '', location.pathname);
+  } else {
+    history.replaceState(null, '', location.pathname + '#' + dest);
+  }
 }
 
 /* ========= Account form ========= */
@@ -361,7 +376,7 @@ $('account-form').addEventListener('submit', (e)=>{
   if(!u.name || !u.email){ toast('Enter name and email'); return; }
   setUser(u);
   toast('Account saved');
-  go('plans');
+  go('plans'); // after signup, show plans (kept intentionally)
 });
 
 /* ========= Plans actions (demo + payments) ========= */
@@ -692,20 +707,17 @@ function renderDashboard(){
 function runSelfTests(){
   const fails=[]; const pass=(name)=>console.log('✔',name); const fail=(name,msg)=>{console.error('✘',name,msg); fails.push(name+': '+msg);} 
   try{
-    // Test 1: go() activates tabs
     go('home');
     if(!document.getElementById('view-home').classList.contains('active')) fail('go(home)','home not active'); else pass('go(home)');
     go('plans');
     if(!document.getElementById('view-plans').classList.contains('active')) fail('go(plans)','plans not active'); else pass('go(plans)');
   }catch(e){ fail('go()', e.message); }
   try{
-    // Test 2: shareTextFromReceipt formatting
     const mockR={ref:'T-1', date:'2025-09-30', customer:'Alice', items:[{desc:'X',qty:1,unit:100,total:100}], subtotal:100, vatPct:0, vatAmt:0, fee:0, discount:0, grand:100};
     const txt=shareTextFromReceipt(mockR,{business:'Biz',brn:'C20'});
     if(!(txt.includes('Grand Total: 100.00 MUR') && txt.includes('\n'))) fail('shareTextFromReceipt','formatting missing'); else pass('shareTextFromReceipt');
   }catch(e){ fail('shareTextFromReceipt', e.message); }
   try{
-    // Test 3: previewNextRef pattern
     const ref=previewNextRef(); if(!/^REF-\d{4}-\d{4}$/.test(ref)) fail('previewNextRef','pattern mismatch'); else pass('previewNextRef');
   }catch(e){ fail('previewNextRef', e.message); }
   if(fails.length){ toast('Self-tests failed'); console.warn('Self-test failures:', fails); }
@@ -715,8 +727,20 @@ function runSelfTests(){
 /* ========= Boot ========= */
 document.addEventListener('DOMContentLoaded', ()=>{
   renderHistory(); renderClients(); renderDashboard();
+
+  // Default route: enforce Home if no hash; otherwise follow the hash
+  const initial = (location.hash || '').replace('#','') || 'home';
+  go(initial);
+
+  // Respond to manual hash changes (#plans, #dashboard, etc.)
+  window.addEventListener('hashchange', ()=>{
+    const h = (location.hash || '').replace('#','') || 'home';
+    go(h);
+  });
+
   // Prefill date today
   const d=$('date'); if(d) d.value=new Date().toISOString().slice(0,10);
+
   // Run lightweight self-tests after initial render
   setTimeout(runSelfTests, 0);
 });
