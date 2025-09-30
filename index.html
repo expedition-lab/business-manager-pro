@@ -390,7 +390,7 @@ $('account-form').addEventListener('submit', (e)=>{
   if(!u.name || !u.email){ toast('Enter name and email'); return; }
   setUser(u);
   toast('Account saved');
-  go('plans'); // after signup, show plans (kept intentionally)
+go('home'); // go to Home after signup
 });
 
 /* ========= Plans actions (demo + payments) ========= */
