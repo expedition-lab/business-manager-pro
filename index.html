@@ -743,13 +743,11 @@ document.addEventListener('DOMContentLoaded', ()=>{
   renderHistory(); renderClients(); renderDashboard();
 
   // Default route: prefer Home. If a restricted hash is present but user not signed in, ignore it.
-let initial = (location.hash || '').replace('#','') || 'home';
-const restricted = ['plans','dashboard','receipts','clients','test'];
+const restricted = ['plans','dashboard','receipts','clients','test']; // used later
 
-if (!getUser() && restricted.includes(initial)) {
-  initial = 'home';
-  history.replaceState(null, '', location.pathname); // drop the hash
-}
+// Always start on Home and drop any #hash
+let initial = 'home';
+try { history.replaceState(null, '', location.pathname); } catch (e) {}
 go(initial);
 
 // If someone types a restricted hash later & not signed in, bounce back to Home
