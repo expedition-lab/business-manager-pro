@@ -134,28 +134,51 @@
   </section>
 
   <!-- ===== ACCOUNT ===== -->
-  <section id="view-account" class="tab">
-    <h2 class="text-xl font-bold mb-4">Login / Sign up</h2>
-    <form id="account-form" class="card grid gap-3">
-      <div>
-        <label class="text-xs text-gray-500">ACCOUNT</label>
-        <input id="acc-name" required placeholder="Your name" class="w-full mt-1 p-2 border rounded" />
-        <input id="acc-email" required type="email" placeholder="you@email.com" class="w-full mt-2 p-2 border rounded" />
-      </div>
-      <div>
-        <label class="text-xs text-gray-500">BUSINESS DETAILS</label>
-        <input id="biz-name" placeholder="Business name (optional)" class="w-full mt-1 p-2 border rounded" />
-        <input id="biz-brn" placeholder="BRN (optional)" class="w-full mt-2 p-2 border rounded" />
-        <textarea id="biz-address" placeholder="Address (optional)" class="w-full mt-2 p-2 border rounded"></textarea>
-        <input id="biz-phone" placeholder="Phone (optional)" class="w-full mt-2 p-2 border rounded" />
-        <input id="biz-bill" placeholder="Billing email (optional)" class="w-full mt-2 p-2 border rounded" />
-      </div>
-      <div class="flex gap-3">
-        <button class="btn btn-primary" type="submit">Continue</button>
-        <button class="btn btn-ghost" type="button" onclick="logout()">Sign out</button>
-      </div>
-    </form>
-  </section>
+<section id="view-account" class="tab">
+  <h2 class="text-xl font-bold mb-4">Account</h2>
+  
+  <!-- Login Form -->
+  <div id="login-view" class="card grid gap-3">
+    <h3 class="font-semibold">Login</h3>
+    <input id="login-email" type="email" placeholder="Email" class="w-full p-2 border rounded" />
+    <input id="login-password" type="password" placeholder="Password" class="w-full p-2 border rounded" />
+    <div class="flex gap-3">
+      <button class="btn btn-primary" onclick="loginUser()">Login</button>
+      <button class="btn btn-ghost" onclick="showSignup()">Create Account</button>
+    </div>
+  </div>
+  
+  <!-- Signup Form -->
+  <form id="account-form" class="card grid gap-3" style="display:none">
+    <h3 class="font-semibold">Create Account</h3>
+    <div>
+      <label class="text-xs text-gray-500">ACCOUNT</label>
+      <input id="acc-name" required placeholder="Your name" class="w-full mt-1 p-2 border rounded" />
+      <input id="acc-email" required type="email" placeholder="you@email.com" class="w-full mt-2 p-2 border rounded" />
+      <input id="acc-password" required type="password" placeholder="Password (min 6 characters)" class="w-full mt-2 p-2 border rounded" />
+    </div>
+    <div>
+      <label class="text-xs text-gray-500">BUSINESS DETAILS (Optional)</label>
+      <input id="biz-name" placeholder="Business name" class="w-full mt-1 p-2 border rounded" />
+      <input id="biz-brn" placeholder="BRN" class="w-full mt-2 p-2 border rounded" />
+      <textarea id="biz-address" placeholder="Address" class="w-full mt-2 p-2 border rounded"></textarea>
+      <input id="biz-phone" placeholder="Phone" class="w-full mt-2 p-2 border rounded" />
+      <input id="biz-bill" placeholder="Billing email" class="w-full mt-2 p-2 border rounded" />
+    </div>
+    <div class="flex gap-3">
+      <button class="btn btn-primary" type="submit">Create Account</button>
+      <button class="btn btn-ghost" type="button" onclick="showLogin()">Back to Login</button>
+    </div>
+  </form>
+  
+  <!-- Logged In View -->
+  <div id="logged-in-view" class="card" style="display:none">
+    <h3 class="font-semibold mb-2">Account Details</h3>
+    <div id="account-details" class="text-sm space-y-1"></div>
+    <button class="btn btn-ghost mt-3" onclick="logout()">Sign Out</button>
+  </div>
+</section>
+
 
   <!-- ===== PLANS ===== -->
   <section id="view-plans" class="tab">
@@ -327,7 +350,13 @@ function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('sho
 /* ========= Auth, Plan & Trial ========= */
 function getUser(){ try{return JSON.parse(localStorage.getItem('bmp_user'))||null}catch(e){return null} }
 function setUser(u){ localStorage.setItem('bmp_user', JSON.stringify(u)); updateHeaderAuth(); }
-function logout(){ localStorage.removeItem('bmp_user'); updateHeaderAuth(); toast('Signed out'); go('home'); }
+function logout(){ 
+  localStorage.removeItem('bmp_user'); 
+  updateHeaderAuth(); 
+  showLogin();
+  toast('Signed out'); 
+  go('home'); 
+}
 
 function isPlanActive(){ return localStorage.getItem('bmp_plan_active')==='1'; }
 function setPlanActive(){ localStorage.setItem('bmp_plan_active','1'); updateHeaderAuth(); }
@@ -374,26 +403,117 @@ function go(target){
     history.replaceState(null, '', location.pathname + '#' + dest);
   }
 }
+/* ========= Password Hashing ========= */
+async function hashPassword(password) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hash))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+/* ========= View Toggle Functions ========= */
+function showLogin() {
+  $('login-view').style.display = 'block';
+  $('account-form').style.display = 'none';
+  $('logged-in-view').style.display = 'none';
+}
+
+function showSignup() {
+  $('login-view').style.display = 'none';
+  $('account-form').style.display = 'block';
+  $('logged-in-view').style.display = 'none';
+}
+
+function showLoggedIn() {
+  $('login-view').style.display = 'none';
+  $('account-form').style.display = 'none';
+  $('logged-in-view').style.display = 'block';
+  
+  const u = getUser();
+  if (u) {
+    $('account-details').innerHTML = `
+      <p><strong>Name:</strong> ${u.name}</p>
+      <p><strong>Email:</strong> ${u.email}</p>
+      <p><strong>Business:</strong> ${u.business || 'Not set'}</p>
+      <p><strong>BRN:</strong> ${u.brn || 'Not set'}</p>
+    `;
+  }
+}
+
+/* ========= Login Function ========= */
+async function loginUser() {
+  const email = $('login-email').value.trim();
+  const password = $('login-password').value;
+  
+  if (!email || !password) {
+    toast('Enter email and password');
+    return;
+  }
+  
+  const allUsers = JSON.parse(localStorage.getItem('bmp_all_users') || '{}');
+  const user = allUsers[email];
+  
+  if (!user) {
+    toast('Account not found');
+    return;
+  }
+  
+  const hashedInput = await hashPassword(password);
+  
+  if (hashedInput !== user.passwordHash) {
+    toast('Incorrect password');
+    return;
+  }
+  
+  setUser(user);
+  toast('Logged in successfully');
+  showLoggedIn();
+  go('home');
+}
 
 /* ========= Account form ========= */
-$('account-form').addEventListener('submit', (e)=>{
+$('account-form').addEventListener('submit', async (e)=>{
   e.preventDefault();
-  const u={
+  const email = $('acc-email').value.trim();
+  const password = $('acc-password').value;
+  
+  if (!password || password.length < 6) {
+    toast('Password must be at least 6 characters');
+    return;
+  }
+  
+  const hashedPassword = await hashPassword(password);
+  
+  const u = {
     name: $('acc-name').value.trim(),
-    email: $('acc-email').value.trim(),
+    email: email,
+    passwordHash: hashedPassword,
     business: $('biz-name').value.trim(),
     brn: $('biz-brn').value.trim(),
     address: $('biz-address').value.trim(),
     phone: $('biz-phone').value.trim(),
     bill: $('biz-bill').value.trim()
   };
+  
   if(!u.name || !u.email){ toast('Enter name and email'); return; }
+  
+  const allUsers = JSON.parse(localStorage.getItem('bmp_all_users') || '{}');
+  if (allUsers[email]) {
+    toast('Email already registered');
+    return;
+  }
+  
+  allUsers[email] = u;
+  localStorage.setItem('bmp_all_users', JSON.stringify(allUsers));
   setUser(u);
-  toast('Account saved');
-go('home'); // go to Home after signup
+  toast('Account created');
+  showLoggedIn();
+  go('home');
 });
 
-/* ========= Plans actions (demo + payments) ========= */
+/* ========= Plans actions (+ payments) ========= */
 const PRICE_MUR = {
   starter: { monthly: 999, '6m': 5400, year: 9600 },
   pro: { monthly: 1499, '6m': 8100, year: 14400 },
@@ -421,7 +541,7 @@ function activateDemo(planName, amount){
   go('receipts');
 }
 
-// JUICE demo flow
+// JUICE  flow
 let pendingPlan=null;
 
 function openJuice(plan){
@@ -740,8 +860,16 @@ function runSelfTests(){
 
 /* ========= Boot ========= */
 document.addEventListener('DOMContentLoaded', ()=>{
+  
+  // Check if user is logged in and show appropriate view
+  const user = getUser();
+  if (user) {
+    showLoggedIn();
+  } else {
+    showLogin();
+  }
+  
   renderHistory(); renderClients(); renderDashboard();
-
   // Default route: prefer Home. If a restricted hash is present but user not signed in, ignore it.
 const restricted = ['plans','dashboard','receipts','clients','test']; // used later
 
