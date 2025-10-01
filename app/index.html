@@ -5,10 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Business Manager Pro — App</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Nuke any stale SW/caches -->
+  <script>
+    (function(){
+      try{
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
+          if (window.caches && caches.keys) { caches.keys().then(keys => keys.forEach(k => caches.delete(k))); }
+        }
+      }catch(e){}
+    })();
+  </script>
 </head>
 <body class="bg-slate-50 text-slate-800">
   <header class="sticky top-0 z-30 bg-white border-b">
-    <div class="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
       <a href="/" class="font-semibold">Business Manager Pro</a>
       <div class="text-sm flex items-center gap-3">
         <span id="userEmail" class="hidden px-2 py-1 rounded-full border"></span>
@@ -17,63 +28,105 @@
     </div>
   </header>
 
-  <main class="max-w-3xl mx-auto px-4 py-6">
-    <!-- AUTH -->
+  <main class="max-w-4xl mx-auto px-4 py-6">
+    <!-- AUTH & COMPLIANCE -->
     <section id="authCard" class="rounded-xl border bg-white p-5">
-      <h2 class="text-lg font-semibold">Sign in</h2>
+      <h2 class="text-lg font-semibold">Create account / Sign in</h2>
       <div class="grid md:grid-cols-3 gap-3 mt-3">
-        <input id="email" class="border rounded-lg p-2" placeholder="Email">
-        <input id="password" type="password" class="border rounded-lg p-2" placeholder="Password">
+        <input id="email" class="border rounded-lg p-2" placeholder="Email" autocomplete="username" inputmode="email">
+        <input id="password" type="password" class="border rounded-lg p-2" placeholder="Password (min 6)" minlength="6" autocomplete="current-password">
         <div class="flex gap-2">
           <button id="signupBtn" class="flex-1 px-3 py-2 rounded-lg bg-blue-600 text-white">Create</button>
           <button id="loginBtn"  class="flex-1 px-3 py-2 rounded-lg border">Log in</button>
         </div>
       </div>
-      <p id="authMsg" class="text-sm text-red-600 mt-2"></p>
+
+      <!-- REQUIRED BUSINESS FIELDS -->
+      <div class="mt-4 grid md:grid-cols-2 gap-3">
+        <input id="fullName"      class="border rounded-lg p-2" placeholder="Full name (required)">
+        <input id="bizName"       class="border rounded-lg p-2" placeholder="Business name (required)">
+        <input id="brn"           class="border rounded-lg p-2 uppercase" placeholder="BRN (required)">
+        <input id="phone"         class="border rounded-lg p-2" placeholder="Phone (required)">
+        <input id="address"       class="md:col-span-2 border rounded-lg p-2" placeholder="Business address (required)">
+        <input id="vat"           class="border rounded-lg p-2" placeholder="VAT number (optional)">
+        <select id="companyType"  class="border rounded-lg p-2">
+          <option value="">Company type (optional)</option>
+          <option>Ltd</option><option>Sole Trader</option><option>Partnership</option><option>Other</option>
+        </select>
+      </div>
+
+      <div class="mt-2 flex gap-2">
+        <button id="loginOtpBtn" class="px-3 py-2 rounded-lg border">Email me a login code</button>
+      </div>
+      <p id="authMsg" class="text-sm mt-2"></p>
     </section>
 
-    <!-- QUICK PAYMENTS -->
+    <!-- PLANS + PAYMENTS -->
     <section id="payCard" class="hidden rounded-xl border bg-white p-5 mt-6">
-      <h2 class="text-lg font-semibold">Payment methods</h2>
-      <p class="text-sm text-slate-600">Choose a subscription payment option.</p>
+      <h2 class="text-lg font-semibold">Choose your plan & pay</h2>
+      <p class="text-sm text-slate-600">Pick a plan. Pay by PayPal or JUICE. Access activates after payment.</p>
 
-      <div class="grid md:grid-cols-2 gap-3 mt-3">
-        <!-- Replace the current #paypalCopy click handler with: -->
-<script>
-  const PAYPAL_EMAIL = "peeroosuhail047@gmail.com";
-  document.querySelector('#paypalCopy').onclick = ()=>{
-    navigator.clipboard.writeText(PAYPAL_EMAIL);
-    window.open('https://www.paypal.com/myaccount/transfer/send', '_blank');
-    const btn = document.querySelector('#paypalCopy');
-    btn.textContent = 'Email copied ✓';
-    setTimeout(()=>btn.textContent='Pay with PayPal (copy email)', 1200);
-  };
-</script>
+      <!-- Plans (editable prices) -->
+      <div class="mt-4 grid md:grid-cols-3 gap-3" id="plansGrid">
+        <!-- data-amount is in MUR -->
+        <button class="planBtn border rounded-lg p-3 text-left hover:bg-slate-50"
+                data-tier="Starter" data-cycle="Monthly" data-amount="499">
+          <div class="font-semibold">Starter — Monthly</div>
+          <div class="text-sm text-slate-600">Rs 499 / month</div>
+          <div class="text-xs text-slate-500 mt-1">Up to 100 receipts / mo</div>
+        </button>
+        <button class="planBtn border rounded-lg p-3 text-left hover:bg-slate-50"
+                data-tier="Pro" data-cycle="Monthly" data-amount="899">
+          <div class="font-semibold">Pro — Monthly</div>
+          <div class="text-sm text-slate-600">Rs 899 / month</div>
+          <div class="text-xs text-slate-500 mt-1">Unlimited receipts</div>
+        </button>
+        <button class="planBtn border rounded-lg p-3 text-left hover:bg-slate-50"
+                data-tier="Pro" data-cycle="Yearly" data-amount="8500">
+          <div class="font-semibold">Pro — Yearly</div>
+          <div class="text-sm text-slate-600">Rs 8,500 / year</div>
+          <div class="text-xs text-slate-500 mt-1">Save vs monthly</div>
+        </button>
+      </div>
 
+      <!-- Selected plan summary -->
+      <div class="mt-4 rounded-lg border p-3 bg-slate-50 hidden" id="planSummary">
+        <div class="text-sm">Selected plan:</div>
+        <div class="font-semibold" id="planName">—</div>
+        <div class="text-sm" id="planAmount">—</div>
+      </div>
 
-        <!-- JUICE -->
-        <button id="juiceBtn" class="px-4 py-3 rounded-lg border">Pay with JUICE</button>
+      <!-- Pay buttons -->
+      <div class="grid md:grid-cols-2 gap-3 mt-4">
+        <button id="paypalCopy" class="px-4 py-3 rounded-lg border">Pay with PayPal (copy email)</button>
+        <button id="juiceBtn"   class="px-4 py-3 rounded-lg border">Pay with JUICE</button>
       </div>
 
       <!-- JUICE modal -->
-      <div id="juiceModal"
-           class="hidden fixed inset-0 bg-black/50 grid place-items-center p-4">
+      <div id="juiceModal" class="hidden fixed inset-0 bg-black/50 grid place-items-center p-4">
         <div class="max-w-md w-full bg-white rounded-xl p-5">
           <h3 class="font-semibold">JUICE payment</h3>
-          <p class="text-sm text-slate-600 mt-1">Send to this number:</p>
+          <p class="text-sm text-slate-600 mt-1">Send to this JUICE number:</p>
           <div class="mt-3 flex items-center gap-2">
-            <input id="juiceNumber" class="border rounded-lg p-2 w-full" value="+230 5XX XX XX" />
+            <input id="juiceNumber" class="border rounded-lg p-2 w-full" value="23054960101" />
             <button id="copyJuice" class="px-3 py-2 rounded-lg border">Copy</button>
+          </div>
+          <div class="text-sm mt-3">
+            Amount to pay: <span class="font-semibold" id="juiceAmount">—</span>
           </div>
           <div class="flex justify-end gap-2 mt-4">
             <a id="callJuice" class="px-3 py-2 rounded-lg border" href="tel:+23054960101">Call</a>
+            <a id="waJuice"   class="px-3 py-2 rounded-lg border" target="_blank">WhatsApp</a>
             <button id="closeJuice" class="px-3 py-2 rounded-lg bg-blue-600 text-white">Done</button>
           </div>
         </div>
       </div>
+
+      <!-- Helper note -->
+      <p id="payMsg" class="text-sm mt-3"></p>
     </section>
 
-    <!-- MIN RECEIPT (optional demo) -->
+    <!-- QUICK RECEIPT (demo) -->
     <section id="recCard" class="hidden rounded-xl border bg-white p-5 mt-6">
       <h2 class="text-lg font-semibold">Quick receipt</h2>
       <div class="grid md:grid-cols-4 gap-3 mt-3">
@@ -95,14 +148,29 @@
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
   <script>
-    // ===== Supabase (YOUR real values already filled) =====
-    const SUPABASE_URL = "https://hppgouoexhqgecntpkei.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_9rkxf2R-S7a4yd24O5q9yQ_vH6xGz3g";
+    /* ===== CONFIG ===== */
+    const SUPABASE_URL = "https://hppgouoexhqgecntpkej.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_9rxkf2R-S74yd24O5q9vQ_vH6xGz3g";
+    const PAYPAL_EMAIL = "peeroosuhail047@gmail.com";
+    // Optional: edit plan prices here (MUR)
+    const PRICES = {
+      "Starter|Monthly": 499,
+      "Pro|Monthly": 899,
+      "Pro|Yearly": 8500
+    };
+
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // helpers
+    /* ===== HELPERS ===== */
     const $ = (s)=>document.querySelector(s);
-
+    const emailOk  = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v||"");
+    const phoneOk  = v => /^\+?[0-9 ()-]{6,20}$/.test((v||"").trim());
+    const brnOk    = v => /^[A-Z0-9-]{8,20}$/.test((v||"").toUpperCase().trim());
+    function msg(el, text, ok=false){
+      el.textContent = text;
+      el.className = 'text-sm mt-2 ' + (ok ? 'text-green-600' : 'text-red-600');
+      if(!ok) setTimeout(()=>{ el.textContent=''; }, 6000);
+    }
     function showWhenSignedIn(user){
       const signedIn = !!user;
       $('#authCard').classList.toggle('hidden', signedIn);
@@ -113,41 +181,136 @@
       if (signedIn) $('#userEmail').textContent = user.email || '';
     }
 
-    // auth actions
-    async function ensureProfile(){
+    async function ensureUserRow(requiredFields){
       const { data: { user } } = await sb.auth.getUser();
-      if(user){
-        await sb.from('users').upsert(
-          { id: user.id, email: user.email, subscription_status: 'trial' },
-          { onConflict: 'id' }
-        );
-      }
+      if(!user) return;
+      await sb.from('users').upsert(
+        {
+          id: user.id,
+          email: user.email,
+          subscription_status: 'trial',
+          full_name: requiredFields.full_name,
+          business_name: requiredFields.business_name,
+          brn: requiredFields.brn,
+          phone: requiredFields.phone,
+          address: requiredFields.address,
+          vat_number: requiredFields.vat_number || null,
+          company_type: requiredFields.company_type || null,
+          plan_tier: requiredFields.plan_tier || null,
+          plan_cycle: requiredFields.plan_cycle || null
+        },
+        { onConflict: 'id' }
+      );
     }
 
+    /* ===== AUTH ===== */
     $('#signupBtn').onclick = async ()=>{
-      $('#authMsg').textContent='';
+      const m = $('#authMsg'); m.textContent='';
       const email = $('#email').value.trim();
       const pass  = $('#password').value.trim();
+      const fullName = $('#fullName').value.trim();
+      const bizName  = $('#bizName').value.trim();
+      const brn      = $('#brn').value.toUpperCase().trim();
+      const phone    = $('#phone').value.trim();
+      const address  = $('#address').value.trim();
+      const vat      = $('#vat').value.trim();
+      const ctype    = $('#companyType').value.trim();
+
+      if(!emailOk(email))         return msg(m,'Enter a valid email');
+      if(pass.length < 6)         return msg(m,'Password must be at least 6 characters');
+      if(!fullName)               return msg(m,'Full name is required');
+      if(!bizName)                return msg(m,'Business name is required');
+      if(!brnOk(brn))             return msg(m,'BRN must be 8–20 chars, A–Z, 0–9, or "-"');
+      if(!phoneOk(phone))         return msg(m,'Enter a valid phone number');
+      if(!address)                return msg(m,'Business address is required');
+
       const { error } = await sb.auth.signUp({ email, password: pass });
-      if(error){ $('#authMsg').textContent = error.message; return; }
-      await ensureProfile(); boot();
+      if(error) return msg(m, error.message);
+      await ensureUserRow({
+        full_name: fullName, business_name: bizName, brn, phone, address,
+        vat_number: vat, company_type: ctype
+      });
+      msg(m,'Account created ✓. If confirmation is ON, check your inbox.', true);
+      await boot();
     };
 
     $('#loginBtn').onclick = async ()=>{
-      $('#authMsg').textContent='';
+      const m = $('#authMsg'); m.textContent='';
       const email = $('#email').value.trim();
       const pass  = $('#password').value.trim();
+      if(!emailOk(email)) return msg(m,'Enter a valid email');
+      if(pass.length < 6) return msg(m,'Password must be at least 6 characters');
       const { error } = await sb.auth.signInWithPassword({ email, password: pass });
-      if(error){ $('#authMsg').textContent = error.message; return; }
-      await ensureProfile(); boot();
+      if(error) return msg(m, error.message);
+      msg(m,'Logged in ✓', true);
+      await boot();
+    };
+
+    $('#loginOtpBtn').onclick = async ()=>{
+      const m = $('#authMsg'); m.textContent='';
+      const email = $('#email').value.trim();
+      if(!emailOk(email)) return msg(m,'Enter a valid email');
+      const { error } = await sb.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: location.origin + '/app/index.html' }
+      });
+      if(error) return msg(m, error.message);
+      msg(m,'We sent you a sign-in link/code. Check your email.', true);
     };
 
     $('#logoutBtn').onclick = async ()=>{ await sb.auth.signOut(); boot(); };
 
-    // quick receipt (single item)
+    /* ===== PLAN SELECTION ===== */
+    let selectedPlan = null; // {tier, cycle, amount}
+    function setPlan(tier, cycle, amount){
+      selectedPlan = { tier, cycle, amount };
+      $('#planSummary').classList.remove('hidden');
+      $('#planName').textContent = `${tier} — ${cycle}`;
+      $('#planAmount').textContent = `Rs ${amount.toFixed(0)}`;
+      $('#juiceAmount').textContent = `Rs ${amount.toFixed(0)}`;
+      $('#waJuice').href = `https://wa.me/23054960101?text=Payment%20for%20BMP%20${encodeURIComponent(tier)}%20(${encodeURIComponent(cycle)})%20-%20Rs%20${amount.toFixed(0)}`;
+      msg($('#payMsg'), `Pay Rs ${amount.toFixed(0)} via PayPal or JUICE to activate ${tier} (${cycle}).`, true);
+    }
+
+    document.querySelectorAll('.planBtn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        document.querySelectorAll('.planBtn').forEach(b=>b.classList.remove('ring-2','ring-blue-600'));
+        btn.classList.add('ring-2','ring-blue-600');
+        const tier = btn.dataset.tier, cycle = btn.dataset.cycle;
+        const amount = Number(btn.dataset.amount || PRICES[`${tier}|${cycle}`] || 0);
+        setPlan(tier, cycle, amount);
+        // persist chosen plan on user row (optional)
+        ensureUserRow({ plan_tier: tier, plan_cycle: cycle });
+      });
+    });
+
+    /* ===== PAYMENTS UI ===== */
+    $('#paypalCopy').onclick = ()=>{
+      if(!selectedPlan){ return msg($('#payMsg'),'Please select a plan first'); }
+      navigator.clipboard.writeText(PAYPAL_EMAIL);
+      window.open('https://www.paypal.com/myaccount/transfer/send', '_blank');
+      const btn = $('#paypalCopy');
+      btn.textContent = 'Email copied ✓';
+      setTimeout(()=>btn.textContent='Pay with PayPal (copy email)', 1200);
+    };
+
+    $('#juiceBtn').onclick  = ()=>{
+      if(!selectedPlan){ return msg($('#payMsg'),'Please select a plan first'); }
+      $('#juiceModal').classList.remove('hidden');
+    };
+    $('#closeJuice').onclick= ()=> $('#juiceModal').classList.add('hidden');
+    $('#copyJuice').onclick = ()=>{
+      navigator.clipboard.writeText($('#juiceNumber').value);
+      $('#copyJuice').textContent = 'Copied';
+      setTimeout(()=>$('#copyJuice').textContent='Copy', 1200);
+    };
+
+    /* ===== QUICK RECEIPT (demo) ===== */
     $('#saveBtn').onclick = async ()=>{
+      const m = $('#recMsg'); m.textContent='';
       const { data:{ user } } = await sb.auth.getUser();
-      if(!user){ $('#recMsg').textContent = 'Sign in first'; return; }
+      if(!user) return msg(m,'Sign in first');
+
       const subtotal = Number($('#rec-price').value||0);
       const payload = {
         user_id: user.id,
@@ -160,21 +323,15 @@
         items: [{ name: $('#rec-item').value.trim(), qty:1, price:subtotal }]
       };
       const { error } = await sb.from('receipts').insert(payload);
-      $('#recMsg').textContent = error ? error.message : 'Saved ✓';
+      msg(m, error ? error.message : 'Saved ✓', !error);
     };
 
-    // JUICE modal
-    $('#juiceBtn').onclick = ()=> $('#juiceModal').classList.remove('hidden');
-    $('#closeJuice').onclick = ()=> $('#juiceModal').classList.add('hidden');
-    $('#copyJuice').onclick = ()=>{
-      navigator.clipboard.writeText($('#juiceNumber').value);
-      $('#copyJuice').textContent = 'Copied';
-      setTimeout(()=>$('#copyJuice').textContent='Copy', 1200);
-    };
-
+    /* ===== BOOT ===== */
+    sb.auth.onAuthStateChange((evt, session)=>{ console.log('[BMP auth]', evt, session); });
     async function boot(){
       const { data:{ user } } = await sb.auth.getUser();
       showWhenSignedIn(user);
+      if (location.hash === '#signup' || location.hash === '#login') $('#email')?.focus();
     }
     document.addEventListener('DOMContentLoaded', boot);
   </script>
