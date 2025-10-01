@@ -38,13 +38,18 @@
       <p class="text-sm text-slate-600">Choose a subscription payment option.</p>
 
       <div class="grid md:grid-cols-2 gap-3 mt-3">
-        <!-- PayPal (replace link with your real one) -->
-        <a id="paypalBtn"
-           href="https://www.paypal.com/paypalme/YOURHANDLE/1499MUR"
-           target="_blank" rel="noopener"
-           class="px-4 py-3 rounded-lg bg-blue-600 text-white text-center">
-          Pay with PayPal
-        </a>
+        <!-- Replace the current #paypalCopy click handler with: -->
+<script>
+  const PAYPAL_EMAIL = "peeroosuhail047@gmail.com";
+  document.querySelector('#paypalCopy').onclick = ()=>{
+    navigator.clipboard.writeText(PAYPAL_EMAIL);
+    window.open('https://www.paypal.com/myaccount/transfer/send', '_blank');
+    const btn = document.querySelector('#paypalCopy');
+    btn.textContent = 'Email copied ✓';
+    setTimeout(()=>btn.textContent='Pay with PayPal (copy email)', 1200);
+  };
+</script>
+
 
         <!-- JUICE -->
         <button id="juiceBtn" class="px-4 py-3 rounded-lg border">Pay with JUICE</button>
@@ -61,7 +66,7 @@
             <button id="copyJuice" class="px-3 py-2 rounded-lg border">Copy</button>
           </div>
           <div class="flex justify-end gap-2 mt-4">
-            <a id="callJuice" class="px-3 py-2 rounded-lg border" href="tel:+2305XXXXXXXX">Call</a>
+            <a id="callJuice" class="px-3 py-2 rounded-lg border" href="tel:+23054960101">Call</a>
             <button id="closeJuice" class="px-3 py-2 rounded-lg bg-blue-600 text-white">Done</button>
           </div>
         </div>
