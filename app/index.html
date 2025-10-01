@@ -29,6 +29,9 @@
   </header>
 
   <main class="max-w-4xl mx-auto px-4 py-6">
+    <!-- DIAGNOSTIC BANNER -->
+    <div id="diag" class="hidden mb-4 rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-700"></div>
+
     <!-- AUTH & COMPLIANCE -->
     <section id="authCard" class="rounded-xl border bg-white p-5">
       <h2 class="text-lg font-semibold">Create account / Sign in</h2>
@@ -41,7 +44,7 @@
         </div>
       </div>
 
-      <!-- REQUIRED BUSINESS FIELDS (signup only; NOT needed for login) -->
+      <!-- REQUIRED BUSINESS FIELDS (signup only) -->
       <div class="mt-4 grid md:grid-cols-2 gap-3">
         <input id="fullName"      class="border rounded-lg p-2" placeholder="Full name (required)">
         <input id="bizName"       class="border rounded-lg p-2" placeholder="Business name (required)">
@@ -66,9 +69,7 @@
       <h2 class="text-lg font-semibold">Choose your plan & pay</h2>
       <p class="text-sm text-slate-600">Pick a plan. Pay by PayPal or JUICE. Access activates after payment.</p>
 
-      <!-- Plans (editable prices) -->
       <div class="mt-4 grid md:grid-cols-3 gap-3" id="plansGrid">
-        <!-- data-amount is in MUR -->
         <button class="planBtn border rounded-lg p-3 text-left hover:bg-slate-50"
                 data-tier="Starter" data-cycle="Monthly" data-amount="499">
           <div class="font-semibold">Starter — Monthly</div>
@@ -89,20 +90,17 @@
         </button>
       </div>
 
-      <!-- Selected plan summary -->
       <div class="mt-4 rounded-lg border p-3 bg-slate-50 hidden" id="planSummary">
         <div class="text-sm">Selected plan:</div>
         <div class="font-semibold" id="planName">—</div>
         <div class="text-sm" id="planAmount">—</div>
       </div>
 
-      <!-- Pay buttons -->
       <div class="grid md:grid-cols-2 gap-3 mt-4">
         <button id="paypalCopy" class="px-4 py-3 rounded-lg border">Pay with PayPal (copy email)</button>
         <button id="juiceBtn"   class="px-4 py-3 rounded-lg border">Pay with JUICE</button>
       </div>
 
-      <!-- JUICE modal -->
       <div id="juiceModal" class="hidden fixed inset-0 bg-black/50 grid place-items-center p-4">
         <div class="max-w-md w-full bg-white rounded-xl p-5">
           <h3 class="font-semibold">JUICE payment</h3>
@@ -122,7 +120,6 @@
         </div>
       </div>
 
-      <!-- Helper note -->
       <p id="payMsg" class="text-sm mt-3"></p>
     </section>
 
@@ -151,35 +148,21 @@
     </section>
   </main>
 
-  <!-- libs -->
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script>
     /* ===== CONFIG ===== */
-    // ⚠️ You already gave these; leaving as-is
     const SUPABASE_URL = "https://hppgouoexhqgecntpkej.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_9rxkf2R-S74yd24O5q9vQ_vH6xGz3g";
-
+    const SUPABASE_ANON_KEY = "sb_publishable_9rxkf2R-S74yd24O5q9vQ_vH6xGz3g"; // <-- THIS IS NOT A VALID ANON KEY
     const PAYPAL_EMAIL = "peeroosuhail047@gmail.com";
-    // Optional: edit plan prices here (MUR)
-    const PRICES = {
-      "Starter|Monthly": 499,
-      "Pro|Monthly": 899,
-      "Pro|Yearly": 8500
-    };
+    const PRICES = { "Starter|Monthly": 499, "Pro|Monthly": 899, "Pro|Yearly": 8500 };
 
-    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    /* ===== HELPERS ===== */
     const $ = (s)=>document.querySelector(s);
     const emailOk  = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v||"");
     const phoneOk  = v => /^\+?[0-9 ()-]{6,20}$/.test((v||"").trim());
     const brnOk    = v => /^[A-Z0-9-]{8,20}$/.test((v||"").toUpperCase().trim());
-    function msg(el, text, ok=false){
-      el.textContent = text;
-      el.className = 'text-sm mt-2 ' + (ok ? 'text-green-600' : 'text-red-600');
-      if(!ok) setTimeout(()=>{ el.textContent=''; }, 6000);
-    }
+    function msg(el, text, ok=false){ el.textContent=text; el.className='text-sm mt-2 '+(ok?'text-green-600':'text-red-600'); if(!ok) setTimeout(()=>{el.textContent='';},6000); }
     function showWhenSignedIn(user){
       const signedIn = !!user;
       $('#authCard').classList.toggle('hidden', signedIn);
@@ -190,207 +173,203 @@
       if (signedIn) $('#userEmail').textContent = user.email || '';
     }
 
-    // Build an object with only defined keys (prevents bad upserts)
-    function clean(obj){
-      const out = {};
-      Object.keys(obj || {}).forEach(k=>{
-        const v = obj[k];
-        if (v !== undefined && v !== null && v !== '') out[k] = v;
-      });
-      return out;
+    /* ===== DIAGNOSTICS ===== */
+    function showDiag(text){ const d=$('#diag'); d.textContent=text; d.classList.remove('hidden'); }
+    function validateSupabaseConfig(){
+      const issues=[];
+      if(!/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(SUPABASE_URL)) issues.push("SUPABASE_URL looks invalid.");
+      const isJwt = (SUPABASE_ANON_KEY||'').split('.').length===3 && SUPABASE_ANON_KEY.startsWith('eyJ');
+      if(!isJwt) issues.push("SUPABASE_ANON_KEY is not a valid anon JWT (should start with 'eyJ...').");
+      if((SUPABASE_ANON_KEY||'').startsWith('sb_publishable_')) issues.push("You're using a placeholder key ('sb_publishable_...'). Use the real anon key from Supabase → Settings → API.");
+      return issues;
+    }
+    async function connectivityProbe(){
+      try{
+        const url = SUPABASE_URL.replace(/\/+$/,'') + '/auth/v1/settings';
+        const r = await fetch(url, { headers: { apikey: SUPABASE_ANON_KEY } });
+        if(!r.ok){ showDiag(`Supabase reachable but returned ${r.status}. Check anon key and project URL. (${await r.text()})`); return false; }
+        return true;
+      }catch(e){
+        showDiag(`Browser couldn't reach Supabase (CORS/DNS). Set Auth → URL Config: Site URL = ${location.origin}/, and add redirect ${location.origin}/* . Error: ${e.message||e}`);
+        return false;
+      }
     }
 
-    async function ensureUserRow(fields){
-      const { data: { user } } = await sb.auth.getUser();
-      if(!user) return;
-      const payload = clean({
-        id: user.id,
-        email: user.email,
-        subscription_status: 'trial',
-        full_name: fields?.full_name,
-        business_name: fields?.business_name,
-        brn: fields?.brn,
-        phone: fields?.phone,
-        address: fields?.address,
-        vat_number: fields?.vat_number,
-        company_type: fields?.company_type,
-        plan_tier: fields?.plan_tier,
-        plan_cycle: fields?.plan_cycle
-      });
-      // Upsert without forcing undefined columns
-      await sb.from('users').upsert(payload, { onConflict: 'id' });
-    }
+    /* ===== INIT CLIENT (after basic validation) ===== */
+    let sb = null;
+    (async function bootEarly(){
+      const issues = validateSupabaseConfig();
+      if(issues.length){ showDiag(issues.join(' ')); }
+      const ok = await connectivityProbe();
+      if(!ok) return; // stop here; user will see exact reason
+      sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      startApp();
+    })();
 
-    /* ===== AUTH ===== */
-    $('#signupBtn').onclick = async ()=>{
-      const m = $('#authMsg'); m.textContent='';
-      const email = $('#email').value.trim();
-      const pass  = $('#password').value.trim();
-      const fullName = $('#fullName').value.trim();
-      const bizName  = $('#bizName').value.trim();
-      const brn      = $('#brn').value.toUpperCase().trim();
-      const phone    = $('#phone').value.trim();
-      const address  = $('#address').value.trim();
-      const vat      = $('#vat').value.trim();
-      const ctype    = $('#companyType').value.trim();
+    /* ===== APP LOGIC (only runs if diagnostics pass) ===== */
+    function startApp(){
+      async function ensureUserRow(fields){
+        const { data: { user } } = await sb.auth.getUser();
+        if(!user) return;
+        const payload = {};
+        const assign=(k,v)=>{ if(v!==undefined && v!==null && v!=='') payload[k]=v; };
+        assign('id', user.id); assign('email', user.email); assign('subscription_status','trial');
+        ['full_name','business_name','brn','phone','address','vat_number','company_type','plan_tier','plan_cycle']
+          .forEach(k=>assign(k, fields?.[k]));
+        await sb.from('users').upsert(payload, { onConflict: 'id' });
+      }
 
-      if(!emailOk(email))         return msg(m,'Enter a valid email');
-      if(pass.length < 6)         return msg(m,'Password must be at least 6 characters');
-      if(!fullName)               return msg(m,'Full name is required');
-      if(!bizName)                return msg(m,'Business name is required');
-      if(!brnOk(brn))             return msg(m,'BRN must be 8–20 chars, A–Z, 0–9, or "-"');
-      if(!phoneOk(phone))         return msg(m,'Enter a valid phone number');
-      if(!address)                return msg(m,'Business address is required');
+      $('#signupBtn').onclick = async ()=>{
+        const m = $('#authMsg'); m.textContent='';
+        const email = $('#email').value.trim();
+        const pass  = $('#password').value.trim();
+        const fullName = $('#fullName').value.trim();
+        const bizName  = $('#bizName').value.trim();
+        const brn      = $('#brn').value.toUpperCase().trim();
+        const phone    = $('#phone').value.trim();
+        const address  = $('#address').value.trim();
+        const vat      = $('#vat').value.trim();
+        const ctype    = $('#companyType').value.trim();
 
-      // Include metadata + redirect (make sure redirect is allowed in Supabase Auth > URL config)
-      const { data, error } = await sb.auth.signUp({
-        email, password: pass,
-        options: {
-          data: { fullName, bizName, brn, phone, address, vat, ctype },
-          emailRedirectTo: location.origin + '/app/#signup-confirmed'
-        }
-      });
-      if(error) return msg(m, error.message);
+        if(!emailOk(email))         return msg(m,'Enter a valid email');
+        if(pass.length < 6)         return msg(m,'Password must be at least 6 characters');
+        if(!fullName)               return msg(m,'Full name is required');
+        if(!bizName)                return msg(m,'Business name is required');
+        if(!brnOk(brn))             return msg(m,'BRN must be 8–20 chars, A–Z, 0–9, or "-"');
+        if(!phoneOk(phone))         return msg(m,'Enter a valid phone number');
+        if(!address)                return msg(m,'Business address is required');
 
-      // If email confirmation ON, user may be null now; upsert when session exists too (boot handles)
-      await ensureUserRow({
-        full_name: fullName, business_name: bizName, brn, phone, address,
-        vat_number: vat, company_type: ctype
-      });
-      msg(m,'Account created ✓. If confirmation is ON, check your inbox.', true);
-      await boot();
-    };
-
-    // LOGIN (BRN NOT REQUIRED)
-    $('#loginBtn').onclick = async ()=>{
-      const m = $('#authMsg'); m.textContent='';
-      const email = $('#email').value.trim();
-      const pass  = $('#password').value.trim();
-      if(!emailOk(email)) return msg(m,'Enter a valid email');
-      if(pass.length < 6) return msg(m,'Password must be at least 6 characters');
-      const { error } = await sb.auth.signInWithPassword({ email, password: pass });
-      if(error) return msg(m, error.message);
-      msg(m,'Logged in ✓', true);
-      await boot();
-    };
-
-    $('#loginOtpBtn').onclick = async ()=>{
-      const m = $('#authMsg'); m.textContent='';
-      const email = $('#email').value.trim();
-      if(!emailOk(email)) return msg(m,'Enter a valid email');
-      const { error } = await sb.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: location.origin + '/app/#otp' }
-      });
-      if(error) return msg(m, error.message);
-      msg(m,'We sent you a sign-in link/code. Check your email.', true);
-    };
-
-    $('#logoutBtn').onclick = async ()=>{ await sb.auth.signOut(); boot(); };
-
-    /* ===== PLAN SELECTION ===== */
-    let selectedPlan = null; // {tier, cycle, amount}
-    function setPlan(tier, cycle, amount){
-      selectedPlan = { tier, cycle, amount };
-      $('#planSummary').classList.remove('hidden');
-      $('#planName').textContent = `${tier} — ${cycle}`;
-      $('#planAmount').textContent = `Rs ${amount.toFixed(0)}`;
-      $('#juiceAmount').textContent = `Rs ${amount.toFixed(0)}`;
-      $('#waJuice').href = `https://wa.me/23054960101?text=Payment%20for%20BMP%20${encodeURIComponent(tier)}%20(${encodeURIComponent(cycle)})%20-%20Rs%20${amount.toFixed(0)}`;
-      msg($('#payMsg'), `Pay Rs ${amount.toFixed(0)} via PayPal or JUICE to activate ${tier} (${cycle}).`, true);
-    }
-
-    document.querySelectorAll('.planBtn').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        document.querySelectorAll('.planBtn').forEach(b=>b.classList.remove('ring-2','ring-blue-600'));
-        btn.classList.add('ring-2','ring-blue-600');
-        const tier = btn.dataset.tier, cycle = btn.dataset.cycle;
-        const amount = Number(btn.dataset.amount || PRICES[`${tier}|${cycle}`] || 0);
-        setPlan(tier, cycle, amount);
-        ensureUserRow({ plan_tier: tier, plan_cycle: cycle });
-      });
-    });
-
-    /* ===== PAYMENTS UI ===== */
-    $('#paypalCopy').onclick = ()=>{
-      if(!selectedPlan){ return msg($('#payMsg'),'Please select a plan first'); }
-      navigator.clipboard.writeText(PAYPAL_EMAIL);
-      // open PayPal send-page
-      window.open('https://www.paypal.com/myaccount/transfer/send', '_blank');
-      const btn = $('#paypalCopy');
-      btn.textContent = 'Email copied ✓';
-      setTimeout(()=>btn.textContent='Pay with PayPal (copy email)', 1200);
-    };
-
-    $('#juiceBtn').onclick  = ()=>{
-      if(!selectedPlan){ return msg($('#payMsg'),'Please select a plan first'); }
-      $('#juiceModal').classList.remove('hidden');
-    };
-    $('#closeJuice').onclick= ()=> $('#juiceModal').classList.add('hidden');
-    $('#copyJuice').onclick = ()=>{
-      navigator.clipboard.writeText($('#juiceNumber').value);
-      $('#copyJuice').textContent = 'Copied';
-      setTimeout(()=>$('#copyJuice').textContent='Copy', 1200);
-    };
-
-    /* ===== QUICK RECEIPT (demo) + SHARE ===== */
-    let lastReceipt = null;
-
-    function buildReceiptText(r){
-      const lines = [
-        `Business Manager Pro Receipt`,
-        `Ref: ${r.reference_number}`,
-        `Client: ${r.client_name || "-"}`,
-        `Phone: ${r.client_phone || "-"}`,
-        `Email: ${r.client_email || "-"}`,
-        `Date: ${new Date(r.date).toLocaleString()}`,
-        `Item: ${r.items?.[0]?.name || "-"}`,
-        `Total: Rs ${Number(r.total||0).toFixed(2)}`
-      ];
-      return lines.join('\n');
-    }
-
-    function updateShareLinks(r){
-      const txt = buildReceiptText(r);
-      const wa = `https://wa.me/?text=${encodeURIComponent(txt)}`;
-      const subject = encodeURIComponent(`Receipt ${r.reference_number}`);
-      const body = encodeURIComponent(txt);
-      $('#shareWa').href   = wa;
-      $('#shareMail').href = `mailto:${encodeURIComponent(r.client_email||'')}?subject=${subject}&body=${body}`;
-      $('#shareWrap').classList.remove('hidden');
-    }
-
-    $('#saveBtn').onclick = async ()=>{
-      const m = $('#recMsg'); m.textContent='';
-      const { data:{ user } } = await sb.auth.getUser();
-      if(!user) return msg(m,'Sign in first');
-
-      const subtotal = Number($('#rec-price').value||0);
-      const payload = {
-        user_id: user.id,
-        reference_number: 'BMP-' + Date.now().toString().slice(-8),
-        client_name:  $('#rec-client').value.trim(),
-        client_phone: $('#rec-phone').value.trim(),
-        client_email: $('#rec-email').value.trim(),
-        date: $('#rec-date').value ? new Date($('#rec-date').value).toISOString() : new Date().toISOString(),
-        subtotal, tax:0, discount:0, total:subtotal,
-        items: [{ name: $('#rec-item').value.trim(), qty:1, price:subtotal }]
+        try{
+          const { error } = await sb.auth.signUp({
+            email, password: pass,
+            options: { data: { fullName, bizName, brn, phone, address, vat, ctype },
+                       emailRedirectTo: location.origin + '/app/#signup-confirmed' }
+          });
+          if(error) return msg(m, error.message);
+          await ensureUserRow({ full_name: fullName, business_name: bizName, brn, phone, address, vat_number: vat, company_type: ctype });
+          msg(m,'Account created ✓. If confirmation is ON, check your inbox.', true);
+          await boot();
+        }catch(e){ msg(m, e.message || 'Failed to sign up'); }
       };
-      const { data, error } = await sb.from('receipts').insert(payload).select().single();
-      if(error){ return msg(m, error.message); }
-      lastReceipt = data || payload;
-      msg(m, 'Saved ✓', true);
-      updateShareLinks(lastReceipt);
-    };
 
-    /* ===== BOOT ===== */
-    sb.auth.onAuthStateChange((evt, session)=>{ console.log('[BMP auth]', evt, session); });
-    async function boot(){
-      const { data:{ user } } = await sb.auth.getUser();
-      showWhenSignedIn(user);
-      if (location.hash === '#signup' || location.hash === '#login') $('#email')?.focus();
+      // LOGIN (BRN NOT REQUIRED)
+      $('#loginBtn').onclick = async ()=>{
+        const m = $('#authMsg'); m.textContent='';
+        const email = $('#email').value.trim();
+        const pass  = $('#password').value.trim();
+        if(!emailOk(email)) return msg(m,'Enter a valid email');
+        if(pass.length < 6) return msg(m,'Password must be at least 6 characters');
+        try{
+          const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+          if(error) return msg(m, error.message);
+          msg(m,'Logged in ✓', true);
+          await boot();
+        }catch(e){ msg(m, e.message || 'Login failed'); }
+      };
+
+      $('#loginOtpBtn').onclick = async ()=>{
+        const m = $('#authMsg'); m.textContent='';
+        const email = $('#email').value.trim();
+        if(!emailOk(email)) return msg(m,'Enter a valid email');
+        try{
+          const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.origin + '/app/#otp' }});
+          if(error) return msg(m, error.message);
+          msg(m,'We sent you a sign-in link/code. Check your email.', true);
+        }catch(e){ msg(m, e.message || 'Failed to send code'); }
+      };
+
+      $('#logoutBtn').onclick = async ()=>{ await sb.auth.signOut(); boot(); };
+
+      // Plan selection
+      let selectedPlan = null;
+      function setPlan(tier, cycle, amount){
+        selectedPlan = { tier, cycle, amount };
+        $('#planSummary').classList.remove('hidden');
+        $('#planName').textContent = `${tier} — ${cycle}`;
+        $('#planAmount').textContent = `Rs ${amount.toFixed(0)}`;
+        $('#juiceAmount').textContent = `Rs ${amount.toFixed(0)}`;
+        $('#waJuice').href = `https://wa.me/23054960101?text=Payment%20for%20BMP%20${encodeURIComponent(tier)}%20(${encodeURIComponent(cycle)})%20-%20Rs%20${amount.toFixed(0)}`;
+        msg($('#payMsg'), `Pay Rs ${amount.toFixed(0)} via PayPal or JUICE to activate ${tier} (${cycle}).`, true);
+      }
+      document.querySelectorAll('.planBtn').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          document.querySelectorAll('.planBtn').forEach(b=>b.classList.remove('ring-2','ring-blue-600'));
+          btn.classList.add('ring-2','ring-blue-600');
+          const tier = btn.dataset.tier, cycle = btn.dataset.cycle;
+          const amount = Number(btn.dataset.amount || 0);
+          setPlan(tier, cycle, amount);
+          ensureUserRow({ plan_tier: tier, plan_cycle: cycle });
+        });
+      });
+
+      // Payments UI
+      $('#paypalCopy').onclick = ()=>{
+        if(!selectedPlan){ return msg($('#payMsg'),'Please select a plan first'); }
+        navigator.clipboard.writeText(PAYPAL_EMAIL);
+        window.open('https://www.paypal.com/myaccount/transfer/send', '_blank');
+        const btn = $('#paypalCopy'); btn.textContent = 'Email copied ✓';
+        setTimeout(()=>btn.textContent='Pay with PayPal (copy email)', 1200);
+      };
+      $('#juiceBtn').onclick  = ()=>{ if(!selectedPlan){ msg($('#payMsg'),'Please select a plan first'); return;} $('#juiceModal').classList.remove('hidden'); };
+      $('#closeJuice').onclick= ()=> $('#juiceModal').classList.add('hidden');
+      $('#copyJuice').onclick = ()=>{ navigator.clipboard.writeText($('#juiceNumber').value); $('#copyJuice').textContent='Copied'; setTimeout(()=>$('#copyJuice').textContent='Copy',1200); };
+
+      // Receipts + share
+      let lastReceipt = null;
+      function buildReceiptText(r){
+        const lines = [
+          `Business Manager Pro Receipt`,
+          `Ref: ${r.reference_number}`,
+          `Client: ${r.client_name || "-"}`,
+          `Phone: ${r.client_phone || "-"}`,
+          `Email: ${r.client_email || "-"}`,
+          `Date: ${new Date(r.date).toLocaleString()}`,
+          `Item: ${r.items?.[0]?.name || "-"}`,
+          `Total: Rs ${Number(r.total||0).toFixed(2)}`
+        ];
+        return lines.join('\\n');
+      }
+      function updateShareLinks(r){
+        const txt = buildReceiptText(r);
+        $('#shareWa').href   = `https://wa.me/?text=${encodeURIComponent(txt)}`;
+        const subject = encodeURIComponent(`Receipt ${r.reference_number}`);
+        const body = encodeURIComponent(txt);
+        $('#shareMail').href = `mailto:${encodeURIComponent(r.client_email||'')}?subject=${subject}&body=${body}`;
+        $('#shareWrap').classList.remove('hidden');
+      }
+      $('#saveBtn').onclick = async ()=>{
+        const m = $('#recMsg'); m.textContent='';
+        const { data:{ user } } = await sb.auth.getUser();
+        if(!user) return msg(m,'Sign in first');
+        const subtotal = Number($('#rec-price').value||0);
+        const payload = {
+          user_id: user.id,
+          reference_number: 'BMP-' + Date.now().toString().slice(-8),
+          client_name:  $('#rec-client').value.trim(),
+          client_phone: $('#rec-phone').value.trim(),
+          client_email: $('#rec-email').value.trim(),
+          date: $('#rec-date').value ? new Date($('#rec-date').value).toISOString() : new Date().toISOString(),
+          subtotal, tax:0, discount:0, total:subtotal,
+          items: [{ name: $('#rec-item').value.trim(), qty:1, price:subtotal }]
+        };
+        try{
+          const { data, error } = await sb.from('receipts').insert(payload).select().single();
+          if(error) return msg(m, error.message);
+          lastReceipt = data || payload;
+          msg(m,'Saved ✓', true);
+          updateShareLinks(lastReceipt);
+        }catch(e){ msg(m, e.message || 'Save failed'); }
+      };
+
+      // Boot (after client exists)
+      sb.auth.onAuthStateChange((evt, session)=>{ console.log('[BMP auth]', evt, session); });
+      async function boot(){
+        const { data:{ user } } = await sb.auth.getUser();
+        showWhenSignedIn(user);
+        if (location.hash === '#signup' || location.hash === '#login') $('#email')?.focus();
+      }
+      document.addEventListener('DOMContentLoaded', boot);
     }
-    document.addEventListener('DOMContentLoaded', boot);
   </script>
 </body>
 </html>
