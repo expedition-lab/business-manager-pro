@@ -4,252 +4,121 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Business Manager Pro — App</title>
-  <meta name="description" content="Create receipts, manage clients, export PDFs." />
   <script src="https://cdn.tailwindcss.com"></script>
-  <style>.shadow-soft{box-shadow:0 10px 20px rgba(0,0,0,.06),0 6px 6px rgba(0,0,0,.06)}</style>
 </head>
 <body class="bg-slate-50 text-slate-800">
   <header class="sticky top-0 z-30 bg-white border-b">
-    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-      <a href="/" class="font-semibold tracking-tight">Business Manager Pro</a>
-      <div class="flex items-center gap-3 text-sm">
-        <span id="userEmail" class="hidden px-2 py-1 rounded-full border text-slate-600"></span>
+    <div class="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
+      <a href="/" class="font-semibold">Business Manager Pro</a>
+      <div class="text-sm flex items-center gap-3">
+        <span id="userEmail" class="hidden px-2 py-1 rounded-full border"></span>
         <button id="logoutBtn" class="hidden px-3 py-1.5 rounded-lg border">Sign out</button>
       </div>
     </div>
   </header>
 
-  <main class="max-w-5xl mx-auto px-4 py-6">
-    <!-- Auth card -->
-    <section id="authCard" class="rounded-2xl border bg-white p-6 shadow-soft">
-      <h2 class="text-xl font-semibold">Sign in</h2>
-      <p class="text-slate-600 text-sm">Create an account or log in to start issuing receipts.</p>
-      <div class="mt-3 grid md:grid-cols-3 gap-3">
-        <input id="email" placeholder="Email" class="border rounded-lg p-2">
-        <input id="password" type="password" placeholder="Password" class="border rounded-lg p-2">
+  <main class="max-w-3xl mx-auto px-4 py-6">
+    <!-- AUTH -->
+    <section id="authCard" class="rounded-xl border bg-white p-5">
+      <h2 class="text-lg font-semibold">Sign in</h2>
+      <div class="grid md:grid-cols-3 gap-3 mt-3">
+        <input id="email" class="border rounded-lg p-2" placeholder="Email">
+        <input id="password" type="password" class="border rounded-lg p-2" placeholder="Password">
         <div class="flex gap-2">
-          <button id="signupBtn" class="flex-1 px-3 py-2 rounded-lg bg-blue-600 text-white">Create account</button>
-          <button id="loginBtn" class="flex-1 px-3 py-2 rounded-lg border">Log in</button>
+          <button id="signupBtn" class="flex-1 px-3 py-2 rounded-lg bg-blue-600 text-white">Create</button>
+          <button id="loginBtn"  class="flex-1 px-3 py-2 rounded-lg border">Log in</button>
         </div>
       </div>
       <p id="authMsg" class="text-sm text-red-600 mt-2"></p>
     </section>
 
-    <!-- App grid -->
-    <section id="appGrid" class="mt-6 grid md:grid-cols-3 gap-6 hidden">
-      <!-- Create receipt -->
-      <div class="md:col-span-2 rounded-2xl border bg-white p-6 shadow-soft">
-        <div class="flex items-center justify-between">
-          <h3 class="font-semibold">Create receipt</h3>
-          <button id="pdfBtn" class="px-3 py-1.5 rounded-lg border">Download PDF</button>
-        </div>
+    <!-- QUICK PAYMENTS -->
+    <section id="payCard" class="hidden rounded-xl border bg-white p-5 mt-6">
+      <h2 class="text-lg font-semibold">Payment methods</h2>
+      <p class="text-sm text-slate-600">Choose a subscription payment option.</p>
 
-        <div class="mt-3 grid md:grid-cols-4 gap-3">
-          <input id="rec-client" class="border rounded-lg p-2" placeholder="Client name">
-          <input id="rec-phone"  class="border rounded-lg p-2" placeholder="Client phone">
-          <input id="rec-email"  class="border rounded-lg p-2" placeholder="Client email">
-          <input id="rec-date"   class="border rounded-lg p-2" type="date">
-        </div>
+      <div class="grid md:grid-cols-2 gap-3 mt-3">
+        <!-- PayPal (replace link with your real one) -->
+        <a id="paypalBtn"
+           href="https://www.paypal.com/paypalme/YOURHANDLE/1499MUR"
+           target="_blank" rel="noopener"
+           class="px-4 py-3 rounded-lg bg-blue-600 text-white text-center">
+          Pay with PayPal
+        </a>
 
-        <div class="mt-4">
-          <div class="flex items-center justify-between">
-            <p class="text-sm text-slate-600">Items</p>
-            <button id="addItem" class="px-3 py-1 rounded-lg border">+ Add item</button>
+        <!-- JUICE -->
+        <button id="juiceBtn" class="px-4 py-3 rounded-lg border">Pay with JUICE</button>
+      </div>
+
+      <!-- JUICE modal -->
+      <div id="juiceModal"
+           class="hidden fixed inset-0 bg-black/50 grid place-items-center p-4">
+        <div class="max-w-md w-full bg-white rounded-xl p-5">
+          <h3 class="font-semibold">JUICE payment</h3>
+          <p class="text-sm text-slate-600 mt-1">Send to this number:</p>
+          <div class="mt-3 flex items-center gap-2">
+            <input id="juiceNumber" class="border rounded-lg p-2 w-full" value="+230 5XX XX XX" />
+            <button id="copyJuice" class="px-3 py-2 rounded-lg border">Copy</button>
           </div>
-          <div id="items" class="mt-2 space-y-2"></div>
-        </div>
-
-        <div class="mt-4 grid md:grid-cols-3 gap-3">
-          <input id="rec-tax"  class="border rounded-lg p-2" type="number" step="0.01" placeholder="Tax (MUR)">
-          <input id="rec-disc" class="border rounded-lg p-2" type="number" step="0.01" placeholder="Discount (MUR)">
-          <input id="rec-total" class="border rounded-lg p-2 bg-slate-100" placeholder="Total (auto)" disabled>
-        </div>
-
-        <div class="flex items-center justify-between mt-3">
-          <div class="text-lg font-semibold">Total: Rs <span id="totalLbl">0.00</span></div>
-          <button id="saveBtn" class="px-4 py-2 rounded-lg bg-blue-600 text-white">Save</button>
-        </div>
-        <p id="recMsg" class="text-sm mt-2"></p>
-      </div>
-
-      <!-- History -->
-      <div class="rounded-2xl border bg-white p-6 shadow-soft">
-        <div class="flex items-center justify-between">
-          <h3 class="font-semibold">History</h3>
-          <button id="reloadBtn" class="px-3 py-1.5 rounded-lg border">Reload</button>
-        </div>
-        <div class="mt-3 overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead>
-              <tr class="text-left border-b">
-                <th class="py-2">Date</th>
-                <th>Ref</th>
-                <th>Client</th>
-                <th>Total</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody id="rec-history"></tbody>
-          </table>
+          <div class="flex justify-end gap-2 mt-4">
+            <a id="callJuice" class="px-3 py-2 rounded-lg border" href="tel:+2305XXXXXXXX">Call</a>
+            <button id="closeJuice" class="px-3 py-2 rounded-lg bg-blue-600 text-white">Done</button>
+          </div>
         </div>
       </div>
+    </section>
+
+    <!-- MIN RECEIPT (optional demo) -->
+    <section id="recCard" class="hidden rounded-xl border bg-white p-5 mt-6">
+      <h2 class="text-lg font-semibold">Quick receipt</h2>
+      <div class="grid md:grid-cols-4 gap-3 mt-3">
+        <input id="rec-client" class="border rounded-lg p-2" placeholder="Client name">
+        <input id="rec-phone"  class="border rounded-lg p-2" placeholder="Client phone">
+        <input id="rec-email"  class="border rounded-lg p-2" placeholder="Client email">
+        <input id="rec-date"   class="border rounded-lg p-2" type="date">
+      </div>
+      <div class="grid md:grid-cols-3 gap-3 mt-3">
+        <input id="rec-item"  class="border rounded-lg p-2" placeholder="Item">
+        <input id="rec-price" class="border rounded-lg p-2" type="number" step="0.01" placeholder="Price (MUR)">
+        <button id="saveBtn"  class="px-4 py-2 rounded-lg bg-blue-600 text-white">Save</button>
+      </div>
+      <p id="recMsg" class="text-sm mt-2"></p>
     </section>
   </main>
 
   <!-- libs -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <script>
-    // ===== Supabase init (your real values) =====
+    // ===== Supabase (YOUR real values already filled) =====
     const SUPABASE_URL = "https://hppgouoexhqgecntpkei.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_9rkxf2R-S7a4yd24O5q9yQ_vH6xGz3g";
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // ===== Helpers =====
-    const $  = s => document.querySelector(s);
-    const $$ = s => document.querySelectorAll(s);
-    const fmt = n => (Number(n||0)).toFixed(2);
+    // helpers
+    const $ = (s)=>document.querySelector(s);
 
-    // ===== Auth =====
-    async function ensureProfile() {
+    function showWhenSignedIn(user){
+      const signedIn = !!user;
+      $('#authCard').classList.toggle('hidden', signedIn);
+      $('#payCard').classList.toggle('hidden', !signedIn);
+      $('#recCard').classList.toggle('hidden', !signedIn);
+      $('#logoutBtn').classList.toggle('hidden', !signedIn);
+      $('#userEmail').classList.toggle('hidden', !signedIn);
+      if (signedIn) $('#userEmail').textContent = user.email || '';
+    }
+
+    // auth actions
+    async function ensureProfile(){
       const { data: { user } } = await sb.auth.getUser();
-      if (user) {
+      if(user){
         await sb.from('users').upsert(
           { id: user.id, email: user.email, subscription_status: 'trial' },
           { onConflict: 'id' }
         );
       }
     }
-    function showApp(user){
-      if(user){
-        $('#authCard').classList.add('hidden');
-        $('#appGrid').classList.remove('hidden');
-        $('#userEmail').textContent = user.email;
-        $('#userEmail').classList.remove('hidden');
-        $('#logoutBtn').classList.remove('hidden');
-      }else{
-        $('#authCard').classList.remove('hidden');
-        $('#appGrid').classList.add('hidden');
-        $('#userEmail').classList.add('hidden');
-        $('#logoutBtn').classList.add('hidden');
-      }
-    }
 
-    // ===== Items UI =====
-    function addItemRow(name="", qty=1, price=0){
-      const row = document.createElement('div');
-      row.className = 'grid grid-cols-12 gap-2 rec-item';
-      row.innerHTML = `
-        <input class="col-span-6 border rounded-lg p-2 it-name" placeholder="Item/service" value="${name}">
-        <input class="col-span-2 border rounded-lg p-2 it-qty" type="number" min="1" value="${qty}">
-        <input class="col-span-3 border rounded-lg p-2 it-unit" type="number" step="0.01" value="${price}">
-        <button class="col-span-1 bg-red-500 text-white rounded-lg">×</button>
-      `;
-      row.querySelector('button').onclick = ()=>{ row.remove(); recalc(); };
-      $('#items').appendChild(row);
-    }
-    function recalc(){
-      let subtotal = 0;
-      $$('#items .rec-item').forEach(r=>{
-        const q = Number(r.querySelector('.it-qty').value||1);
-        const p = Number(r.querySelector('.it-unit').value||0);
-        subtotal += q*p;
-      });
-      const tax = Number($('#rec-tax').value||0);
-      const disc= Number($('#rec-disc').value||0);
-      const total = Math.max(0, subtotal + tax - disc);
-      $('#rec-total').value = `Rs ${fmt(total)}`;
-      $('#totalLbl').textContent = fmt(total);
-    }
-
-    // ===== CRUD =====
-    async function saveReceipt(){
-      const { data:{ user } } = await sb.auth.getUser();
-      if(!user){ $('#recMsg').textContent = 'Please sign in first.'; return; }
-
-      const items = [...$$('#items .rec-item')].map(r=>({
-        name:  r.querySelector('.it-name').value.trim(),
-        qty:   Number(r.querySelector('.it-qty').value||1),
-        price: Number(r.querySelector('.it-unit').value||0)
-      })).filter(i=>i.name);
-
-      const subtotal = items.reduce((s,i)=>s + i.qty*i.price, 0);
-      const tax = Number($('#rec-tax').value||0);
-      const discount = Number($('#rec-disc').value||0);
-      const total = Math.max(0, subtotal + tax - discount);
-      const ref = 'BMP-' + Date.now().toString().slice(-8);
-
-      const payload = {
-        user_id: user.id,
-        reference_number: ref,
-        client_name:  $('#rec-client').value.trim(),
-        client_phone: $('#rec-phone').value.trim(),
-        client_email: $('#rec-email').value.trim(),
-        date: $('#rec-date').value ? new Date($('#rec-date').value).toISOString() : new Date().toISOString(),
-        subtotal, tax, discount, total, items
-      };
-
-      const { error } = await sb.from('receipts').insert(payload);
-      $('#recMsg').textContent = error ? error.message : 'Saved ✓';
-      if(!error){ await loadReceipts(); }
-    }
-
-    async function loadReceipts(){
-      const { data:{ user } } = await sb.auth.getUser();
-      if(!user) return;
-      const { data, error } = await sb.from('receipts')
-        .select('*').eq('user_id', user.id).order('created_at',{ascending:false});
-      const tbody = $('#rec-history'); tbody.innerHTML = '';
-      if(error){ tbody.innerHTML = `<tr><td colspan="5" class="py-3 text-red-600">${error.message}</td></tr>`; return; }
-      (data||[]).forEach(r=>{
-        const tr = document.createElement('tr');
-        tr.className = 'border-b';
-        tr.innerHTML = `
-          <td class="py-2">${new Date(r.created_at).toLocaleString()}</td>
-          <td>${r.reference_number}</td>
-          <td>${r.client_name||'-'}</td>
-          <td>Rs ${fmt(r.total)}</td>
-          <td class="space-x-2">
-            <button class="px-2 py-1 rounded-lg border text-xs" data-act="pdf" data-id="${r.id}">PDF</button>
-            <button class="px-2 py-1 rounded-lg bg-red-500 text-white text-xs" data-act="del" data-id="${r.id}">Delete</button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-      tbody.querySelectorAll('button').forEach(b=>{
-        b.onclick = async ()=>{
-          const id = b.dataset.id, act = b.dataset.act;
-          if(act==='del'){
-            await sb.from('receipts').delete().eq('id', id);
-            loadReceipts();
-          }
-          if(act==='pdf'){
-            const { data } = await sb.from('receipts').select('*').eq('id', id).single();
-            renderPdf(data);
-          }
-        };
-      });
-    }
-
-    function renderPdf(data){
-      const { jsPDF } = window.jspdf; const doc = new jsPDF();
-      let y=16;
-      doc.setFontSize(14); doc.text('Business Manager Pro — Receipt',14,y); y+=8;
-      doc.setFontSize(11);
-      doc.text(`Ref: ${data.reference_number}`,14,y); y+=6;
-      doc.text(`Client: ${data.client_name || '-'}`,14,y); y+=6;
-      doc.text(`Phone: ${data.client_phone || '-'}   Email: ${data.client_email || '-'}`,14,y); y+=6;
-      doc.text(`Date: ${new Date(data.date||data.created_at).toLocaleDateString()}`,14,y); y+=8;
-      doc.text('Items:',14,y); y+=6;
-      (data.items||[]).forEach((it,i)=>{ doc.text(`${i+1}. ${it.name}  x${it.qty}  —  Rs ${fmt(it.price)}`,18,y); y+=6; });
-      y+=4;
-      doc.text(`Subtotal: Rs ${fmt(data.subtotal)}   Tax: Rs ${fmt(data.tax)}   Discount: Rs ${fmt(data.discount)}`,14,y); y+=6;
-      doc.setFontSize(12); doc.text(`TOTAL: Rs ${fmt(data.total)}`,14,y);
-      doc.save('receipt.pdf');
-    }
-
-    // ===== Events & boot =====
     $('#signupBtn').onclick = async ()=>{
       $('#authMsg').textContent='';
       const email = $('#email').value.trim();
@@ -258,6 +127,7 @@
       if(error){ $('#authMsg').textContent = error.message; return; }
       await ensureProfile(); boot();
     };
+
     $('#loginBtn').onclick = async ()=>{
       $('#authMsg').textContent='';
       const email = $('#email').value.trim();
@@ -266,47 +136,40 @@
       if(error){ $('#authMsg').textContent = error.message; return; }
       await ensureProfile(); boot();
     };
+
     $('#logoutBtn').onclick = async ()=>{ await sb.auth.signOut(); boot(); };
 
-    $('#addItem').onclick = ()=>{ addItemRow(); recalc(); };
-    document.addEventListener('input', e=>{
-      if(e.target.closest('.rec-item') || e.target.id==='rec-tax' || e.target.id==='rec-disc'){ recalc(); }
-    });
-    $('#saveBtn').onclick = saveReceipt;
-    $('#pdfBtn').onclick = ()=>{
-      const items = [...$$('#items .rec-item')].map(r=>({
-        name:  r.querySelector('.it-name').value.trim(),
-        qty:   Number(r.querySelector('.it-qty').value||1),
-        price: Number(r.querySelector('.it-unit').value||0)
-      })).filter(i=>i.name);
-      const subtotal = items.reduce((s,i)=>s + i.qty*i.price, 0);
-      const tax = Number($('#rec-tax').value||0);
-      const discount = Number($('#rec-disc').value||0);
-      const total = Math.max(0, subtotal + tax - discount);
-      renderPdf({
+    // quick receipt (single item)
+    $('#saveBtn').onclick = async ()=>{
+      const { data:{ user } } = await sb.auth.getUser();
+      if(!user){ $('#recMsg').textContent = 'Sign in first'; return; }
+      const subtotal = Number($('#rec-price').value||0);
+      const payload = {
+        user_id: user.id,
         reference_number: 'BMP-' + Date.now().toString().slice(-8),
         client_name:  $('#rec-client').value.trim(),
         client_phone: $('#rec-phone').value.trim(),
         client_email: $('#rec-email').value.trim(),
-        date: $('#rec-date').value || new Date().toISOString(),
-        items, subtotal, tax, discount, total
-      });
+        date: $('#rec-date').value ? new Date($('#rec-date').value).toISOString() : new Date().toISOString(),
+        subtotal, tax:0, discount:0, total:subtotal,
+        items: [{ name: $('#rec-item').value.trim(), qty:1, price:subtotal }]
+      };
+      const { error } = await sb.from('receipts').insert(payload);
+      $('#recMsg').textContent = error ? error.message : 'Saved ✓';
     };
-    $('#reloadBtn').onclick = loadReceipts;
+
+    // JUICE modal
+    $('#juiceBtn').onclick = ()=> $('#juiceModal').classList.remove('hidden');
+    $('#closeJuice').onclick = ()=> $('#juiceModal').classList.add('hidden');
+    $('#copyJuice').onclick = ()=>{
+      navigator.clipboard.writeText($('#juiceNumber').value);
+      $('#copyJuice').textContent = 'Copied';
+      setTimeout(()=>$('#copyJuice').textContent='Copy', 1200);
+    };
 
     async function boot(){
       const { data:{ user } } = await sb.auth.getUser();
-      showApp(user);
-      if(user){
-        if(!$('#items').children.length){ addItemRow(); }
-        recalc();
-        await loadReceipts();
-      }else{
-        $('#items').innerHTML = '';
-        $('#recMsg').textContent = '';
-        $('#rec-total').value = '';
-        $('#totalLbl').textContent = '0.00';
-      }
+      showWhenSignedIn(user);
     }
     document.addEventListener('DOMContentLoaded', boot);
   </script>
