@@ -27,8 +27,8 @@
       <h2 class="text-xl font-semibold">Sign in</h2>
       <p class="text-slate-600 text-sm">Create an account or log in to start issuing receipts.</p>
       <div class="mt-3 grid md:grid-cols-3 gap-3">
-        <input id="email" placeholder="Email" class="border rounded-lg p-2">
-        <input id="password" type="password" placeholder="Password" class="border rounded-lg p-2">
+        <input id="email" placeholder="Email" class="border rounded-lg p-2" autocomplete="username" inputmode="email">
+        <input id="password" type="password" placeholder="Password (min 6)" class="border rounded-lg p-2" autocomplete="current-password" minlength="6">
         <div class="flex gap-2">
           <button id="signupBtn" class="flex-1 px-3 py-2 rounded-lg bg-blue-600 text-white">Create account</button>
           <button id="loginBtn" class="flex-1 px-3 py-2 rounded-lg border">Log in</button>
@@ -103,20 +103,33 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <script>
-    // ===== Supabase init (REPLACE these) =====
-    const SUPABASE_URL = "YOUR_SUPABASE_URL"; // e.g. https://xxxxx.supabase.co
-    const SUPABASE_ANON_KEY = "YOUR_SUPABASE_PUBLISHABLE_KEY"; // sb_publishable_...
+    // ===== Supabase init =====
+    // TODO: ⛳ REPLACE with your real values from Supabase → Project Settings → API
+    const SUPABASE_URL = "https://hppgouoexhqgecntpkej.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_9rxkf2R-S74yd24O5q9vQ_vH6xGz3g";
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // ===== Helpers =====
     const $  = s => document.querySelector(s);
     const $$ = s => document.querySelectorAll(s);
     const fmt = n => (Number(n||0)).toFixed(2);
+    const showErr = (el, msg)=>{ el.textContent = msg; setTimeout(()=>el.textContent="", 4000); };
 
     // ===== Auth =====
+    function validEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v||""); }
     async function ensureProfile() {
+      // Try to keep it flexible: first try 'profiles', fallback to 'users' if profiles table isn't created.
       const { data: { user } } = await sb.auth.getUser();
-      if (user) {
+      if (!user) return;
+      // Try profiles
+      let { error: pErr } = await sb.from('profiles').upsert(
+        { id: user.id, email: user.email, created_at: new Date().toISOString() },
+        { onConflict: 'id' }
+      );
+      // If profiles table doesn't exist, fall back to 'users' table name
+      if (pErr && (pErr.code === '42P01' || /relation .* does not exist/i.test(pErr.message))) {
         await sb.from('users').upsert(
           { id: user.id, email: user.email, subscription_status: 'trial' },
           { onConflict: 'id' }
@@ -127,7 +140,7 @@
       if(user){
         $('#authCard').classList.add('hidden');
         $('#appGrid').classList.remove('hidden');
-        $('#userEmail').textContent = user.email;
+        $('#userEmail').textContent = user.email || "";
         $('#userEmail').classList.remove('hidden');
         $('#logoutBtn').classList.remove('hidden');
       }else{
@@ -146,7 +159,7 @@
         <input class="col-span-6 border rounded-lg p-2 it-name" placeholder="Item/service" value="${name}">
         <input class="col-span-2 border rounded-lg p-2 it-qty" type="number" min="1" value="${qty}">
         <input class="col-span-3 border rounded-lg p-2 it-unit" type="number" step="0.01" value="${price}">
-        <button class="col-span-1 bg-red-500 text-white rounded-lg">×</button>
+        <button class="col-span-1 bg-red-500 text-white rounded-lg" title="Remove">×</button>
       `;
       row.querySelector('button').onclick = ()=>{ row.remove(); recalc(); };
       $('#items').appendChild(row);
@@ -168,7 +181,7 @@
     // ===== CRUD =====
     async function saveReceipt(){
       const { data:{ user } } = await sb.auth.getUser();
-      if(!user){ $('#recMsg').textContent = 'Please sign in first.'; return; }
+      if(!user){ $('#recMsg').className='text-sm mt-2 text-red-600'; $('#recMsg').textContent = 'Please sign in first.'; return; }
 
       const items = [...$$('#items .rec-item')].map(r=>({
         name:  r.querySelector('.it-name').value.trim(),
@@ -193,17 +206,28 @@
       };
 
       const { error } = await sb.from('receipts').insert(payload);
-      $('#recMsg').textContent = error ? error.message : 'Saved ✓';
-      if(!error){ await loadReceipts(); }
+      if(error){
+        $('#recMsg').className='text-sm mt-2 text-red-600';
+        $('#recMsg').textContent = error.message.includes('permission denied')
+          ? 'Receipts table RLS/policies missing. Add policies to allow user to insert their own rows.'
+          : error.message;
+      }else{
+        $('#recMsg').className='text-sm mt-2 text-green-600';
+        $('#recMsg').textContent = 'Saved ✓';
+        await loadReceipts();
+      }
     }
 
     async function loadReceipts(){
       const { data:{ user } } = await sb.auth.getUser();
+      const tbody = $('#rec-history'); tbody.innerHTML = '';
       if(!user) return;
       const { data, error } = await sb.from('receipts')
         .select('*').eq('user_id', user.id).order('created_at',{ascending:false});
-      const tbody = $('#rec-history'); tbody.innerHTML = '';
-      if(error){ tbody.innerHTML = `<tr><td colspan="5" class="py-3 text-red-600">${error.message}</td></tr>`; return; }
+      if(error){
+        tbody.innerHTML = `<tr><td colspan="5" class="py-3 text-red-600">${error.message}</td></tr>`;
+        return;
+      }
       (data||[]).forEach(r=>{
         const tr = document.createElement('tr');
         tr.className = 'border-b';
@@ -228,7 +252,7 @@
           }
           if(act==='pdf'){
             const { data } = await sb.from('receipts').select('*').eq('id', id).single();
-            renderPdf(data);
+            if(data) renderPdf(data);
           }
         };
       });
@@ -253,21 +277,27 @@
 
     // ===== Events & boot =====
     $('#signupBtn').onclick = async ()=>{
-      $('#authMsg').textContent='';
       const email = $('#email').value.trim();
       const pass  = $('#password').value.trim();
+      if(!validEmail(email)) return showErr($('#authMsg'),'Enter a valid email.');
+      if((pass||'').length < 6) return showErr($('#authMsg'),'Password must be at least 6 characters.');
+      $('#authMsg').textContent='';
       const { error } = await sb.auth.signUp({ email, password: pass });
-      if(error){ $('#authMsg').textContent = error.message; return; }
+      if(error){ showErr($('#authMsg'), error.message); return; }
       await ensureProfile(); boot();
     };
+
     $('#loginBtn').onclick = async ()=>{
-      $('#authMsg').textContent='';
       const email = $('#email').value.trim();
       const pass  = $('#password').value.trim();
+      if(!validEmail(email)) return showErr($('#authMsg'),'Enter a valid email.');
+      if((pass||'').length < 6) return showErr($('#authMsg'),'Password must be at least 6 characters.');
+      $('#authMsg').textContent='';
       const { error } = await sb.auth.signInWithPassword({ email, password: pass });
-      if(error){ $('#authMsg').textContent = error.message; return; }
+      if(error){ showErr($('#authMsg'), error.message); return; }
       await ensureProfile(); boot();
     };
+
     $('#logoutBtn').onclick = async ()=>{ await sb.auth.signOut(); boot(); };
 
     $('#addItem').onclick = ()=>{ addItemRow(); recalc(); };
@@ -314,4 +344,3 @@
   </script>
 </body>
 </html>
-
