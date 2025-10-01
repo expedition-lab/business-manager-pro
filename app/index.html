@@ -3,25 +3,26 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Business Manager Pro — App</title>
+
+<!-- Kill any stale service workers/caches that might serve the old app -->
 <script>
-/* HARD NUKE (temporary): unregister SWs + delete caches each load */
 (function(){
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(rs => {
-      rs.forEach(r => r.unregister());
-    }).then(() => {
-      if (window.caches && caches.keys) {
-        caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
-      }
-    });
-  }
+  try{
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
+      if (window.caches && caches.keys) { caches.keys().then(keys => keys.forEach(k => caches.delete(k))); }
+    }
+  }catch(e){ /* ignore */ }
 })();
 </script>
-<title>Business Manager Pro</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<!-- Note: PayPal SDK below uses sandbox client-id=sb (internal). No user-facing sandbox text shown. -->
+<!-- PayPal SDK (sandbox). Replace client-id in prod. -->
 <script id="paypal-sdk" src="https://www.paypal.com/sdk/js?client-id=sb&currency=USD"></script>
 <style>
   .tab{display:none}.tab.active{display:block}
@@ -33,14 +34,54 @@
   .toast{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:.7rem 1rem;border-radius:.6rem;opacity:0;transition:opacity .2s}
   .toast.show{opacity:1}
   table{width:100%} th,td{padding:.5rem .6rem} th{background:#f9fafb;text-align:left;font-weight:700}
+  .shadow-soft{box-shadow:0 10px 20px rgba(0,0,0,.06),0 6px 6px rgba(0,0,0,.06)}
 </style>
+<!-- Define router early so onclick handlers never fail -->
+<script>
+(function(){
+  window.__boot_ready = false;
+  window.__route_intent = null;
+
+  window.activateTab = function(name){
+    document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
+    var v=document.getElementById('view-'+name); if(v) v.classList.add('active');
+    window.scrollTo(0,0);
+  };
+
+  function gate(target){
+    try{
+      const publicTabs = ['home','plans','account'];
+      if (!publicTabs.includes(target)){
+        if (!window.getUser || !getUser()) return {dest:'account', note:'Please create an account first'};
+        if (!(window.isPlanActive && isPlanActive()) && !(window.isTrialActive && isTrialActive())) return {dest:'plans', note:'Activate a plan or start trial'};
+      }
+      return {dest:target};
+    }catch(_){ return {dest:'account'}; }
+  }
+
+  window.go = function(target, opts={}){
+    try{
+      var intent = (opts && opts.mode) ? String(opts.mode) : null;
+      var g = window.__boot_ready ? gate(target) : {dest:target};
+      var dest = g.dest;
+      if (window.__boot_ready && g.note && window.toast){ try{ toast(g.note); }catch(_){} }
+      activateTab(dest);
+      // Update URL hash (support simple query like #account?mode=signup)
+      const qs = intent ? ('?mode='+encodeURIComponent(intent)) : '';
+      if (dest === 'home') { history.replaceState(null,'',location.pathname); }
+      else { history.replaceState(null,'',location.pathname+'#'+dest+qs); }
+      window.__route_intent = intent;
+    }catch(e){ console.error('Router error', e); }
+  };
+})();
+</script>
 </head>
 <body class="bg-gray-50 text-gray-800">
 
 <!-- ===== NAV ===== -->
-<header class="bg-white border-b">
+<header class="bg-white border-b sticky top-0 z-30">
   <div class="max-w-6xl mx-auto px-4 py-3 flex items-center gap-4">
-    <div class="w-9 h-9 rounded-full bg-blue-600 text-white grid place-items-center font-bold">B</div>
+    <a href="/" class="w-9 h-9 rounded-full bg-blue-600 text-white grid place-items-center font-bold" title="Home">B</a>
     <div class="font-bold">Business Manager Pro</div>
     <nav class="ml-4 flex gap-4 text-sm">
       <button class="hover:text-blue-600" onclick="go('home')">Home</button>
@@ -58,83 +99,214 @@
 </header>
 
 <main class="max-w-6xl mx-auto px-4 py-8">
-
+  
   <!-- ===== HOME ===== -->
-  <section id="view-home" class="tab active">
-    <div class="grid gap-6 lg:grid-cols-2 items-start">
-      <div>
-        <h1 class="text-4xl sm:text-5xl font-extrabold leading-tight">
-          Generate <span class="text-blue-600">Professional E-Receipts</span> in Seconds
-        </h1>
-        <p class="mt-4 text-gray-700">Auto reference numbers, BRN support, and instant PDF receipts. Faster than Excel, simpler than accounting software.</p>
-        <ul class="mt-4 list-disc pl-5 space-y-2">
-          <li>Auto reference numbers — no typos.</li>
-          <li>BRN & business info saved once — always prefilled.</li>
-          <li>Professional PDF receipts ready for clients.</li>
-          <li>Access anywhere (phone, laptop).</li>
-          <li>Quick setup + affordable plans.</li>
-        </ul>
-        <div class="mt-5 p-3 card bg-blue-50 border-blue-200 text-blue-900 text-sm">
-          We generate e-receipts only. Issuer is responsible for content and any external links/payments.
-        </div>
-        <div class="mt-5 flex flex-wrap gap-3">
-          <button class="btn btn-ghost" onclick="go('account')">Create Account</button>
-          <button class="btn btn-primary" onclick="go('plans')">Activate Plan</button>
-        </div>
-      </div>
-
-      <!-- Mock receipt -->
-      <div class="card">
-        <div class="flex items-center gap-2 mb-3">
-          <div class="w-9 h-9 rounded-full bg-blue-600 text-white grid place-items-center font-semibold">B</div>
-          <div class="font-semibold">Receipt Mock</div>
-          <span class="ml-auto text-blue-700 text-xs pill">Preview</span>
-        </div>
-        <div class="text-sm">
-          <div class="font-semibold">Business</div>
-          <div>Your Business Name</div>
-          <div class="text-gray-500">BRN: C20123456</div>
-          <div class="mt-3 border rounded">
-            <div class="grid grid-cols-2 text-xs bg-gray-50 px-3 py-2 font-semibold">
-              <div>DESCRIPTION</div><div class="text-right">TOTAL</div>
-            </div>
-            <div class="grid grid-cols-2 px-3 py-2 text-sm border-t">
-              <div>Service Example</div><div class="text-right">Rs 2,500</div>
-            </div>
-            <div class="grid grid-cols-2 px-3 py-2 text-sm border-t">
-              <div>Extra Charge</div><div class="text-right">Rs 100</div>
-            </div>
-            <div class="px-3 py-3 text-right font-semibold border-t">Grand Total: Rs 2,600</div>
+<section id="view-home" class="tab active">
+  <!-- New marketing-style hero -->
+  <div class="relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-b from-blue-50 to-transparent"></div>
+    <div class="relative container mx-auto px-0 sm:px-4 py-10 md:py-16">
+      <div class="grid md:grid-cols-2 items-center gap-10">
+        <div class="px-2 sm:px-0">
+          <h1 class="text-3xl md:text-5xl font-bold tracking-tight leading-tight">
+            Smart E-Receipts for <span class="text-blue-700">Modern Businesses</span>
+          </h1>
+          <p class="mt-4 text-gray-700 md:text-lg">
+            Create and send professional e-receipts in seconds. Track revenue, export to Excel, and pay for your BMP plan via JUICE or PayPal.
+          </p>
+          <ul class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+            <li class="flex items-start gap-2"><span class="mt-1 h-5 w-5 rounded-full bg-green-500"></span> Instant PDF receipts</li>
+            <li class="flex items-start gap-2"><span class="mt-1 h-5 w-5 rounded-full bg-green-500"></span> Client & item library</li>
+            <li class="flex items-start gap-2"><span class="mt-1 h-5 w-5 rounded-full bg-green-500"></span> Analytics dashboard</li>
+            <li class="flex items-start gap-2"><span class="mt-1 h-5 w-5 rounded-full bg-green-500"></span> MUR + multi-currency</li>
+          </ul>
+          <div class="mt-8 flex flex-wrap items-center gap-3">
+            <button class="px-5 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700" onclick="go('plans')">Start 3-day trial</button>
+            <button class="px-5 py-3 rounded-xl border border-slate-300 hover:bg-slate-100" onclick="go('receipts')">See demo</button>
+            <p class="w-full sm:w-auto text-xs text-slate-500">No credit card needed.</p>
           </div>
         </div>
-        <div class="mt-3 text-xs text-gray-500 grid grid-cols-2">
-          <div>Ref: REF-2025-0001</div><div class="text-right">Date: 2025-09-25</div>
+        <div class="relative px-2 sm:px-0">
+          <div class="rounded-2xl border bg-white shadow-soft p-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-xs text-slate-500">This month</p>
+                <p class="text-2xl font-semibold">Rs 124,560</p>
+              </div>
+              <div class="text-xs text-green-600">+12.4%</div>
+            </div>
+            <div aria-hidden="true" class="mt-3 h-32 rounded-xl bg-gradient-to-r from-blue-100 to-blue-200"></div>
+            <div class="mt-4 grid grid-cols-3 gap-3 text-sm">
+              <div class="rounded-xl border p-3">
+                <p class="text-xs text-slate-500">Receipts</p>
+                <p class="font-semibold">328</p>
+              </div>
+              <div class="rounded-xl border p-3">
+                <p class="text-xs text-slate-500">Clients</p>
+                <p class="font-semibold">142</p>
+              </div>
+              <div class="rounded-xl border p-3">
+                <p class="text-xs text-slate-500">Exports</p>
+                <p class="font-semibold">27</p>
+              </div>
+            </div>
+            <div class="mt-6 rounded-2xl border p-4">
+              <div class="flex items-center justify-between">
+                <p class="font-medium">Receipt preview</p>
+                <button class="text-sm px-3 py-1 rounded-lg border hover:bg-slate-100" onclick="go('receipts')">Generate PDF</button>
+              </div>
+              <div class="mt-3 h-44 rounded-xl bg-slate-100 grid place-content-center text-slate-400 text-sm">PDF preview</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Social proof strip -->
+      <div class="mt-12 flex flex-wrap items-center gap-6 text-slate-500 text-sm px-2 sm:px-0">
+        <span class="inline-flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full bg-green-500"></span> Trusted by 500+ businesses</span>
+        <span>10,000+ receipts generated</span>
+        <span>Bank-grade encryption</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- How It Works -->
+  <div class="py-14 md:py-20">
+    <div class="container mx-auto px-0 sm:px-4">
+      <h2 class="text-2xl md:text-3xl font-semibold tracking-tight">How it works</h2>
+      <p class="mt-2 text-slate-600">Three quick steps to your first receipt.</p>
+      <div class="mt-8 grid md:grid-cols-3 gap-6">
+        <div class="rounded-2xl border bg-white p-6 shadow-soft">
+          <div class="h-10 w-10 rounded-xl bg-blue-600"></div>
+          <h3 class="mt-4 font-semibold">1) Create</h3>
+          <p class="text-sm text-slate-600">Enter client and items, auto-generate reference numbers and dates.</p>
+        </div>
+        <div class="rounded-2xl border bg-white p-6 shadow-soft">
+          <div class="h-10 w-10 rounded-xl bg-blue-600"></div>
+          <h3 class="mt-4 font-semibold">2) Send</h3>
+          <p class="text-sm text-slate-600">Share via Email or WhatsApp, or download a branded PDF.</p>
+        </div>
+        <div class="rounded-2xl border bg-white p-6 shadow-soft">
+          <div class="h-10 w-10 rounded-xl bg-blue-600"></div>
+          <h3 class="mt-4 font-semibold">3) Track</h3>
+          <p class="text-sm text-slate-600">See revenue analytics and export CSV/Excel for accounting.</p>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Key features + FAQ -->
-    <div class="grid sm:grid-cols-2 gap-4 mt-10">
-      <div class="card"><div class="font-semibold">E-Receipts in 10 seconds</div><div class="text-sm text-gray-600">Fill items, taxes/discounts, and share.</div></div>
-      <div class="card"><div class="font-semibold">Smart client book</div><div class="text-sm text-gray-600">Auto-remember clients; view their receipt history.</div></div>
-      <div class="card"><div class="font-semibold">Exports</div><div class="text-sm text-gray-600">Excel/CSV for accountant or tax filing.</div></div>
-      <div class="card"><div class="font-semibold">Analytics</div><div class="text-sm text-gray-600">Daily/weekly/monthly totals, top clients/items.</div></div>
+  <!-- Features -->
+  <div class="py-14 md:py-20 bg-white">
+    <div class="container mx-auto px-0 sm:px-4">
+      <h2 class="text-2xl md:text-3xl font-semibold tracking-tight">Everything you need to issue receipts</h2>
+      <p class="mt-2 text-slate-600">Built for freelancers, SMBs, and agencies in Mauritius and beyond.</p>
+
+      <div class="mt-8 grid md:grid-cols-3 gap-6 text-sm">
+        <div class="rounded-2xl border p-6">
+          <h3 class="font-semibold">Professional templates</h3>
+          <p class="mt-1 text-slate-600">Branded PDFs with logo, address, BRN, and signatures.</p>
+        </div>
+        <div class="rounded-2xl border p-6">
+          <h3 class="font-semibold">Client & item library</h3>
+          <p class="mt-1 text-slate-600">Save frequent clients and services; auto-fill details.</p>
+        </div>
+        <div class="rounded-2xl border p-6">
+          <h3 class="font-semibold">Analytics dashboard</h3>
+          <p class="mt-1 text-slate-600">Track totals, categories, and payment status at a glance.</p>
+        </div>
+        <div class="rounded-2xl border p-6">
+          <h3 class="font-semibold">Exports & backups</h3>
+          <p class="mt-1 text-slate-600">CSV/Excel exports and secure cloud backups.</p>
+        </div>
+        <div class="rounded-2xl border p-6">
+          <h3 class="font-semibold">Payments</h3>
+          <p class="mt-1 text-slate-600">Pay for your BMP subscription via JUICE or PayPal. Stripe coming soon.</p>
+        </div>
+        <div class="rounded-2xl border p-6">
+          <h3 class="font-semibold">Multi-currency</h3>
+          <p class="mt-1 text-slate-600">MUR first, with USD/EUR/GBP support for foreign clients.</p>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <div class="card mt-8">
-      <details class="border-b p-3"><summary class="font-medium">Do I need a plan to use it?</summary>
-        <p class="pt-2 text-sm text-gray-700">Yes — create an account and activate a plan or start a free 3-day trial.</p>
-      </details>
-      <details class="border-b p-3"><summary class="font-medium">Can I use it on my phone?</summary>
-        <p class="pt-2 text-sm text-gray-700">Yes. Works on any modern phone or tablet.</p>
-      </details>
-      <details class="p-3"><summary class="font-medium">Can I export my data?</summary>
-        <p class="pt-2 text-sm text-gray-700">Yes — CSV/Excel exports are supported.</p>
-      </details>
+  <!-- Testimonials -->
+  <div class="py-14 md:py-20">
+    <div class="container mx-auto px-0 sm:px-4">
+      <h2 class="text-2xl md:text-3xl font-semibold tracking-tight">Loved by growing businesses</h2>
+      <div class="mt-8 grid md:grid-cols-3 gap-6 text-sm">
+        <blockquote class="rounded-2xl border bg-white p-6 shadow-soft">
+          <p>“I issue receipts in under a minute now. Huge time saver.”</p>
+          <footer class="mt-3 text-slate-500">— Sarah, Freelancer</footer>
+        </blockquote>
+        <blockquote class="rounded-2xl border bg-white p-6 shadow-soft">
+          <p>“We replaced messy Excel files. The exports are perfect.”</p>
+          <footer class="mt-3 text-slate-500">— Raj, Retail owner</footer>
+        </blockquote>
+        <blockquote class="rounded-2xl border bg-white p-6 shadow-soft">
+          <p>“The JUICE payment link is a game changer for us.”</p>
+          <footer class="mt-3 text-slate-500">— Aisha, Tour operator</footer>
+        </blockquote>
+      </div>
     </div>
-  </section>
+  </div>
 
-  <!-- ===== ACCOUNT ===== -->
+  <!-- Pricing (buttons navigate to the Plans tab that has PayPal/JUICE) -->
+  <div class="py-14 md:py-20 bg-white">
+    <div class="container mx-auto px-0 sm:px-4">
+      <div class="flex items-end justify-between gap-4">
+        <div>
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight">Simple pricing</h2>
+          <p class="mt-2 text-slate-600">Start free. Upgrade when you’re ready.</p>
+        </div>
+      </div>
+
+      <div class="mt-8 grid md:grid-cols-2 gap-6">
+        <div class="rounded-2xl border bg-gradient-to-b from-slate-50 to-white p-6 shadow-soft">
+          <h3 class="text-xl font-semibold">Starter</h3>
+          <p class="mt-1 text-slate-600">Everything to issue receipts fast.</p>
+          <p class="mt-4 text-3xl font-bold">Rs 999 <span class="text-base font-normal text-slate-500">/ month</span></p>
+          <ul class="mt-4 space-y-2 text-sm">
+            <li>Up to 200 receipts / month</li>
+            <li>1 user</li>
+            <li>PDF exports</li>
+            <li>Email or WhatsApp share</li>
+          </ul>
+          <button class="mt-6 inline-block px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700" onclick="go('plans')">Start free</button>
+        </div>
+        <div class="rounded-2xl border bg-gradient-to-b from-blue-50 to-white p-6 shadow-soft">
+          <div class="inline-block mb-2 text-xs px-2 py-1 rounded-full bg-blue-600 text-white">Most popular</div>
+          <h3 class="text-xl font-semibold">Pro</h3>
+          <p class="mt-1 text-slate-600">Advanced features for teams.</p>
+          <p class="mt-4 text-3xl font-bold">Rs 1,499 <span class="text-base font-normal text-slate-500">/ month</span></p>
+          <ul class="mt-4 space-y-2 text-sm">
+            <li>Unlimited receipts</li>
+            <li>Up to 5 users</li>
+            <li>Client & item library</li>
+            <li>Analytics dashboard</li>
+            <li>Checkout via JUICE or PayPal</li>
+          </ul>
+          <button class="mt-6 inline-block px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700" onclick="go('plans')">Go Pro</button>
+        </div>
+      </div>
+      <p class="mt-4 text-xs text-slate-500">Full checkout lives in the Plans tab.</p>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="py-16 bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+    <div class="container mx-auto px-0 sm:px-4 text-center">
+      <h2 class="text-2xl md:text-3xl font-semibold">Start issuing receipts in minutes</h2>
+      <p class="mt-2 text-blue-100">Free 3-day trial • Cancel anytime • No credit card</p>
+      <div class="mt-6 flex justify-center gap-2">
+        <button class="px-6 py-3 rounded-xl bg-white text-blue-700 hover:bg-blue-50 font-medium" onclick="go('account', {mode:'signup'})">Create my account</button>
+        <button class="px-6 py-3 rounded-xl border border-white/80 hover:bg-white/10 font-medium" onclick="go('plans')">Choose a plan</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== ACCOUNT ===== -->
   <section id="view-account" class="tab">
     <h2 class="text-xl font-bold mb-4">Account</h2>
     <!-- Login -->
@@ -339,12 +511,25 @@
 <div id="toast" class="toast"></div>
 
 <script>
-const JUICE_NUMBER = '+230 5496 0101';
+'use strict';
 
-/* ========= Utilities ========= */
+// ===== Owner payment settings =====
+const OWNER = {
+  JUICE_NUMBER_RAW: '23054960101', // provided by owner
+};
+function fmtJuice(num){
+  try{
+    const n = String(num||'').replace(/\D/g,'');
+    const last8 = n.slice(-8);
+    if(last8.length===8) return '+230 ' + last8.slice(0,4) + ' ' + last8.slice(4);
+    return '+230 ' + last8;
+  }catch(_){ return String(num); }
+}
+
+// ===== Utilities =====
 const $ = (id)=>document.getElementById(id);
 const money = (n)=>'Rs '+Number(n||0).toFixed(2);
-function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1600); }
+function toast(msg){ const t=$('toast'); if(!t) return; t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1600); }
 
 /* ========= Auth, Plan & Trial ========= */
 function getUser(){ try{return JSON.parse(localStorage.getItem('bmp_user'))||null}catch(e){return null} }
@@ -375,42 +560,6 @@ function updateHeaderAuth(){
 }
 updateHeaderAuth();
 
-/* ========= Tab activator ========= */
-function activateTab(name){
-  document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
-  const v=$('view-'+name); if(v) v.classList.add('active');
-  window.scrollTo(0,0);
-}
-
-/* ========= Router ========= */
-function go(target){
-  const publicTabs = ['home','plans','account'];
-  let dest = target;
-
-  // Gate private tabs
-  if (!publicTabs.includes(target)) {
-    if (!getUser()) { toast('Please create an account first'); dest = 'account'; }
-    else if (!(isPlanActive() || isTrialActive())) { toast('Activate a plan or start trial'); dest = 'plans'; }
-  }
-
-  activateTab(dest);
-
-  // Clean URL for home; hash for others
-  if (dest === 'home') {
-    history.replaceState(null, '', location.pathname);
-  } else {
-    history.replaceState(null, '', location.pathname + '#' + dest);
-  }
-}
-
-/* ========= Password Hashing ========= */
-async function hashPassword(password) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hash = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
 /* ========= View Toggles ========= */
 function showLogin() {
   $('login-view').style.display = 'block';
@@ -436,6 +585,8 @@ function showLoggedIn() {
     `;
   }
 }
+window.showLogin = showLogin;
+window.showSignup = showSignup;
 
 /* ========= Login ========= */
 async function loginUser() {
@@ -451,6 +602,15 @@ async function loginUser() {
   toast('Logged in successfully');
   showLoggedIn();
   go('home');
+}
+window.loginUser = loginUser;
+
+/* ========= Password Hashing ========= */
+async function hashPassword(password) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
 /* ========= Signup ========= */
@@ -483,6 +643,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
     go('home');
   });
 });
+
 /* ========= Plans (+ payments) ========= */
 const PRICE_MUR = {
   starter: { monthly: 999, '6m': 5400, year: 9600 },
@@ -519,7 +680,7 @@ function openJuice(plan){
   pendingPlan=plan;
   const amt=getSelectedAmount(plan);
   const ref = `JUICE-${plan.toUpperCase()}-${Date.now().toString().slice(-6)}`;
-  const n = (typeof JUICE_NUMBER!=='undefined') ? JUICE_NUMBER : '+230 5496 0101';
+  const n = fmtJuice(OWNER.JUICE_NUMBER_RAW);
   const sms = `JUICE Payment — ${plan} Rs ${amt} | Ref ${ref}`;
   const el=$('juice-body');
   el.innerHTML = `
@@ -537,21 +698,28 @@ function openJuice(plan){
           <button class='pill' onclick="navigator.clipboard&&navigator.clipboard.writeText('${ref}')">Copy</button>
         </div>
       </div>
-      <a class='pill inline-block' href='sms:+23054960101?body=${encodeURIComponent(sms)}'>Send SMS confirmation</a>
+      <a class='pill inline-block' href='sms:${OWNER.JUICE_NUMBER_RAW}?body=${encodeURIComponent(sms)}'>Send SMS confirmation</a>
     </div>`;
-  $('juice-modal').showModal();
+  const dlg=$('juice-modal');
+  if(dlg && typeof dlg.showModal==='function'){ dlg.showModal(); }
+  else if(dlg){ dlg.setAttribute('open',''); dlg.style.display='block'; }
 }
-function closeJuice(){ $('juice-modal').close(); }
+function closeJuice(){ const dlg=$('juice-modal'); if(dlg && typeof dlg.close==='function'){ dlg.close(); } else if(dlg){ dlg.removeAttribute('open'); dlg.style.display='none'; } }
 function confirmJuicePaid(){
   if(!pendingPlan) return closeJuice();
   setPlanActive(); toast(`${pendingPlan==='starter'?'Starter':'Pro'} plan activated`);
   closeJuice(); go('receipts');
 }
+window.startTrial = startTrial;
+window.activateDemo = activateDemo;
+window.openJuice = openJuice;
+window.closeJuice = closeJuice;
+window.confirmJuicePaid = confirmJuicePaid;
 
 /* PayPal buttons (SDK is sandbox internally) */
 function renderPayPal(){
   if(!window.paypal) return;
-  const targets=[['paypal-btn-starter','starter'],['paypal-btn-pro','pro']];
+  const targets=[["paypal-btn-starter","starter"],["paypal-btn-pro","pro"]];
   targets.forEach(([id,plan])=>{
     const mount=document.getElementById(id); if(!mount || mount.hasChildNodes()) return;
     window.paypal.Buttons({
@@ -696,16 +864,6 @@ function downloadPdfFromCurrent(){
 }
 
 /* Share helpers */
-function shareFromRecord(id){
-  const r=loadR().find(x=>x.id===id); if(!r){toast('Not found');return;}
-  const p=getUser()||{};
-  const title = `Receipt ${r.ref}`;
-  const text = shareTextFromReceipt(r, p);
-  if(navigator.share){ navigator.share({title, text}).catch(()=>{}); return; }
-  const wa=`https://wa.me/?text=${encodeURIComponent(text)}`;
-  const mail=`mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(text)}`;
-  window.open(wa,'_blank') || (window.location.href=mail);
-}
 function shareTextFromReceipt(r,p){
   const lines = [];
   lines.push((p.business||'Your Business')+(p.brn?` • BRN ${p.brn}`:''));
@@ -805,21 +963,19 @@ function renderDashboard(){
 /* ========= Self-tests ========= */
 function runSelfTests(){
   const fails=[]; const pass=(name)=>console.log('✔',name); const fail=(name,msg)=>{console.error('✘',name,msg); fails.push(name+': '+msg);} 
-  try{
-    go('home');
-    if(!document.getElementById('view-home').classList.contains('active')) fail('go(home)','home not active'); else pass('go(home)');
-    go('plans');
-    if(!document.getElementById('view-plans').classList.contains('active')) fail('go(plans)','plans not active'); else pass('go(plans)');
-  }catch(e){ fail('go()', e.message); }
+  try{ go('home'); if(!document.getElementById('view-home').classList.contains('active')) fail('go(home)','home not active'); else pass('go(home)'); }catch(e){ fail('go(home)', e.message); }
+  try{ go('plans'); if(!document.getElementById('view-plans').classList.contains('active')) fail('go(plans)','plans not active'); else pass('go(plans)'); }catch(e){ fail('go(plans)', e.message); }
+  try{ if(typeof openJuice!=='function') fail('openJuice','missing'); else pass('openJuice exists'); }catch(e){ fail('openJuice', e.message); }
+  try{ if(typeof startTrial!=='function') fail('startTrial','missing'); else pass('startTrial exists'); }catch(e){ fail('startTrial', e.message); }
+  try{ if(typeof showSignup!=='function') fail('showSignup','missing'); else pass('showSignup exists'); }catch(e){ fail('showSignup', e.message); }
   try{
     const mockR={ref:'T-1', date:'2025-09-30', customer:'Alice', items:[{desc:'X',qty:1,unit:100,total:100}], subtotal:100, vatPct:0, vatAmt:0, fee:0, discount:0, grand:100};
     const txt=shareTextFromReceipt(mockR,{business:'Biz',brn:'C20'});
     if(!(txt.includes('Grand Total: 100.00 MUR') && txt.includes('\n'))) fail('shareTextFromReceipt','formatting missing'); else pass('shareTextFromReceipt');
   }catch(e){ fail('shareTextFromReceipt', e.message); }
-  try{
-    const ref=previewNextRef(); if(!/^REF-\d{4}-\d{4}$/.test(ref)) fail('previewNextRef','pattern mismatch'); else pass('previewNextRef');
-  }catch(e){ fail('previewNextRef', e.message); }
-  if(fails.length){ toast('Self-tests failed'); console.warn('Self-test failures:', fails); }
+  try{ const ref=previewNextRef(); if(!/^REF-\d{4}-\d{4}$/.test(ref)) fail('previewNextRef','pattern mismatch'); else pass('previewNextRef'); }catch(e){ fail('previewNextRef', e.message); }
+  try{ const f = fmtJuice(OWNER.JUICE_NUMBER_RAW); if(!/^\+230\s\d{4}\s\d{4}$/.test(f)) fail('fmtJuice','format'); else pass('fmtJuice'); }catch(e){ fail('fmtJuice', e.message); }
+  if(fails.length){ console.warn('Self-test failures:', fails); toast('Self-tests failed'); }
   else{ console.info('All self-tests passed'); }
 }
 
@@ -827,7 +983,7 @@ function runSelfTests(){
 document.addEventListener('DOMContentLoaded', ()=>{
   // Keep startup safe: stop browser from restoring old hash/scroll
   try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch(e) {}
-  try { if (location.hash) history.replaceState(null, '', location.pathname + location.search); } catch(e) {}
+  try { /* reset hash to control routing ourselves */ } catch(e) {}
   window.scrollTo(0, 0);
 
   // Account view
@@ -837,36 +993,47 @@ document.addEventListener('DOMContentLoaded', ()=>{
   // Initial renders
   renderHistory(); renderClients(); renderDashboard();
 
-  // Default route: always Home
-  go('home');
+  // Default route: Home (or hash if provided)
+  const rawHash = (location.hash||'').slice(1);
+  let base=rawHash.split('?')[0]||'home';
+  activateTab('home');
 
   // Hash navigation (gated inside go())
   const restricted = ['plans','dashboard','receipts','clients','test'];
   window.addEventListener('hashchange', (ev)=>{
     ev.preventDefault();
     const h = (location.hash || '').slice(1) || 'home';
-    if (!getUser() && restricted.includes(h)) {
+    const dest = h.split('?')[0];
+    if (!getUser() && restricted.includes(dest)) {
       try { history.replaceState(null, '', location.pathname + location.search); } catch(e) {}
       go('home');
     } else {
-      go(h);
+      go(dest);
     }
   });
 
   // Prefill date today
   const d=$('date'); if(d) d.value=new Date().toISOString().slice(0,10);
 
+  // mark router ready, then navigate if hash or CTA intent exists
+  window.__boot_ready = true;
+  if(base){
+    const intent = (rawHash.includes('?mode=signup')) ? {mode:'signup'} : {};
+    go(base, intent);
+    if (base==='account' && intent.mode==='signup') showSignup();
+  } else {
+    go('home');
+  }
+
   // Run self-tests ONLY when '?test=1'
   if (location.search.includes('test=1')) setTimeout(runSelfTests, 0);
 
-  // Optional: surface first JS error as toast (helps diagnose)
+  // Optional: surface first JS error in console (silence toast by default)
   window.addEventListener('error', (e)=>{
     console.error('JS error:', e.message, e.filename+':'+e.lineno);
-    // toast('Error: ' + e.message); // uncomment if you want visible toasts on errors
   });
   window.addEventListener('unhandledrejection', (e)=>{
     console.error('Unhandled promise:', e.reason);
-    // toast('Error: ' + (e.reason && e.reason.message || 'Unhandled promise'));
   });
 });
 </script>
