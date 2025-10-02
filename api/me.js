@@ -1,22 +1,21 @@
-export const config = { runtime: 'nodejs20.x', regions: ['iad1'] };
+export const config = { runtime: 'edge' };
 
-export default async function handler(req, res) {
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
-    return res.status(500).json({ error: 'Missing env vars' });
-  }
-  const auth = req.headers.authorization || '';
-  const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
-  if (!token) return res.status(401).json({ error: 'No token' });
+const json = (obj, status = 200) =>
+  new Response(JSON.stringify(obj), { status, headers: { 'content-type': 'application/json' } });
+
+export default async function handler(req) {
+  const base = (process.env.SUPABASE_URL || '').trim().replace(/\/+$/, '');
+  const key  = (process.env.SUPABASE_SERVICE_KEY || '').trim();
+  if (!base || !key) return json({ error: 'Missing env vars' }, 500);
+
+  const token = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
+  if (!token) return json({ error: 'No token' }, 401);
 
   try {
-    const url = process.env.SUPABASE_URL.replace(/\/+$/, '') + '/auth/v1/user';
-    const r = await fetch(url, {
-      headers: { 'apikey': process.env.SUPABASE_SERVICE_KEY, 'Authorization': `Bearer ${token}` }
-    });
+    const r = await fetch(base + '/auth/v1/user', { headers: { apikey: key, Authorization: `Bearer ${token}` } });
     const text = await r.text();
-    res.status(r.status).setHeader('Content-Type', r.headers.get('content-type') || 'application/json').send(text);
+    return new Response(text, { status: r.status, headers: { 'content-type': r.headers.get('content-type') || 'application/json' } });
   } catch (e) {
-    console.error('ME ERROR', e);
-    res.status(500).json({ error: e.message || String(e) });
+    return json({ error: e.message || String(e) }, 500);
   }
 }
