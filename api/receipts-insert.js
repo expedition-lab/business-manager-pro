@@ -1,51 +1,38 @@
-// api/receipts-insert.js
-async function readJsonBody(req) {
-  if (req.body && typeof req.body === 'object') return req.body;
-  const chunks = [];
-  for await (const c of req) chunks.push(c);
-  const txt = Buffer.concat(chunks).toString('utf8');
-  return txt ? JSON.parse(txt) : {};
-}
+export const config = { runtime: 'edge' };
 
-export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
-    return res.status(500).json({ error: 'Missing env vars' });
-  }
+const json = (obj, status = 200) =>
+  new Response(JSON.stringify(obj), { status, headers: { 'content-type': 'application/json' } });
 
-  const auth = req.headers.authorization || '';
-  const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
-  if (!token) return res.status(401).json({ error: 'No token' });
+export default async function handler(req) {
+  if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
+  const base = (process.env.SUPABASE_URL || '').trim().replace(/\/+$/, '');
+  const key  = (process.env.SUPABASE_SERVICE_KEY || '').trim();
+  if (!base || !key) return json({ error: 'Missing env vars' }, 500);
+
+  const token = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
+  if (!token) return json({ error: 'No token' }, 401);
 
   try {
-    const meUrl = process.env.SUPABASE_URL.replace(/\/+$/,'') + '/auth/v1/user';
-    const me = await fetch(meUrl, {
-      headers: { 'apikey': process.env.SUPABASE_SERVICE_KEY, 'Authorization': `Bearer ${token}` }
-    }).then(r => r.json());
+    const me = await fetch(base + '/auth/v1/user', { headers: { apikey: key, Authorization: `Bearer ${token}` } }).then(r => r.json());
+    if (!me || !me.id) return json({ error: 'Invalid token' }, 401);
 
-    if (!me || !me.id) return res.status(401).json({ error: 'Invalid token' });
-
-    const rec = await readJsonBody(req);
+    const rec = await req.json();
     rec.user_id = me.id;
 
-    const insUrl = process.env.SUPABASE_URL.replace(/\/+$/,'') + '/rest/v1/receipts';
-    const r = await fetch(insUrl, {
+    const r = await fetch(base + '/rest/v1/receipts', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'apikey': process.env.SUPABASE_SERVICE_KEY,   // ✅ correct, no extra quote
-        'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY}`,
-        'Prefer': 'return=representation'
+        'content-type': 'application/json',
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        Prefer: 'return=representation'
       },
       body: JSON.stringify(rec)
     });
 
     const text = await r.text();
-    res.status(r.status)
-       .setHeader('Content-Type', r.headers.get('content-type') || 'application/json')
-       .send(text);
+    return new Response(text, { status: r.status, headers: { 'content-type': r.headers.get('content-type') || 'application/json' } });
   } catch (e) {
-    console.error('RECEIPT INSERT ERROR', e);
-    res.status(500).json({ error: e.message || String(e) });
+    return json({ error: e.message || String(e) }, 500);
   }
 }
