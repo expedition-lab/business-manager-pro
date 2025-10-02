@@ -1,5 +1,4 @@
-export const config = { runtime: 'nodejs20.x', regions: ['iad1'] };
-
+// api/receipts-insert.js
 async function readJsonBody(req) {
   if (req.body && typeof req.body === 'object') return req.body;
   const chunks = [];
@@ -19,7 +18,8 @@ export default async function handler(req, res) {
   if (!token) return res.status(401).json({ error: 'No token' });
 
   try {
-    const meUrl = process.env.SUPABASE_URL.replace(/\/+$/, '') + '/auth/v1/user';
+    // identify the user
+    const meUrl = process.env.SUPABASE_URL.replace(/\/+$/,'') + '/auth/v1/user';
     const me = await fetch(meUrl, {
       headers: { 'apikey': process.env.SUPABASE_SERVICE_KEY, 'Authorization': `Bearer ${token}` }
     }).then(r => r.json());
@@ -29,12 +29,12 @@ export default async function handler(req, res) {
     const rec = await readJsonBody(req);
     rec.user_id = me.id;
 
-    const insUrl = process.env.SUPABASE_URL.replace(/\/+$/, '') + '/rest/v1/receipts';
+    const insUrl = process.env.SUPABASE_URL.replace(/\/+$/,'') + '/rest/v1/receipts';
     const r = await fetch(insUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': process.env.SUPABASE_SERVICE_KEY',
+        'apikey': process.env.SUPABASE_SERVICE_KEY,          // ✅ no stray quote
         'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY}`,
         'Prefer': 'return=representation'
       },
@@ -42,7 +42,9 @@ export default async function handler(req, res) {
     });
 
     const text = await r.text();
-    res.status(r.status).setHeader('Content-Type', r.headers.get('content-type') || 'application/json').send(text);
+    res.status(r.status)
+       .setHeader('Content-Type', r.headers.get('content-type') || 'application/json')
+       .send(text);
   } catch (e) {
     console.error('RECEIPT INSERT ERROR', e);
     res.status(500).json({ error: e.message || String(e) });
