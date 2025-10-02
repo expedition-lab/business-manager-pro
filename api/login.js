@@ -1,18 +1,31 @@
+import { readJsonBody, requireEnv, passThrough } from './_util';
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  const { email, password } = req.body || {};
-  if (!email || !password) return res.status(400).json({ error: 'Missing email or password' });
+  if (!requireEnv(res, ['SUPABASE_URL','SUPABASE_SERVICE_KEY'])) return;
 
-  const r = await fetch(`${process.env.SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'apikey': process.env.SUPABASE_SERVICE_KEY,
-      'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY}`
-    },
-    body: JSON.stringify({ email, password })
-  });
+  try {
+    const { email, password } = await readJsonBody(req);
+    if (!email || !password) return res.status(400).json({ error: 'Missing email or password' });
 
-  const body = await r.text();
-  res.status(r.status).setHeader('Content-Type', r.headers.get('content-type') || 'application/json').send(body);
+    const u = `${process.env.SUPABASE_URL.replace(/\/+$/,'')}/auth/v1/token?grant_type=password`;
+    const { ok, status, text, type } = await passThrough(u, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': process.env.SUPABASE_SERVICE_KEY,
+        'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY}`
+      },
+      body: JSON.stringify({ email, password })
+    });
+
+    if (!ok) {
+      console.error('LOGIN FAIL', status, text);
+      return res.status(status).setHeader('Content-Type', type).send(text);
+    }
+    res.status(status).setHeader('Content-Type', type).send(text);
+  } catch (e) {
+    console.error('LOGIN ERROR', e);
+    res.status(500).json({ error: e.message || String(e) });
+  }
 }
