@@ -1,45 +1,45 @@
-export const config = { runtime: 'edge' };
+export const config = { runtime: 'nodejs' };
 
-const json = (obj, status = 200) =>
-  new Response(JSON.stringify(obj), { 
-    status, 
-    headers: { 'content-type': 'application/json' } 
-  });
+async function readJsonBody(req){
+  if (req.body && typeof req.body === 'object') return req.body;
+  const bufs=[]; for await (const c of req) bufs.push(c);
+  const t=Buffer.concat(bufs).toString('utf8'); return t?JSON.parse(t):{};
+}
 
-export default async function handler(req) {
-  if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
-  
-  const base = (process.env.SUPABASE_URL || '').trim().replace(/\/+$/, '');
-  const key = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
-  const site = (process.env.SITE_URL || '').trim();
-  
-  if (!base || !key || !site) return json({ error: 'Missing env vars' }, 500);
-  
-  try {
-    const { email, password, data } = await req.json();
-    if (!email || !password) return json({ error: 'Missing email or password' }, 400);
-    
-    const r = await fetch(base + '/auth/v1/signup', {
+export default async function handler(req, res){
+  try{
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+    const base = (process.env.SUPABASE_URL || '').trim().replace(/\/+$/,'');
+    // accept either env name so we don't get "Missing env vars"
+    const key  = (process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
+    const site = (process.env.SITE_URL || '').trim();
+    if (!base || !key || !site) return res.status(500).json({ error: 'Missing env vars' });
+
+    const { email, password, data } = await readJsonBody(req);
+    if (!email || !password) return res.status(400).json({ error: 'Missing email or password' });
+
+    // Admin create (immediate confirmation, no SMTP hassle)
+    const r = await fetch(base + '/auth/v1/admin/users', {
       method: 'POST',
-      headers: { 
-        'content-type': 'application/json', 
-        apikey: key, 
-        Authorization: `Bearer ${key}` 
+      headers: {
+        'content-type': 'application/json',
+        apikey: key,
+        authorization: `Bearer ${key}`
       },
-      body: JSON.stringify({ 
-        email, 
-        password, 
-        data: data || {}, 
-        email_redirect_to: `${site}/app/#signup-confirmed` 
+      body: JSON.stringify({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: data || {}
       })
     });
-    
+
     const text = await r.text();
-    return new Response(text, { 
-      status: r.status, 
-      headers: { 'content-type': r.headers.get('content-type') || 'application/json' } 
-    });
+    res.status(r.status).setHeader(
+      'content-type', r.headers.get('content-type') || 'application/json'
+    ).send(text);
   } catch (e) {
-    return json({ error: e.message }, 500);
+    res.status(500).json({ error: e.message || String(e) });
   }
 }
