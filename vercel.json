@@ -1,6 +1,6 @@
 {
   "functions": {
-    "api/**/*.js": { "runtime": "nodejs", "regions": ["iad1","fra1","dub1"] }
+    "api/**/*.js": { "runtime": "nodejs" }
   },
   "headers": [
     {
