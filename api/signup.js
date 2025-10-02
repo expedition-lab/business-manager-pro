@@ -1,43 +1,28 @@
-export const config = { runtime: 'nodejs20.x', regions: ['iad1'] };
+export const config = { runtime: 'edge' };
 
-async function readJsonBody(req) {
-  if (req.body && typeof req.body === 'object') return req.body;
-  const chunks = [];
-  for await (const c of req) chunks.push(c);
-  const txt = Buffer.concat(chunks).toString('utf8');
-  return txt ? JSON.parse(txt) : {};
-}
+const json = (obj, status = 200) =>
+  new Response(JSON.stringify(obj), { status, headers: { 'content-type': 'application/json' } });
 
-export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY || !process.env.SITE_URL) {
-    return res.status(500).json({ error: 'Missing env vars' });
-  }
+export default async function handler(req) {
+  if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
+  const base = (process.env.SUPABASE_URL || '').trim().replace(/\/+$/, '');
+  const key  = (process.env.SUPABASE_SERVICE_KEY || '').trim();
+  const site = (process.env.SITE_URL || '').trim();
+  if (!base || !key || !site) return json({ error: 'Missing env vars' }, 500);
 
   try {
-    const { email, password, data } = await readJsonBody(req);
-    if (!email || !password) return res.status(400).json({ error: 'Missing email or password' });
+    const { email, password, data } = await req.json();
+    if (!email || !password) return json({ error: 'Missing email or password' }, 400);
 
-    const url = process.env.SUPABASE_URL.replace(/\/+$/, '') + '/auth/v1/signup';
-    const r = await fetch(url, {
+    const r = await fetch(base + '/auth/v1/signup', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': process.env.SUPABASE_SERVICE_KEY,
-        'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY}`
-      },
-      body: JSON.stringify({
-        email,
-        password,
-        data: data || {},
-        email_redirect_to: `${process.env.SITE_URL}/app/#signup-confirmed`
-      })
+      headers: { 'content-type': 'application/json', apikey: key, Authorization: `Bearer ${key}` },
+      body: JSON.stringify({ email, password, data: data || {}, email_redirect_to: `${site}/app/#signup-confirmed` })
     });
 
     const text = await r.text();
-    res.status(r.status).setHeader('Content-Type', r.headers.get('content-type') || 'application/json').send(text);
+    return new Response(text, { status: r.status, headers: { 'content-type': r.headers.get('content-type') || 'application/json' } });
   } catch (e) {
-    console.error('SIGNUP ERROR', e);
-    res.status(500).json({ error: e.message || String(e) });
+    return json({ error: e.message || String(e) }, 500);
   }
 }
