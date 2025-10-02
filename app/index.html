@@ -154,7 +154,8 @@
   <script>
     /* ===== CONFIG ===== */
     const SUPABASE_URL = "https://hppgouoexhqgecntpkej.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_9rxkf2R-S74yd24O5q9vQ_vH6xGz3g"; // <-- THIS IS NOT A VALID ANON KEY
+    // ✅ With the new Supabase API, the publishable key is correct for browsers
+    const SUPABASE_ANON_KEY = "sb_publishable_9rxkf2R-S74yd24O5q9vQ_vH6xGz3g";
     const PAYPAL_EMAIL = "peeroosuhail047@gmail.com";
     const PRICES = { "Starter|Monthly": 499, "Pro|Monthly": 899, "Pro|Yearly": 8500 };
 
@@ -173,40 +174,46 @@
       if (signedIn) $('#userEmail').textContent = user.email || '';
     }
 
-    /* ===== DIAGNOSTICS ===== */
+    /* ===== DIAGNOSTICS (fixed for new keys) ===== */
     function showDiag(text){ const d=$('#diag'); d.textContent=text; d.classList.remove('hidden'); }
     function validateSupabaseConfig(){
       const issues=[];
       if(!/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(SUPABASE_URL)) issues.push("SUPABASE_URL looks invalid.");
       const isJwt = (SUPABASE_ANON_KEY||'').split('.').length===3 && SUPABASE_ANON_KEY.startsWith('eyJ');
-      if(!isJwt) issues.push("SUPABASE_ANON_KEY is not a valid anon JWT (should start with 'eyJ...').");
-      if((SUPABASE_ANON_KEY||'').startsWith('sb_publishable_')) issues.push("You're using a placeholder key ('sb_publishable_...'). Use the real anon key from Supabase → Settings → API.");
+      const isNewPublishable = (SUPABASE_ANON_KEY||'').startsWith('sb_publishable_'); // ✅ accept new browser key
+      if(!(isJwt || isNewPublishable)){
+        issues.push("SUPABASE_ANON_KEY doesn't look right (expected 'sb_publishable_…' or a legacy JWT starting 'eyJ…').");
+      }
       return issues;
     }
     async function connectivityProbe(){
       try{
         const url = SUPABASE_URL.replace(/\/+$/,'') + '/auth/v1/settings';
         const r = await fetch(url, { headers: { apikey: SUPABASE_ANON_KEY } });
-        if(!r.ok){ showDiag(`Supabase reachable but returned ${r.status}. Check anon key and project URL. (${await r.text()})`); return false; }
+        if(!r.ok){ showDiag(`Supabase reachable but returned ${r.status}. Check key and project URL. (${await r.text()})`); return false; }
         return true;
       }catch(e){
-        showDiag(`Browser couldn't reach Supabase (CORS/DNS). Set Auth → URL Config: Site URL = ${location.origin}/, and add redirect ${location.origin}/* . Error: ${e.message||e}`);
+        showDiag(`Browser couldn't reach Supabase (CORS/DNS). In Supabase → Auth → URL Configuration, set:
+Site URL: https://business-manager-pro.vercel.app
+Redirects: https://business-manager-pro.vercel.app/*  and  https://business-manager-pro.vercel.app/app/*
+
+Error: ${e.message||e}`);
         return false;
       }
     }
 
-    /* ===== INIT CLIENT (after basic validation) ===== */
+    /* ===== INIT CLIENT (only if diagnostics pass) ===== */
     let sb = null;
     (async function bootEarly(){
       const issues = validateSupabaseConfig();
       if(issues.length){ showDiag(issues.join(' ')); }
       const ok = await connectivityProbe();
-      if(!ok) return; // stop here; user will see exact reason
+      if(!ok) return;
       sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       startApp();
     })();
 
-    /* ===== APP LOGIC (only runs if diagnostics pass) ===== */
+    /* ===== APP LOGIC ===== */
     function startApp(){
       async function ensureUserRow(fields){
         const { data: { user } } = await sb.auth.getUser();
@@ -327,7 +334,7 @@
           `Item: ${r.items?.[0]?.name || "-"}`,
           `Total: Rs ${Number(r.total||0).toFixed(2)}`
         ];
-        return lines.join('\\n');
+        return lines.join('\n');
       }
       function updateShareLinks(r){
         const txt = buildReceiptText(r);
@@ -361,7 +368,7 @@
         }catch(e){ msg(m, e.message || 'Save failed'); }
       };
 
-      // Boot (after client exists)
+      // Boot
       sb.auth.onAuthStateChange((evt, session)=>{ console.log('[BMP auth]', evt, session); });
       async function boot(){
         const { data:{ user } } = await sb.auth.getUser();
