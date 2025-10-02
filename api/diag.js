@@ -1,3 +1,5 @@
+// at the very top of EVERY api file
+export const config = { runtime: 'edge', regions: ['iad1', 'fra1', 'dub1'] };
 export const config = { runtime: 'edge' };
 const json = (o,s=200)=>new Response(JSON.stringify(o),{status:s,headers:{'content-type':'application/json'}});
 export default async function handler(req){
