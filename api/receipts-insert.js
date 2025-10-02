@@ -18,7 +18,6 @@ export default async function handler(req, res) {
   if (!token) return res.status(401).json({ error: 'No token' });
 
   try {
-    // identify the user
     const meUrl = process.env.SUPABASE_URL.replace(/\/+$/,'') + '/auth/v1/user';
     const me = await fetch(meUrl, {
       headers: { 'apikey': process.env.SUPABASE_SERVICE_KEY, 'Authorization': `Bearer ${token}` }
@@ -34,7 +33,7 @@ export default async function handler(req, res) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': process.env.SUPABASE_SERVICE_KEY,          // ✅ no stray quote
+        'apikey': process.env.SUPABASE_SERVICE_KEY,   // ✅ correct, no extra quote
         'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY}`,
         'Prefer': 'return=representation'
       },
