@@ -1,7 +1,8 @@
 {
   "functions": {
     "api/**/*.js": {
-      "runtime": "nodejs20.x"
+      "runtime": "nodejs",
+      "regions": ["iad1", "fra1", "dub1"]
     }
   },
   "headers": [
