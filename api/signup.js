@@ -1,23 +1,43 @@
+export const config = { runtime: 'nodejs20.x', regions: ['iad1'] };
+
+async function readJsonBody(req) {
+  if (req.body && typeof req.body === 'object') return req.body;
+  const chunks = [];
+  for await (const c of req) chunks.push(c);
+  const txt = Buffer.concat(chunks).toString('utf8');
+  return txt ? JSON.parse(txt) : {};
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  const { email, password, data } = req.body || {};
-  if (!email || !password) return res.status(400).json({ error: 'Missing email or password' });
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY || !process.env.SITE_URL) {
+    return res.status(500).json({ error: 'Missing env vars' });
+  }
 
-  const r = await fetch(`${process.env.SUPABASE_URL}/auth/v1/signup`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'apikey': process.env.SUPABASE_SERVICE_KEY,
-      'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY}`
-    },
-    body: JSON.stringify({
-      email,
-      password,
-      data: data || {},
-      email_redirect_to: `${process.env.SITE_URL || 'https://business-manager-pro.vercel.app'}/app/#signup-confirmed`
-    })
-  });
+  try {
+    const { email, password, data } = await readJsonBody(req);
+    if (!email || !password) return res.status(400).json({ error: 'Missing email or password' });
 
-  const body = await r.text();
-  res.status(r.status).setHeader('Content-Type', r.headers.get('content-type') || 'application/json').send(body);
+    const url = process.env.SUPABASE_URL.replace(/\/+$/, '') + '/auth/v1/signup';
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': process.env.SUPABASE_SERVICE_KEY,
+        'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY}`
+      },
+      body: JSON.stringify({
+        email,
+        password,
+        data: data || {},
+        email_redirect_to: `${process.env.SITE_URL}/app/#signup-confirmed`
+      })
+    });
+
+    const text = await r.text();
+    res.status(r.status).setHeader('Content-Type', r.headers.get('content-type') || 'application/json').send(text);
+  } catch (e) {
+    console.error('SIGNUP ERROR', e);
+    res.status(500).json({ error: e.message || String(e) });
+  }
 }
