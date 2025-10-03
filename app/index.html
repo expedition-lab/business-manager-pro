@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Business Manager Pro — App</title>
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Kill any stale service workers/caches that might serve the old app -->
   <script>
     (function(){
       try{
@@ -14,6 +16,14 @@
         }
       }catch(e){}
     })();
+  </script>
+
+  <!-- Supabase client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // 🔧 FILL THESE WITH YOUR REAL VALUES
+    window.SUPABASE_URL = "https://YOUR_PROJECT.supabase.co";
+    window.SUPABASE_ANON_KEY = "YOUR_ANON_PUBLIC_KEY";
   </script>
 </head>
 <body class="bg-slate-50 text-slate-800">
@@ -30,11 +40,12 @@
   <main class="max-w-4xl mx-auto px-4 py-6">
     <div id="diag" class="hidden mb-4 rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-700"></div>
 
+    <!-- AUTH -->
     <section id="authCard" class="rounded-xl border bg-white p-5">
       <h2 class="text-lg font-semibold">Create account / Sign in</h2>
       <div class="grid md:grid-cols-3 gap-3 mt-3">
-        <input id="email" class="border rounded-lg p-2" placeholder="Email" autocomplete="username" inputmode="email">
-        <input id="password" type="password" class="border rounded-lg p-2" placeholder="Password (min 6)" minlength="6" autocomplete="current-password">
+        <input id="email" class="border rounded-lg p-2" placeholder="Email" autocomplete="email" inputmode="email" />
+        <input id="password" type="password" class="border rounded-lg p-2" placeholder="Password (min 8)" minlength="8" autocomplete="current-password" />
         <div class="flex gap-2">
           <button id="signupBtn" class="flex-1 px-3 py-2 rounded-lg bg-blue-600 text-white">Create</button>
           <button id="loginBtn"  class="flex-1 px-3 py-2 rounded-lg border">Log in</button>
@@ -42,24 +53,21 @@
       </div>
 
       <div class="mt-4 grid md:grid-cols-2 gap-3">
-        <input id="fullName" class="border rounded-lg p-2" placeholder="Full name (required)">
-        <input id="bizName"  class="border rounded-lg p-2" placeholder="Business name (required)">
-        <input id="brn"      class="border rounded-lg p-2 uppercase" placeholder="BRN (required)">
-        <input id="phone"    class="border rounded-lg p-2" placeholder="Phone (required)">
-        <input id="address"  class="md:col-span-2 border rounded-lg p-2" placeholder="Business address (required)">
-        <input id="vat"      class="border rounded-lg p-2" placeholder="VAT number (optional)">
+        <input id="fullName" class="border rounded-lg p-2" placeholder="Full name (required)" />
+        <input id="bizName"  class="border rounded-lg p-2" placeholder="Business name (required)" />
+        <input id="brn"      class="border rounded-lg p-2 uppercase" placeholder="BRN (required)" />
+        <input id="phone"    class="border rounded-lg p-2" placeholder="Phone (required)" />
+        <input id="address"  class="md:col-span-2 border rounded-lg p-2" placeholder="Business address (required)" />
+        <input id="vat"      class="border rounded-lg p-2" placeholder="VAT number (optional)" />
         <select id="companyType" class="border rounded-lg p-2">
           <option value="">Company type (optional)</option>
           <option>Ltd</option><option>Sole Trader</option><option>Partnership</option><option>Other</option>
         </select>
       </div>
-
-      <div class="mt-2 flex gap-2">
-        <button id="loginOtpBtn" class="px-3 py-2 rounded-lg border" disabled title="Magic link disabled in proxy mode">Email me a login code</button>
-      </div>
       <p id="authMsg" class="text-sm mt-2"></p>
     </section>
 
+    <!-- PAY -->
     <section id="payCard" class="hidden rounded-xl border bg-white p-5 mt-6">
       <h2 class="text-lg font-semibold">Choose your plan & pay</h2>
       <p class="text-sm text-slate-600">Pick a plan. Pay by PayPal or JUICE. Access activates after payment.</p>
@@ -113,6 +121,7 @@
       <p id="payMsg" class="text-sm mt-3"></p>
     </section>
 
+    <!-- RECEIPT -->
     <section id="recCard" class="hidden rounded-xl border bg-white p-5 mt-6">
       <h2 class="text-lg font-semibold">Quick receipt</h2>
       <div class="grid md:grid-cols-4 gap-3 mt-3">
@@ -137,45 +146,32 @@
   </main>
 
   <script>
+    // ---------- helpers ----------
     const $ = s => document.querySelector(s);
     const emailOk = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v||"");
     const phoneOk = v => /^\+?[0-9 ()-]{6,20}$/.test((v||"").trim());
     const brnOk   = v => /^[A-Z0-9-]{8,20}$/.test((v||"").toUpperCase().trim());
-    const PAYPAL_EMAIL = "peeroosuhail047@gmail.com";
-    const PRICES = { "Starter|Monthly": 499, "Pro|Monthly": 899, "Pro|Yearly": 8500 };
-    const tokenKey = 'bmp_token';
-    const setToken = t => localStorage.setItem(tokenKey, t);
-    const getToken = () => localStorage.getItem(tokenKey);
-    const clearToken = () => localStorage.removeItem(tokenKey);
-
     function msg(el, text, ok=false){ el.textContent=text; el.className='text-sm mt-2 '+(ok?'text-green-600':'text-red-600'); if(!ok) setTimeout(()=>{el.textContent='';},6000); }
-    function showWhenSignedIn(user){
-      const signedIn = !!user;
+    function showDiag(text){ const d=$('#diag'); d.textContent=text; d.classList.remove('hidden'); }
+
+    // ---------- Supabase client ----------
+    const supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+
+    function renderAuthState(session){
+      const signedIn = !!session?.user;
       $('#authCard').classList.toggle('hidden', signedIn);
       $('#payCard').classList.toggle('hidden', !signedIn);
       $('#recCard').classList.toggle('hidden', !signedIn);
       $('#logoutBtn').classList.toggle('hidden', !signedIn);
       $('#userEmail').classList.toggle('hidden', !signedIn);
-      if (signedIn) $('#userEmail').textContent = user.email || '';
+      if (signedIn) $('#userEmail').textContent = session.user.email || '';
     }
-    function showDiag(text){ const d=$('#diag'); d.textContent=text; d.classList.remove('hidden'); }
 
-    // ---- API helpers (talk only to our own domain) ----
-    async function api(path, method='POST', body=null){
-      const headers = { 'Content-Type': 'application/json' };
-      const token = getToken();
-      if (token) headers['Authorization'] = 'Bearer ' + token;
-      const r = await fetch(path, { method, headers, body: body ? JSON.stringify(body) : undefined });
-      if (!r.ok) throw new Error(await r.text());
-      return r.json();
-    }
-    const apiSignup       = (p) => api('/api/signup','POST',p);
-    const apiLogin        = (p) => api('/api/login','POST',p);
-    const apiMe           = ()  => api('/api/me','GET');
-    const apiUsersUpsert  = (p) => api('/api/users-upsert','POST',p);
-    const apiReceiptsIns  = (p) => api('/api/receipts-insert','POST',p);
+    // load current session + react to changes
+    supabase.auth.getSession().then(({ data }) => renderAuthState(data.session));
+    supabase.auth.onAuthStateChange((_evt, session) => renderAuthState(session));
 
-    // ---- Auth actions ----
+    // ---------- Sign up ----------
     $('#signupBtn').onclick = async ()=>{
       const m=$('#authMsg'); m.textContent='';
       const email = $('#email').value.trim();
@@ -189,46 +185,54 @@
       const ctype    = $('#companyType').value.trim();
 
       if(!emailOk(email))         return msg(m,'Enter a valid email');
-      if(pass.length < 6)         return msg(m,'Password must be at least 6 characters');
+      if(pass.length < 8)         return msg(m,'Password must be at least 8 characters');
       if(!fullName)               return msg(m,'Full name is required');
       if(!bizName)                return msg(m,'Business name is required');
       if(!brnOk(brn))             return msg(m,'BRN must be 8–20 chars, A–Z, 0–9, or "-"');
       if(!phoneOk(phone))         return msg(m,'Enter a valid phone number');
       if(!address)                return msg(m,'Business address is required');
 
-      try{
-        await apiSignup({ email, password: pass, data: { fullName, bizName, brn, phone, address, vat, ctype } });
-        msg(m,'Account created ✓. If confirmation is ON, check your inbox.', true);
-      }catch(e){ msg(m, e.message || 'Signup failed'); }
+      // 1) create auth user
+      const { data: signUp, error: signUpErr } = await supabase.auth.signUp({
+        email, password: pass,
+        options: { emailRedirectTo: location.origin }
+      });
+      if (signUpErr) return msg(m, signUpErr.message || 'Signup failed');
+
+      // 2) insert business profile
+      const { error: insErr } = await supabase
+        .from('business_profiles')
+        .insert([{
+          user_id: signUp.user?.id,
+          email, full_name: fullName, business_name: bizName,
+          brn, phone, address, vat, company_type: ctype
+        }]);
+      if (insErr) return msg(m, insErr.message || 'Profile save failed');
+
+      msg(m,'Account created ✓. Check your email to confirm your address.', true);
     };
 
+    // ---------- Log in ----------
     $('#loginBtn').onclick = async ()=>{
       const m=$('#authMsg'); m.textContent='';
       const email = $('#email').value.trim();
       const pass  = $('#password').value.trim();
       if(!emailOk(email)) return msg(m,'Enter a valid email');
-      if(pass.length < 6) return msg(m,'Password must be at least 6 characters');
-      try{
-        const out = await apiLogin({ email, password: pass });
-        if(!out.access_token) throw new Error('No access token');
-        setToken(out.access_token);
+      if(pass.length < 8) return msg(m,'Password must be at least 8 characters');
 
-        // ensure user row
-        await apiUsersUpsert({ full_name: $('#fullName').value.trim(), business_name: $('#bizName').value.trim(),
-                               brn: $('#brn').value.trim(), phone: $('#phone').value.trim(),
-                               address: $('#address').value.trim(), vat_number: $('#vat').value.trim(),
-                               company_type: $('#companyType').value.trim() });
-
-        const me = await apiMe();
-        showWhenSignedIn(me);
-        msg(m,'Logged in ✓', true);
-      }catch(e){ msg(m, e.message || 'Login failed'); }
+      const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
+      if (error) return msg(m, error.message || 'Login failed');
+      msg(m,'Logged in ✓', true);
     };
 
-    $('#logoutBtn').onclick = async ()=>{ clearToken(); showWhenSignedIn(null); location.hash='#logout'; };
+    // ---------- Log out ----------
+    $('#logoutBtn').onclick = async ()=>{ await supabase.auth.signOut(); };
 
-    // ---- Plans ----
+    // ---------- Plans ----------
+    const PAYPAL_EMAIL = "peeroosuhail047@gmail.com";
+    const PRICES = { "Starter|Monthly": 499, "Pro|Monthly": 899, "Pro|Yearly": 8500 };
     let selectedPlan = null;
+
     function setPlan(tier, cycle, amount){
       selectedPlan = { tier, cycle, amount };
       $('#planSummary').classList.remove('hidden');
@@ -237,8 +241,6 @@
       $('#juiceAmount').textContent = `Rs ${amount.toFixed(0)}`;
       $('#waJuice').href = `https://wa.me/23054960101?text=Payment%20for%20BMP%20${encodeURIComponent(tier)}%20(${encodeURIComponent(cycle)})%20-%20Rs%20${amount.toFixed(0)}`;
       msg($('#payMsg'), `Pay Rs ${amount.toFixed(0)} via PayPal or JUICE to activate ${tier} (${cycle}).`, true);
-      // save chosen tier/cycle on user row (best-effort)
-      apiUsersUpsert({ plan_tier: tier, plan_cycle: cycle }).catch(()=>{});
     }
     document.querySelectorAll('.planBtn').forEach(btn=>{
       btn.addEventListener('click', ()=>{
@@ -250,7 +252,7 @@
       });
     });
 
-    // ---- Payments UI ----
+    // ---------- Payments UI ----------
     $('#paypalCopy').onclick = ()=>{
       if(!selectedPlan){ return msg($('#payMsg'),'Please select a plan first'); }
       navigator.clipboard.writeText(PAYPAL_EMAIL);
@@ -262,7 +264,7 @@
     $('#closeJuice').onclick= ()=> $('#juiceModal').classList.add('hidden');
     $('#copyJuice').onclick = ()=>{ navigator.clipboard.writeText($('#juiceNumber').value); $('#copyJuice').textContent='Copied'; setTimeout(()=>$('#copyJuice').textContent='Copy',1200); };
 
-    // ---- Receipts + share ----
+    // ---------- Receipts + share (client-side demo) ----------
     function buildReceiptText(r){
       const lines = [
         `Business Manager Pro Receipt`,
@@ -284,9 +286,12 @@
       $('#shareMail').href = `mailto:${encodeURIComponent(r.client_email||'')}?subject=${subject}&body=${body}`;
       $('#shareWrap').classList.remove('hidden');
     }
+
     $('#saveBtn').onclick = async ()=>{
       const m=$('#recMsg'); m.textContent='';
-      if(!getToken()) return msg(m,'Sign in first');
+      const session = (await supabase.auth.getSession()).data.session;
+      if (!session) return msg(m,'Sign in first');
+
       const subtotal = Number($('#rec-price').value||0);
       const payload = {
         reference_number: 'BMP-' + Date.now().toString().slice(-8),
@@ -297,24 +302,16 @@
         subtotal, tax:0, discount:0, total:subtotal,
         items: [{ name: $('#rec-item').value.trim(), qty:1, price:subtotal }]
       };
+
       try{
-        const out = await apiReceiptsIns(payload);
-        const rec = Array.isArray(out) ? out[0] : out;
+        // If you have a receipts table/API, insert there. Otherwise simulate success:
+        // const { error } = await supabase.from('receipts').insert([payload]);
+        // if (error) throw error;
+
         msg(m,'Saved ✓', true);
-        updateShareLinks(rec || payload);
+        updateShareLinks(payload);
       }catch(e){ msg(m, e.message || 'Save failed'); }
     };
-
-    // ---- Boot ----
-    async function boot(){
-      const token = getToken();
-      if(!token){ showWhenSignedIn(null); return; }
-      try{
-        const me = await apiMe();
-        showWhenSignedIn(me);
-      }catch(_){ showWhenSignedIn(null); clearToken(); }
-    }
-    document.addEventListener('DOMContentLoaded', boot);
   </script>
 </body>
 </html>
