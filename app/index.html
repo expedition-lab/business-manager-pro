@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Business Manager Pro — App</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-  <!-- Kill any stale service workers/caches that might serve the old app -->
   <script>
     (function(){
       try{
@@ -18,10 +18,8 @@
     })();
   </script>
 
-  <!-- Supabase client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // 🔧 FILL THESE WITH YOUR REAL VALUES
     window.SUPABASE_URL = "https://hppgouoexhqgecntpkei.supabase.co";
     window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhwcGdvdW9leGhxZ2VjbnRwa2VpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyMzUzMDQsImV4cCI6MjA3NDgxMTMwNH0.twfjnJ7uirm4FaQBr4wFqT9KW-cH_lrqohA66oWNFJo";
   </script>
@@ -65,6 +63,25 @@
         </select>
       </div>
       <p id="authMsg" class="text-sm mt-2"></p>
+    </section>
+
+    <!-- DASHBOARD -->
+    <section id="dashCard" class="hidden rounded-xl border bg-white p-5 mt-6">
+      <h2 class="text-lg font-semibold">Dashboard</h2>
+      <div class="grid md:grid-cols-3 gap-4 mt-4">
+        <div class="border rounded-lg p-4">
+          <p class="text-sm text-slate-600">This Month Revenue</p>
+          <p class="text-2xl font-bold" id="monthRevenue">Rs 0</p>
+        </div>
+        <div class="border rounded-lg p-4">
+          <p class="text-sm text-slate-600">Total Receipts</p>
+          <p class="text-2xl font-bold" id="totalReceipts">0</p>
+        </div>
+        <div class="border rounded-lg p-4">
+          <p class="text-sm text-slate-600">Total Clients</p>
+          <p class="text-2xl font-bold" id="totalClients">0</p>
+        </div>
+      </div>
     </section>
 
     <!-- PAY -->
@@ -155,6 +172,7 @@
               <th class="p-2">Client</th>
               <th class="p-2">Date</th>
               <th class="p-2">Total</th>
+              <th class="p-2">Actions</th>
             </tr>
           </thead>
           <tbody id="receiptsBody"></tbody>
@@ -164,7 +182,6 @@
   </main>
 
   <script>
-    // ---------- helpers ----------
     const $ = s => document.querySelector(s);
     const emailOk = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v||"");
     const phoneOk = v => /^\+?[0-9 ()-]{6,20}$/.test((v||"").trim());
@@ -172,12 +189,12 @@
     function msg(el, text, ok=false){ el.textContent=text; el.className='text-sm mt-2 '+(ok?'text-green-600':'text-red-600'); if(!ok) setTimeout(()=>{el.textContent='';},6000); }
     function showDiag(text){ const d=$('#diag'); d.textContent=text; d.classList.remove('hidden'); }
 
-    // ---------- Supabase client ----------
     const supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
 
     function renderAuthState(session){
       const signedIn = !!session?.user;
       $('#authCard').classList.toggle('hidden', signedIn);
+      $('#dashCard').classList.toggle('hidden', !signedIn);
       $('#payCard').classList.toggle('hidden', !signedIn);
       $('#recCard').classList.toggle('hidden', !signedIn);
       $('#logoutBtn').classList.toggle('hidden', !signedIn);
@@ -185,14 +202,12 @@
       if (signedIn) $('#userEmail').textContent = session.user.email || '';
     }
 
-    // load current session + react to changes
     supabase.auth.getSession().then(({ data }) => renderAuthState(data.session));
     supabase.auth.onAuthStateChange((_evt, session) => {
       renderAuthState(session);
-      if (session) loadReceipts();
+      if (session) { loadReceipts(); loadDashboard(); }
     });
 
-    // ---------- Sign up ----------
     $('#signupBtn').onclick = async ()=>{
       const m=$('#authMsg'); m.textContent='';
       const email = $('#email').value.trim();
@@ -213,14 +228,12 @@
       if(!phoneOk(phone))         return msg(m,'Enter a valid phone number');
       if(!address)                return msg(m,'Business address is required');
 
-      // 1) create auth user
       const { data: signUp, error: signUpErr } = await supabase.auth.signUp({
         email, password: pass,
         options: { emailRedirectTo: location.origin }
       });
       if (signUpErr) return msg(m, signUpErr.message || 'Signup failed');
 
-      // 2) insert business profile
       const { error: insErr } = await supabase
         .from('business_profiles')
         .insert([{
@@ -233,7 +246,6 @@
       msg(m,'Account created ✓. Check your email to confirm your address.', true);
     };
 
-    // ---------- Log in ----------
     $('#loginBtn').onclick = async ()=>{
       const m=$('#authMsg'); m.textContent='';
       const email = $('#email').value.trim();
@@ -246,10 +258,8 @@
       msg(m,'Logged in ✓', true);
     };
 
-    // ---------- Log out ----------
     $('#logoutBtn').onclick = async ()=>{ await supabase.auth.signOut(); };
 
-    // ---------- Plans ----------
     const PAYPAL_EMAIL = "peeroosuhail047@gmail.com";
     const PRICES = { "Starter|Monthly": 499, "Pro|Monthly": 899, "Pro|Yearly": 8500 };
     let selectedPlan = null;
@@ -273,7 +283,6 @@
       });
     });
 
-    // ---------- Payments UI ----------
     $('#paypalCopy').onclick = ()=>{
       if(!selectedPlan){ return msg($('#payMsg'),'Please select a plan first'); }
       navigator.clipboard.writeText(PAYPAL_EMAIL);
@@ -285,7 +294,6 @@
     $('#closeJuice').onclick= ()=> $('#juiceModal').classList.add('hidden');
     $('#copyJuice').onclick = ()=>{ navigator.clipboard.writeText($('#juiceNumber').value); $('#copyJuice').textContent='Copied'; setTimeout(()=>$('#copyJuice').textContent='Copy',1200); };
 
-    // ---------- Receipts + share ----------
     function buildReceiptText(r){
       const lines = [
         `Business Manager Pro Receipt`,
@@ -308,7 +316,6 @@
       $('#shareWrap').classList.remove('hidden');
     }
 
-    // ---------- Save receipt to database ----------
     $('#saveBtn').onclick = async ()=>{
       const m=$('#recMsg'); m.textContent='';
       const session = (await supabase.auth.getSession()).data.session;
@@ -333,8 +340,8 @@
         msg(m,'Receipt #' + payload.reference_number + ' saved!', true);
         updateShareLinks(payload);
         loadReceipts();
+        loadDashboard();
         
-        // Clear form
         $('#rec-client').value = '';
         $('#rec-phone').value = '';
         $('#rec-email').value = '';
@@ -345,7 +352,6 @@
       }
     };
 
-    // ---------- Load receipts from database ----------
     async function loadReceipts(){
       const session = (await supabase.auth.getSession()).data.session;
       if (!session) return;
@@ -362,7 +368,7 @@
       
       const tbody = $('#receiptsBody');
       if (!data || data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-500">No receipts yet</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-500">No receipts yet</td></tr>';
         return;
       }
       
@@ -372,8 +378,121 @@
           <td class="p-2">${r.client_name || '-'}</td>
           <td class="p-2">${new Date(r.date).toLocaleDateString()}</td>
           <td class="p-2 font-semibold">Rs ${Number(r.total).toFixed(2)}</td>
+          <td class="p-2">
+            <button onclick="viewPDF('${r.id}')" class="text-blue-600 text-sm hover:underline mr-2">View</button>
+            <button onclick="downloadPDF('${r.id}')" class="text-green-600 text-sm hover:underline">Download</button>
+          </td>
         </tr>
       `).join('');
+    }
+
+    async function loadDashboard() {
+      const session = (await supabase.auth.getSession()).data.session;
+      if (!session) return;
+      
+      const { data: receipts } = await supabase
+        .from('receipts')
+        .select('*')
+        .eq('user_id', session.user.id);
+      
+      if (!receipts) return;
+      
+      const thisMonth = receipts.filter(r => {
+        const d = new Date(r.date);
+        const now = new Date();
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+      });
+      
+      const monthRev = thisMonth.reduce((sum, r) => sum + Number(r.total || 0), 0);
+      $('#monthRevenue').textContent = `Rs ${monthRev.toFixed(2)}`;
+      $('#totalReceipts').textContent = receipts.length;
+      
+      const clients = new Set(receipts.map(r => r.client_name).filter(Boolean));
+      $('#totalClients').textContent = clients.size;
+    }
+
+    window.viewPDF = async function(receiptId) {
+      const { data: receipt } = await supabase.from('receipts').select('*').eq('id', receiptId).single();
+      const { data: profile } = await supabase.from('business_profiles').select('*').eq('user_id', receipt.user_id).single();
+      
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      
+      doc.setFontSize(20);
+      doc.text(profile?.business_name || 'Business', 20, 20);
+      doc.setFontSize(10);
+      doc.text(`BRN: ${profile?.brn || '-'}`, 20, 30);
+      doc.text(profile?.address || '', 20, 35);
+      doc.text(profile?.phone || '', 20, 40);
+      
+      doc.setFontSize(16);
+      doc.text('RECEIPT', 20, 55);
+      doc.setFontSize(10);
+      doc.text(`Ref: ${receipt.reference_number}`, 20, 65);
+      doc.text(`Date: ${new Date(receipt.date).toLocaleDateString()}`, 20, 70);
+      
+      doc.text(`Client: ${receipt.client_name || '-'}`, 20, 80);
+      doc.text(`Phone: ${receipt.client_phone || '-'}`, 20, 85);
+      
+      let y = 100;
+      doc.text('Item', 20, y);
+      doc.text('Price', 140, y);
+      
+      y += 10;
+      (receipt.items || []).forEach(item => {
+        doc.text(item.name || '-', 20, y);
+        doc.text(`Rs ${item.price || 0}`, 140, y);
+        y += 7;
+      });
+      
+      y += 10;
+      doc.setFontSize(14);
+      doc.text(`TOTAL: Rs ${receipt.total}`, 20, y);
+      
+      const pdfBlob = doc.output('blob');
+      const url = URL.createObjectURL(pdfBlob);
+      window.open(url, '_blank');
+    }
+
+    window.downloadPDF = async function(receiptId) {
+      const { data: receipt } = await supabase.from('receipts').select('*').eq('id', receiptId).single();
+      const { data: profile } = await supabase.from('business_profiles').select('*').eq('user_id', receipt.user_id).single();
+      
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      
+      doc.setFontSize(20);
+      doc.text(profile?.business_name || 'Business', 20, 20);
+      doc.setFontSize(10);
+      doc.text(`BRN: ${profile?.brn || '-'}`, 20, 30);
+      doc.text(profile?.address || '', 20, 35);
+      doc.text(profile?.phone || '', 20, 40);
+      
+      doc.setFontSize(16);
+      doc.text('RECEIPT', 20, 55);
+      doc.setFontSize(10);
+      doc.text(`Ref: ${receipt.reference_number}`, 20, 65);
+      doc.text(`Date: ${new Date(receipt.date).toLocaleDateString()}`, 20, 70);
+      
+      doc.text(`Client: ${receipt.client_name || '-'}`, 20, 80);
+      doc.text(`Phone: ${receipt.client_phone || '-'}`, 20, 85);
+      
+      let y = 100;
+      doc.text('Item', 20, y);
+      doc.text('Price', 140, y);
+      
+      y += 10;
+      (receipt.items || []).forEach(item => {
+        doc.text(item.name || '-', 20, y);
+        doc.text(`Rs ${item.price || 0}`, 140, y);
+        y += 7;
+      });
+      
+      y += 10;
+      doc.setFontSize(14);
+      doc.text(`TOTAL: Rs ${receipt.total}`, 20, y);
+      
+      doc.save(`${receipt.reference_number}.pdf`);
     }
   </script>
 </body>
