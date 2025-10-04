@@ -143,6 +143,24 @@
 
       <p id="recMsg" class="text-sm mt-2"></p>
     </section>
+
+    <!-- RECEIPTS LIST -->
+    <section id="receiptsList" class="hidden rounded-xl border bg-white p-5 mt-6">
+      <h2 class="text-lg font-semibold">Your Receipts</h2>
+      <div class="mt-3 overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="border-b">
+            <tr class="text-left">
+              <th class="p-2">Ref</th>
+              <th class="p-2">Client</th>
+              <th class="p-2">Date</th>
+              <th class="p-2">Total</th>
+            </tr>
+          </thead>
+          <tbody id="receiptsBody"></tbody>
+        </table>
+      </div>
+    </section>
   </main>
 
   <script>
@@ -169,7 +187,10 @@
 
     // load current session + react to changes
     supabase.auth.getSession().then(({ data }) => renderAuthState(data.session));
-    supabase.auth.onAuthStateChange((_evt, session) => renderAuthState(session));
+    supabase.auth.onAuthStateChange((_evt, session) => {
+      renderAuthState(session);
+      if (session) loadReceipts();
+    });
 
     // ---------- Sign up ----------
     $('#signupBtn').onclick = async ()=>{
@@ -264,7 +285,7 @@
     $('#closeJuice').onclick= ()=> $('#juiceModal').classList.add('hidden');
     $('#copyJuice').onclick = ()=>{ navigator.clipboard.writeText($('#juiceNumber').value); $('#copyJuice').textContent='Copied'; setTimeout(()=>$('#copyJuice').textContent='Copy',1200); };
 
-    // ---------- Receipts + share (client-side demo) ----------
+    // ---------- Receipts + share ----------
     function buildReceiptText(r){
       const lines = [
         `Business Manager Pro Receipt`,
@@ -287,6 +308,7 @@
       $('#shareWrap').classList.remove('hidden');
     }
 
+    // ---------- Save receipt to database ----------
     $('#saveBtn').onclick = async ()=>{
       const m=$('#recMsg'); m.textContent='';
       const session = (await supabase.auth.getSession()).data.session;
@@ -294,6 +316,7 @@
 
       const subtotal = Number($('#rec-price').value||0);
       const payload = {
+        user_id: session.user.id,
         reference_number: 'BMP-' + Date.now().toString().slice(-8),
         client_name:  $('#rec-client').value.trim(),
         client_phone: $('#rec-phone').value.trim(),
@@ -304,14 +327,54 @@
       };
 
       try{
-        // If you have a receipts table/API, insert there. Otherwise simulate success:
-        // const { error } = await supabase.from('receipts').insert([payload]);
-        // if (error) throw error;
+        const { data, error } = await supabase.from('receipts').insert([payload]).select();
+        if (error) throw error;
 
-        msg(m,'Saved ✓', true);
+        msg(m,'Receipt #' + payload.reference_number + ' saved!', true);
         updateShareLinks(payload);
-      }catch(e){ msg(m, e.message || 'Save failed'); }
+        loadReceipts();
+        
+        // Clear form
+        $('#rec-client').value = '';
+        $('#rec-phone').value = '';
+        $('#rec-email').value = '';
+        $('#rec-item').value = '';
+        $('#rec-price').value = '';
+      }catch(e){ 
+        msg(m, e.message || 'Save failed'); 
+      }
     };
+
+    // ---------- Load receipts from database ----------
+    async function loadReceipts(){
+      const session = (await supabase.auth.getSession()).data.session;
+      if (!session) return;
+      
+      $('#receiptsList').classList.remove('hidden');
+      
+      const { data, error } = await supabase
+        .from('receipts')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
+      
+      if (error) { console.error(error); return; }
+      
+      const tbody = $('#receiptsBody');
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-500">No receipts yet</td></tr>';
+        return;
+      }
+      
+      tbody.innerHTML = data.map(r => `
+        <tr class="border-b hover:bg-slate-50">
+          <td class="p-2 font-mono text-xs">${r.reference_number}</td>
+          <td class="p-2">${r.client_name || '-'}</td>
+          <td class="p-2">${new Date(r.date).toLocaleDateString()}</td>
+          <td class="p-2 font-semibold">Rs ${Number(r.total).toFixed(2)}</td>
+        </tr>
+      `).join('');
+    }
   </script>
 </body>
 </html>
