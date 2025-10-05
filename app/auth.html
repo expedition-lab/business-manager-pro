@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Sign in · Business Manager Pro</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+<style>
+  .container { max-width: 560px; padding-top: 32px; }
+  .muted { color:#6b7280; font-size:12px }
+  .hidden { display:none !important; }
+</style>
+</head>
+<body>
+<main class="container">
+  <header style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+    <h1 style="margin:0;">Business Manager Pro</h1>
+    <a href="/app/">Dashboard</a>
+  </header>
+
+  <!-- STATUS -->
+  <p id="status" class="muted"></p>
+
+  <!-- LOGIN / SIGNUP -->
+  <article id="authCard">
+    <nav style="display:flex;gap:10px;margin-bottom:12px;">
+      <button id="tabLogin" class="contrast">Login</button>
+      <button id="tabSignup" class="secondary">Create account</button>
+    </nav>
+
+    <form id="loginForm" class="grid" style="gap:12px;">
+      <label>Email <input id="loginEmail" type="email" required autocomplete="username" /></label>
+      <label>Password <input id="loginPwd" type="password" required autocomplete="current-password" /></label>
+      <button type="submit" id="loginBtn">Sign in</button>
+      <small><a href="#" id="forgotLink">Forgot password?</a></small>
+    </form>
+
+    <form id="signupForm" class="grid hidden" style="gap:12px;">
+      <label>Email <input id="signupEmail" type="email" required autocomplete="username" /></label>
+      <label>Password <input id="signupPwd" type="password" required autocomplete="new-password" minlength="6"/></label>
+      <button type="submit" id="signupBtn">Create account</button>
+      <small class="muted">You might receive a confirmation email, depending on your Auth settings.</small>
+    </form>
+
+    <hr />
+
+    <form id="magicForm" class="grid" style="gap:12px;">
+      <label>Or get a magic link <input id="magicEmail" type="email" required /></label>
+      <button type="submit" id="magicBtn">Send magic link</button>
+    </form>
+  </article>
+
+  <!-- FORGOT PASSWORD REQUEST -->
+  <article id="forgotCard" class="hidden">
+    <h3>Reset your password</h3>
+    <form id="forgotForm" class="grid" style="gap:12px;">
+      <label>Email <input id="forgotEmail" type="email" required /></label>
+      <button type="submit" id="forgotBtn">Send reset link</button>
+      <small class="muted">We’ll email you a link. After clicking it, you’ll come back here to set a new password.</small>
+    </form>
+    <small><a href="#" id="backToLogin">← Back to login</a></small>
+  </article>
+
+  <!-- PASSWORD RESET (after email link) -->
+  <article id="resetCard" class="hidden">
+    <h3>Set a new password</h3>
+    <form id="resetForm" class="grid" style="gap:12px;">
+      <label>New password <input id="newPwd" type="password" required minlength="6" autocomplete="new-password" /></label>
+      <button type="submit" id="resetBtn">Update password</button>
+      <small id="resetMsg" class="muted"></small>
+    </form>
+  </article>
+
+</main>
+
+<script src="https://esm.sh/@supabase/supabase-js@2"></script>
+<script>
+/* ====== CONFIG: fill these from Supabase Project Settings → API ====== */
+const SUPABASE_URL = "YOUR_SUPABASE_URL";
+const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+/* ==================================================================== */
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const qs = new URLSearchParams(location.search);
+const statusEl = document.getElementById("status");
+const authCard = document.getElementById("authCard");
+const forgotCard = document.getElementById("forgotCard");
+const resetCard = document.getElementById("resetCard");
+
+function show(el){ el.classList.remove("hidden"); }
+function hide(el){ el.classList.add("hidden"); }
+function setStatus(t){ statusEl.textContent = t || ""; }
+
+function setLoading(btn, loading){
+  if(!btn) return;
+  if(loading){ btn.disabled = true; btn.dataset.prev = btn.textContent; btn.textContent = "Please wait…"; }
+  else       { btn.disabled = false; if(btn.dataset.prev) btn.textContent = btn.dataset.prev; }
+}
+
+/* ====== 1) Handle email links: magic link + password recovery ======
+   Supabase sends you back with ?code=...&type=magiclink|recovery etc.
+   We must exchange the code for a session, then:
+   - if type=recovery → show password reset form
+   - otherwise → send to /app/
+===================================================================== */
+async function handleEmailLinksIfAny() {
+  const code = qs.get("code");
+  const type = qs.get("type"); // 'recovery' for password reset
+  if (!code) return; // nothing to handle
+
+  setStatus("Signing you in…");
+  try {
+    const { data, error } = await sb.auth.exchangeCodeForSession({ code });
+    if (error) throw error;
+
+    if (type === "recovery") {
+      // User came from a "reset password" email
+      setStatus("Password reset link verified. Set a new password below.");
+      hide(authCard); hide(forgotCard); show(resetCard);
+    } else {
+      // Magic link / confirmation
+      setStatus("Signed in. Redirecting…");
+      location.href = "/app/";
+    }
+  } catch (err) {
+    console.error(err);
+    setStatus("Link expired or invalid. Please request a new one.");
+    // Show login again
+    show(authCard); hide(forgotCard); hide(resetCard);
+  }
+}
+
+/* ====== 2) Tabs: login vs signup ====== */
+document.getElementById("tabLogin").addEventListener("click", () => {
+  document.getElementById("loginForm").classList.remove("hidden");
+  document.getElementById("signupForm").classList.add("hidden");
+});
+document.getElementById("tabSignup").addEventListener("click", () => {
+  document.getElementById("loginForm").classList.add("hidden");
+  document.getElementById("signupForm").classList.remove("hidden");
+});
+
+/* ====== 3) Login (email + password) ====== */
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPwd").value;
+  const btn = document.getElementById("loginBtn");
+  setLoading(btn, true);
+  setStatus("");
+
+  try {
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    location.href = "/app/";
+  } catch (err) {
+    console.error(err);
+    setStatus(err.message || "Login failed.");
+  } finally {
+    setLoading(btn, false);
+  }
+});
+
+/* ====== 4) Signup ====== */
+document.getElementById("signupForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = document.getElementById("signupEmail").value.trim();
+  const password = document.getElementById("signupPwd").value;
+  const btn = document.getElementById("signupBtn");
+  setLoading(btn, true);
+  setStatus("");
+
+  try {
+    const { error } = await sb.auth.signUp({ email, password });
+    if (error) throw error;
+    setStatus("Check your inbox to confirm (if confirmations are enabled). Then sign in.");
+    // Optional: auto-redirect after short delay
+  } catch (err) {
+    console.error(err);
+    setStatus(err.message || "Signup failed.");
+  } finally {
+    setLoading(btn, false);
+  }
+});
+
+/* ====== 5) Magic link ====== */
+document.getElementById("magicForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = document.getElementById("magicEmail").value.trim();
+  const btn = document.getElementById("magicBtn");
+  setLoading(btn, true);
+  setStatus("");
+
+  try {
+    const redirectTo = `${location.origin}/app/auth.html`;
+    const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo } });
+    if (error) throw error;
+    setStatus("Magic link sent. Check your email.");
+  } catch (err) {
+    console.error(err);
+    setStatus(err.message || "Could not send magic link.");
+  } finally {
+    setLoading(btn, false);
+  }
+});
+
+/* ====== 6) Forgot password (request email) ====== */
+document.getElementById("forgotLink").addEventListener("click", (e) => {
+  e.preventDefault();
+  hide(authCard); show(forgotCard); hide(resetCard);
+  setStatus("");
+});
+document.getElementById("backToLogin").addEventListener("click", (e) => {
+  e.preventDefault();
+  show(authCard); hide(forgotCard); hide(resetCard);
+  setStatus("");
+});
+document.getElementById("forgotForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = document.getElementById("forgotEmail").value.trim();
+  const btn = document.getElementById("forgotBtn");
+  setLoading(btn, true);
+  setStatus("");
+
+  try {
+    const redirectTo = `${location.origin}/app/auth.html?type=recovery`;
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
+    if (error) throw error;
+    setStatus("Reset link sent. Open the email and follow the link.");
+  } catch (err) {
+    console.error(err);
+    setStatus(err.message || "Could not send reset link.");
+  } finally {
+    setLoading(btn, false);
+  }
+});
+
+/* ====== 7) Complete password reset after email link ====== */
+document.getElementById("resetForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const newPwd = document.getElementById("newPwd").value;
+  const btn = document.getElementById("resetBtn");
+  const msg = document.getElementById("resetMsg");
+  setLoading(btn, true); msg.textContent = "";
+
+  try {
+    // User is already signed in after exchangeCodeForSession(); now update password:
+    const { error } = await sb.auth.updateUser({ password: newPwd });
+    if (error) throw error;
+    msg.textContent = "Password updated. Redirecting to app…";
+    setTimeout(() => location.href = "/app/", 800);
+  } catch (err) {
+    console.error(err);
+    msg.textContent = err.message || "Could not update password.";
+  } finally {
+    setLoading(btn, false);
+  }
+});
+
+/* ====== 8) Boot: if we have a ?code=..., handle it ====== */
+document.addEventListener("DOMContentLoaded", handleEmailLinksIfAny);
+</script>
+</body>
+</html>
