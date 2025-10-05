@@ -13,18 +13,18 @@
     window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhwcGdvdW9leGhxZ2VjbnRwa2VpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyMzUzMDQsImV4cCI6MjA3NDgxMTMwNH0.twfjnJ7uirm4FaQBr4wFqT9KW-cH_lrqohA66oWNFJo";
   </script>
 </head>
-<body class="bg-slate-50 text-slate-800">
+<body class="bg-gray-50">
   
   <!-- HEADER -->
-  <header class="sticky top-0 z-30 bg-white border-b">
-    <div class="max-w-7xl mx-auto px-4 py-3">
-      <div class="flex items-center justify-between">
-        <a href="/" class="text-xl font-bold">Business Manager Pro</a>
-        <div id="navTabs" class="hidden flex gap-2">
-          <button onclick="showSection('dashboard')" id="dashboardBtn" class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">Dashboard</button>
-          <button onclick="showSection('receipts')" id="receiptsBtn" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg">Receipts</button>
-          <button onclick="showSection('clients')" id="clientsBtn" class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">Clients</button>
-          <button onclick="showSection('create')" id="createBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">+ New Receipt</button>
+  <div class="bg-white shadow-sm border-b">
+    <div class="container mx-auto px-4 py-4">
+      <div class="flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-gray-800">Business Manager Pro</h1>
+        <div id="navTabs" class="hidden flex gap-3">
+          <button onclick="showSection('dashboard')" id="dashboardBtn" class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition">Dashboard</button>
+          <button onclick="showSection('receipts')" id="receiptsBtn" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg transition">Receipts</button>
+          <button onclick="showSection('clients')" id="clientsBtn" class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition">Clients</button>
+          <button onclick="showSection('create')" id="createBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">+ New Receipt</button>
         </div>
         <div class="flex items-center gap-3">
           <span id="userEmail" class="hidden text-sm px-3 py-1 rounded-full border"></span>
@@ -32,9 +32,9 @@
         </div>
       </div>
     </div>
-  </header>
+  </div>
 
-  <main class="max-w-7xl mx-auto px-4 py-6">
+  <div class="container mx-auto px-4 py-8 max-w-7xl">
     
     <!-- AUTH SECTION -->
     <section id="authCard" class="rounded-xl border bg-white p-6 max-w-2xl mx-auto">
@@ -58,27 +58,27 @@
     </section>
 
     <!-- DASHBOARD -->
-    <section id="dashCard" class="hidden">
+    <div id="dashboardSection" style="display: none;">
       <h2 class="text-2xl font-bold mb-6">Dashboard</h2>
-      <div class="grid md:grid-cols-4 gap-6 mb-8">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div class="bg-white rounded-xl shadow-sm p-6">
           <p class="text-sm text-gray-600">This Month Revenue</p>
-          <p class="text-3xl font-bold" id="monthRevenue">Rs 0</p>
+          <p class="text-3xl font-bold text-gray-900" id="monthRevenue">Rs 0</p>
         </div>
         <div class="bg-white rounded-xl shadow-sm p-6">
           <p class="text-sm text-gray-600">Total Receipts</p>
-          <p class="text-3xl font-bold" id="totalReceipts">0</p>
+          <p class="text-3xl font-bold text-gray-900" id="totalReceipts">0</p>
         </div>
         <div class="bg-white rounded-xl shadow-sm p-6">
           <p class="text-sm text-gray-600">Total Clients</p>
-          <p class="text-3xl font-bold" id="totalClients">0</p>
+          <p class="text-3xl font-bold text-gray-900" id="totalClients">0</p>
         </div>
         <div class="bg-white rounded-xl shadow-sm p-6">
           <p class="text-sm text-gray-600">Unpaid</p>
           <p class="text-3xl font-bold text-red-600" id="unpaidAmount">Rs 0</p>
         </div>
       </div>
-      <div class="grid md:grid-cols-2 gap-6 mb-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div class="bg-white rounded-xl shadow-sm p-6">
           <h3 class="text-lg font-semibold mb-4">Revenue Trend</h3>
           <canvas id="revenueChart"></canvas>
@@ -88,29 +88,29 @@
           <canvas id="paymentChart"></canvas>
         </div>
       </div>
-    </section>
+    </div>
 
     <!-- CLIENTS -->
-    <section id="clientsCard" class="hidden">
+    <div id="clientsSection" style="display: none;">
       <div class="bg-white rounded-xl shadow-sm p-6">
         <h2 class="text-xl font-semibold mb-6">All Clients</h2>
         <div id="clientsList"></div>
       </div>
-    </section>
+    </div>
 
     <!-- RECEIPTS LIST -->
-    <section id="receiptsCard" class="hidden">
-      <div class="bg-white rounded-xl shadow-sm p-6">
+    <div id="receiptsSection" style="display: none;">
+      <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
         <div class="flex justify-between items-center mb-6">
-          <h2 class="text-xl font-semibold">Your Receipts</h2>
-          <button id="exportCsvBtn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Export CSV</button>
+          <h2 class="text-xl font-semibold">All Receipts</h2>
+          <button id="exportCsvBtn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">Export CSV</button>
         </div>
         <div id="receiptsTable" class="overflow-x-auto"></div>
       </div>
-    </section>
+    </div>
 
     <!-- CREATE RECEIPT -->
-    <section id="createCard" class="hidden">
+    <div id="createSection" style="display: none;">
       <div class="bg-white rounded-xl shadow-sm p-6">
         <h2 class="text-xl font-semibold mb-6">Create Receipt</h2>
         <form id="receiptForm" onsubmit="saveReceipt(event)">
@@ -147,18 +147,15 @@
           </div>
         </form>
       </div>
-    </section>
+    </div>
 
-  </main>
+  </div>
 
   <script>
-    const $ = s => document.querySelector(s);
     const supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
-    
     let revenueChart = null;
     let paymentChart = null;
-    
-    const currencySymbols = { 'MUR': 'Rs', 'USD': '$', 'EUR': '€', 'GBP': '£' };
+    const currencySymbols = { 'MUR': 'Rs', 'USD': '$', 'EUR': '€' };
 
     function msg(el, text, ok=false){ 
       el.textContent=text; 
@@ -167,12 +164,12 @@
 
     function renderAuthState(session){
       const signedIn = !!session?.user;
-      $('#authCard').classList.toggle('hidden', signedIn);
-      $('#navTabs').classList.toggle('hidden', !signedIn);
-      $('#logoutBtn').classList.toggle('hidden', !signedIn);
-      $('#userEmail').classList.toggle('hidden', !signedIn);
+      document.getElementById('authCard').classList.toggle('hidden', signedIn);
+      document.getElementById('navTabs').classList.toggle('hidden', !signedIn);
+      document.getElementById('logoutBtn').classList.toggle('hidden', !signedIn);
+      document.getElementById('userEmail').classList.toggle('hidden', !signedIn);
       if (signedIn) {
-        $('#userEmail').textContent = session.user.email || '';
+        document.getElementById('userEmail').textContent = session.user.email || '';
         showSection('receipts');
       }
     }
@@ -183,15 +180,15 @@
       if (session) loadReceipts();
     });
 
-    $('#signupBtn').onclick = async ()=>{
-      const m=$('#authMsg');
-      const email = $('#email').value.trim();
-      const pass = $('#password').value.trim();
-      const fullName = $('#fullName').value.trim();
-      const bizName = $('#bizName').value.trim();
-      const brn = $('#brn').value.toUpperCase().trim();
-      const phone = $('#phone').value.trim();
-      const address = $('#address').value.trim();
+    document.getElementById('signupBtn').onclick = async ()=>{
+      const m=document.getElementById('authMsg');
+      const email = document.getElementById('email').value.trim();
+      const pass = document.getElementById('password').value.trim();
+      const fullName = document.getElementById('fullName').value.trim();
+      const bizName = document.getElementById('bizName').value.trim();
+      const brn = document.getElementById('brn').value.toUpperCase().trim();
+      const phone = document.getElementById('phone').value.trim();
+      const address = document.getElementById('address').value.trim();
 
       if(!email || pass.length < 8 || !fullName || !bizName) return msg(m,'Fill all required fields');
 
@@ -213,10 +210,10 @@
       msg(m,'Account created! Check your email.', true);
     };
 
-    $('#loginBtn').onclick = async ()=>{
-      const m=$('#authMsg');
-      const email = $('#email').value.trim();
-      const pass = $('#password').value.trim();
+    document.getElementById('loginBtn').onclick = async ()=>{
+      const m=document.getElementById('authMsg');
+      const email = document.getElementById('email').value.trim();
+      const pass = document.getElementById('password').value.trim();
       if(!email || pass.length < 8) return msg(m,'Enter email and password');
 
       const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
@@ -224,31 +221,31 @@
       msg(m,'Logged in!', true);
     };
 
-    $('#logoutBtn').onclick = async ()=>{ await supabase.auth.signOut(); };
+    document.getElementById('logoutBtn').onclick = async ()=>{ await supabase.auth.signOut(); };
 
     function showSection(section) {
-      ['authCard','dashCard','receiptsCard','clientsCard','createCard'].forEach(id => {
-        $(id).classList.add('hidden');
+      ['authCard','dashboardSection','receiptsSection','clientsSection','createSection'].forEach(id => {
+        document.getElementById(id).style.display = 'none';
       });
       ['dashboardBtn','receiptsBtn','clientsBtn'].forEach(id => {
-        const btn = $(id);
-        if(btn) btn.className = 'px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg';
+        const btn = document.getElementById(id);
+        if(btn) btn.className = 'px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition';
       });
 
       if (section === 'dashboard') {
-        $('#dashCard').classList.remove('hidden');
-        $('#dashboardBtn').className = 'px-4 py-2 bg-blue-100 text-blue-700 rounded-lg';
+        document.getElementById('dashboardSection').style.display = 'block';
+        document.getElementById('dashboardBtn').className = 'px-4 py-2 bg-blue-100 text-blue-700 rounded-lg transition';
         loadDashboard();
       } else if (section === 'receipts') {
-        $('#receiptsCard').classList.remove('hidden');
-        $('#receiptsBtn').className = 'px-4 py-2 bg-blue-100 text-blue-700 rounded-lg';
+        document.getElementById('receiptsSection').style.display = 'block';
+        document.getElementById('receiptsBtn').className = 'px-4 py-2 bg-blue-100 text-blue-700 rounded-lg transition';
         loadReceipts();
       } else if (section === 'clients') {
-        $('#clientsCard').classList.remove('hidden');
-        $('#clientsBtn').className = 'px-4 py-2 bg-blue-100 text-blue-700 rounded-lg';
+        document.getElementById('clientsSection').style.display = 'block';
+        document.getElementById('clientsBtn').className = 'px-4 py-2 bg-blue-100 text-blue-700 rounded-lg transition';
         loadClients();
       } else if (section === 'create') {
-        $('#createCard').classList.remove('hidden');
+        document.getElementById('createSection').style.display = 'block';
       }
     }
 
@@ -256,11 +253,7 @@
       const session = (await supabase.auth.getSession()).data.session;
       if (!session) return;
       
-      const { data: receipts } = await supabase
-        .from('receipts')
-        .select('*')
-        .eq('user_id', session.user.id);
-      
+      const { data: receipts } = await supabase.from('receipts').select('*').eq('user_id', session.user.id);
       if (!receipts) return;
       
       const now = new Date();
@@ -270,17 +263,16 @@
       });
       
       const monthRev = thisMonth.reduce((sum, r) => sum + Number(r.total || 0), 0);
-      $('#monthRevenue').textContent = `Rs ${monthRev.toFixed(2)}`;
-      $('#totalReceipts').textContent = receipts.length;
+      document.getElementById('monthRevenue').textContent = `Rs ${monthRev.toFixed(2)}`;
+      document.getElementById('totalReceipts').textContent = receipts.length;
       
       const clients = new Set(receipts.map(r => r.client_name).filter(Boolean));
-      $('#totalClients').textContent = clients.size;
+      document.getElementById('totalClients').textContent = clients.size;
       
       const unpaid = receipts.filter(r => !r.payment_status || r.payment_status === 'unpaid' || r.payment_status === 'partial');
       const unpaidAmount = unpaid.reduce((sum, r) => sum + Number(r.total || 0), 0);
-      $('#unpaidAmount').textContent = `Rs ${unpaidAmount.toFixed(2)}`;
+      document.getElementById('unpaidAmount').textContent = `Rs ${unpaidAmount.toFixed(2)}`;
       
-      // Charts
       const last6Months = [];
       for (let i = 5; i >= 0; i--) {
         const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -295,7 +287,7 @@
       }
       
       if (revenueChart) revenueChart.destroy();
-      const ctx1 = $('#revenueChart').getContext('2d');
+      const ctx1 = document.getElementById('revenueChart').getContext('2d');
       revenueChart = new Chart(ctx1, {
         type: 'line',
         data: {
@@ -316,7 +308,7 @@
       const partial = receipts.filter(r => r.payment_status === 'partial').length;
       
       if (paymentChart) paymentChart.destroy();
-      const ctx2 = $('#paymentChart').getContext('2d');
+      const ctx2 = document.getElementById('paymentChart').getContext('2d');
       paymentChart = new Chart(ctx2, {
         type: 'doughnut',
         data: {
@@ -334,13 +326,10 @@
       const session = (await supabase.auth.getSession()).data.session;
       if (!session) return;
       
-      const { data: receipts } = await supabase
-        .from('receipts')
-        .select('*')
-        .eq('user_id', session.user.id);
+      const { data: receipts } = await supabase.from('receipts').select('*').eq('user_id', session.user.id);
       
       if (!receipts || receipts.length === 0) {
-        $('#clientsList').innerHTML = '<p class="text-gray-500 text-center py-8">No clients yet</p>';
+        document.getElementById('clientsList').innerHTML = '<p class="text-gray-500 text-center py-8">No clients yet</p>';
         return;
       }
       
@@ -361,7 +350,7 @@
       
       const clients = Object.values(clientData).sort((a, b) => b.total - a.total);
       
-      $('#clientsList').innerHTML = `
+      document.getElementById('clientsList').innerHTML = `
         <div class="grid gap-4">
           ${clients.map(client => `
             <div class="border-2 rounded-xl p-6 hover:shadow-lg transition bg-white">
@@ -396,29 +385,29 @@
       if (error) { console.error(error); return; }
       
       if (!data || data.length === 0) {
-        $('#receiptsTable').innerHTML = '<p class="text-gray-500 text-center py-8">No receipts yet</p>';
+        document.getElementById('receiptsTable').innerHTML = '<p class="text-gray-500 text-center py-8">No receipts yet</p>';
         return;
       }
       
-      $('#receiptsTable').innerHTML = `
+      document.getElementById('receiptsTable').innerHTML = `
         <table class="w-full">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">REF</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">CLIENT</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">DATE</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">TOTAL</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">STATUS</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">ACTIONS</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reference</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Client</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody class="divide-y divide-gray-200">
             ${data.map(r => `
-              <tr class="border-b hover:bg-gray-50">
-                <td class="px-4 py-3 text-sm font-mono">${r.reference_number}</td>
-                <td class="px-4 py-3 text-sm">${r.client_name || '-'}</td>
-                <td class="px-4 py-3 text-sm">${new Date(r.date).toLocaleDateString()}</td>
-                <td class="px-4 py-3 text-sm font-semibold">Rs ${Number(r.total).toFixed(2)}</td>
+              <tr class="hover:bg-gray-50">
+                <td class="px-4 py-3 text-sm text-gray-900">${new Date(r.date).toLocaleDateString()}</td>
+                <td class="px-4 py-3 text-sm font-medium text-gray-900">${r.reference_number}</td>
+                <td class="px-4 py-3 text-sm text-gray-900">${r.client_name || '-'}</td>
+                <td class="px-4 py-3 text-sm text-gray-900">Rs ${Number(r.total).toFixed(2)}</td>
                 <td class="px-4 py-3 text-sm">
                   <span class="px-2 py-1 rounded text-xs font-medium ${
                     r.payment_status === 'paid' ? 'bg-green-100 text-green-800' :
@@ -439,7 +428,7 @@
     }
 
     function addItemRow() {
-      const container = $('#itemsContainer');
+      const container = document.getElementById('itemsContainer');
       const itemId = Date.now() + Math.random();
       const itemRow = document.createElement('div');
       itemRow.className = 'grid grid-cols-12 gap-3 mb-3';
@@ -475,9 +464,9 @@
         const price = parseFloat(item.querySelector('.item-price').value) || 0;
         total += quantity * price;
       });
-      const currency = $('#currency').value;
-      $('#currencySymbol').textContent = currencySymbols[currency];
-      $('#totalAmount').textContent = total.toFixed(2);
+      const currency = document.getElementById('currency').value;
+      document.getElementById('currencySymbol').textContent = currencySymbols[currency];
+      document.getElementById('totalAmount').textContent = total.toFixed(2);
     }
 
     function getReceiptItems() {
@@ -501,28 +490,28 @@
       const items = getReceiptItems();
       if (items.length === 0) return alert('Add at least one item');
 
-      const total = parseFloat($('#totalAmount').textContent);
+      const total = parseFloat(document.getElementById('totalAmount').textContent);
       const payload = {
         user_id: session.user.id,
         reference_number: 'BMP-' + Date.now().toString().slice(-8),
-        client_name: $('#clientName').value.trim(),
-        client_email: $('#clientEmail').value.trim(),
-        client_phone: $('#clientPhone').value.trim(),
+        client_name: document.getElementById('clientName').value.trim(),
+        client_email: document.getElementById('clientEmail').value.trim(),
+        client_phone: document.getElementById('clientPhone').value.trim(),
         date: new Date().toISOString(),
         subtotal: total,
         tax: 0,
         discount: 0,
         total,
         items,
-        payment_status: $('#paymentStatus').value
+        payment_status: document.getElementById('paymentStatus').value
       };
 
       const { error } = await supabase.from('receipts').insert([payload]);
       if (error) return alert('Error: ' + error.message);
 
       alert('Receipt saved!');
-      $('#receiptForm').reset();
-      $('#itemsContainer').innerHTML = '';
+      document.getElementById('receiptForm').reset();
+      document.getElementById('itemsContainer').innerHTML = '';
       addItemRow();
       showSection('receipts');
     }
@@ -560,7 +549,7 @@
       doc.save(`${receipt.reference_number}.pdf`);
     }
 
-    $('#exportCsvBtn').onclick = async () => {
+    document.getElementById('exportCsvBtn').onclick = async () => {
       const session = (await supabase.auth.getSession()).data.session;
       if (!session) return;
       
