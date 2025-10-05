@@ -88,7 +88,7 @@ const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
 
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
-    persistSession: true,         // <-- keep users signed in
+    persistSession: true,         // keep users signed in
     autoRefreshToken: true,
     detectSessionInUrl: true
   }
@@ -104,7 +104,31 @@ function show(el){ el.classList.remove("hidden"); }
 function hide(el){ el.classList.add("hidden"); }
 function loading(btn, on){ if(!btn) return; btn.disabled = !!on; btn.dataset.prev ??= btn.textContent; btn.textContent = on ? "Please wait…" : btn.dataset.prev; }
 
-/* ===== 1) Handle email links (magic & password recovery) ===== */
+/* ===== Handle hash-style links: #access_token=... (magic/recovery) ===== */
+async function handleHashTokensIfAny() {
+  if (!location.hash) return;
+  const hash = new URLSearchParams(location.hash.slice(1));
+  const access_token  = hash.get("access_token");
+  const refresh_token = hash.get("refresh_token");
+  const type          = hash.get("type"); // optional: "recovery"
+  if (!access_token || !refresh_token) return;
+
+  const { error } = await sb.auth.setSession({ access_token, refresh_token });
+  if (error) { setStatus(error.message || "Invalid or expired link.", "err"); return; }
+
+  // Clean hash to avoid re-running on refresh
+  history.replaceState(null, "", location.pathname + location.search);
+
+  if (type === "recovery") {
+    setStatus("Link verified. Set a new password below.");
+    hide(authCard); hide(forgotCard); show(resetCard);
+  } else {
+    // Magic link / confirmation
+    location.href = "/app/";
+  }
+}
+
+/* ===== Handle code-style links: ?code=...&type=recovery ===== */
 async function handleEmailLinksIfAny() {
   const url = new URL(window.location.href);
   const code = url.searchParams.get("code");
@@ -130,7 +154,7 @@ async function handleEmailLinksIfAny() {
   }
 }
 
-/* ===== 2) Tabs ===== */
+/* ===== Tabs ===== */
 document.getElementById("tabLogin").addEventListener("click", () => {
   document.getElementById("loginForm").classList.remove("hidden");
   document.getElementById("signupForm").classList.add("hidden");
@@ -142,7 +166,7 @@ document.getElementById("tabSignup").addEventListener("click", () => {
   setStatus("");
 });
 
-/* ===== 3) Login with feedback ===== */
+/* ===== Login with feedback ===== */
 document.getElementById("loginForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const email = document.getElementById("loginEmail").value.trim();
@@ -153,11 +177,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
 
   try {
     const { error } = await sb.auth.signInWithPassword({ email, password });
-    if (error) {
-      // clear, visible error:
-      err.textContent = error.message || "Invalid email or password.";
-      return;
-    }
+    if (error) { err.textContent = error.message || "Invalid email or password."; return; }
     location.href = "/app/"; // success
   } catch (ex) {
     err.textContent = ex.message || "Login failed.";
@@ -166,7 +186,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
   }
 });
 
-/* ===== 4) Signup with feedback ===== */
+/* ===== Signup with feedback ===== */
 document.getElementById("signupForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const email = document.getElementById("signupEmail").value.trim();
@@ -186,7 +206,7 @@ document.getElementById("signupForm").addEventListener("submit", async (e) => {
   }
 });
 
-/* ===== 5) Magic link ===== */
+/* ===== Magic link ===== */
 document.getElementById("magicForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const email = document.getElementById("magicEmail").value.trim();
@@ -195,7 +215,7 @@ document.getElementById("magicForm").addEventListener("submit", async (e) => {
   msg.textContent = ""; loading(btn, true);
 
   try {
-    // works for both auth.html and #login (hash) routes
+    // Works for both auth.html and hash routes
     const redirectTo = `${location.origin}/app/auth.html`;
     const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo } });
     if (error) throw error;
@@ -207,14 +227,13 @@ document.getElementById("magicForm").addEventListener("submit", async (e) => {
   }
 });
 
-/* ===== 6) Forgot password request with feedback ===== */
+/* ===== Forgot password request with feedback ===== */
 document.getElementById("forgotLink").addEventListener("click", (e) => {
   e.preventDefault(); hide(authCard); show(forgotCard); hide(resetCard); setStatus("");
 });
 document.getElementById("backToLogin").addEventListener("click", (e) => {
   e.preventDefault(); show(authCard); hide(forgotCard); hide(resetCard); setStatus("");
 });
-
 document.getElementById("forgotForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const email = document.getElementById("forgotEmail").value.trim();
@@ -224,7 +243,6 @@ document.getElementById("forgotForm").addEventListener("submit", async (e) => {
   err.textContent = ""; ok.textContent = ""; loading(btn, true);
 
   try {
-    // send to this same page; we’ll handle ?code&type=recovery above
     const redirectTo = `${location.origin}/app/auth.html?type=recovery`;
     const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
     if (error) throw error;
@@ -236,7 +254,7 @@ document.getElementById("forgotForm").addEventListener("submit", async (e) => {
   }
 });
 
-/* ===== 7) Complete password reset (after email link) ===== */
+/* ===== Complete password reset ===== */
 document.getElementById("resetForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const newPwd = document.getElementById("newPwd").value;
@@ -256,8 +274,11 @@ document.getElementById("resetForm").addEventListener("submit", async (e) => {
   }
 });
 
-/* ===== 8) Boot ===== */
-document.addEventListener("DOMContentLoaded", handleEmailLinksIfAny);
+/* ===== Boot: handle BOTH link styles ===== */
+document.addEventListener("DOMContentLoaded", async () => {
+  await handleHashTokensIfAny();   // handles #access_token=...
+  await handleEmailLinksIfAny();   // handles ?code=...
+});
 </script>
 </body>
 </html>
