@@ -1,0 +1,1466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Manager Pro - Complete System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-50">
+    
+    <!-- HEADER -->
+    <div class="bg-white shadow-sm border-b">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-gray-800">Business Manager Pro</h1>
+                <div class="flex gap-3">
+                    <button onclick="showSection('dashboard')" id="dashboardBtn" class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition">
+                        📊 Dashboard
+                    </button>
+                    <button onclick="showSection('receipts')" id="receiptsBtn" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg transition">
+                        📄 Receipts
+                    </button>
+                    <button onclick="showSection('clients')" id="clientsBtn" class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition">
+                        👥 Clients
+                    </button>
+                    <button onclick="showSection('templates')" id="templatesBtn" class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition">
+                        📋 Templates
+                    </button>
+                    <button onclick="showSection('create')" id="createBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                        + New Receipt
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        
+        <!-- DASHBOARD SECTION -->
+        <div id="dashboardSection" style="display: none;">
+            <h2 class="text-2xl font-bold mb-6">Dashboard</h2>
+            
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <p class="text-sm text-gray-600">Total Revenue</p>
+                    <p class="text-3xl font-bold text-gray-900" id="totalRevenue">Rs 0</p>
+                    <p class="text-sm text-green-600 mt-2">This month</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <p class="text-sm text-gray-600">Total Receipts</p>
+                    <p class="text-3xl font-bold text-gray-900" id="totalReceipts">0</p>
+                    <p class="text-sm text-blue-600 mt-2">All time</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <p class="text-sm text-gray-600">Total Clients</p>
+                    <p class="text-3xl font-bold text-gray-900" id="totalClients">0</p>
+                    <p class="text-sm text-purple-600 mt-2">Active</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <p class="text-sm text-gray-600">Unpaid</p>
+                    <p class="text-3xl font-bold text-red-600" id="unpaidAmount">Rs 0</p>
+                    <p class="text-sm text-gray-600 mt-2">Outstanding</p>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h3 class="text-lg font-semibold mb-4">Revenue Trend</h3>
+                    <canvas id="revenueChart"></canvas>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h3 class="text-lg font-semibold mb-4">Payment Status</h3>
+                    <canvas id="paymentChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Top Clients -->
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <h3 class="text-lg font-semibold mb-4">Top Clients</h3>
+                <div id="topClients"></div>
+            </div>
+        </div>
+
+        <!-- CLIENTS SECTION -->
+        <div id="clientsSection" style="display: none;">
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <h2 class="text-xl font-semibold mb-6">All Clients</h2>
+                <div id="clientsList"></div>
+            </div>
+        </div>
+
+        <!-- TEMPLATES SECTION -->
+        <div id="templatesSection" style="display: none;">
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-semibold">Invoice Templates</h2>
+                    <button onclick="saveAsTemplate()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                        + Save Current as Template
+                    </button>
+                </div>
+                <div id="templatesList"></div>
+            </div>
+        </div>
+
+        <!-- RECEIPTS LIST SECTION -->
+        <div id="receiptsSection">
+            <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-semibold">All Receipts</h2>
+                    <div class="flex gap-2">
+                        <button onclick="generateMonthlyReport()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
+                            📊 Monthly Report
+                        </button>
+                        <button onclick="exportReceiptsToExcel()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                            📥 Export Excel
+                        </button>
+                    </div>
+                </div>
+
+                <!-- SEARCH & FILTER -->
+                <div class="mb-6 flex gap-3 flex-wrap">
+                    <input 
+                        type="text" 
+                        id="receiptSearch" 
+                        placeholder="Search by client, reference, or amount..."
+                        class="flex-1 min-w-[200px] px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        oninput="filterReceipts()"
+                    />
+                    <select 
+                        id="dateFilter" 
+                        class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        onchange="filterReceipts()"
+                    >
+                        <option value="all">All Time</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                    </select>
+                    <select 
+                        id="statusFilter" 
+                        class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        onchange="filterReceipts()"
+                    >
+                        <option value="all">All Status</option>
+                        <option value="paid">Paid</option>
+                        <option value="unpaid">Unpaid</option>
+                        <option value="partial">Partial</option>
+                    </select>
+                </div>
+
+                <!-- RECEIPTS TABLE -->
+                <div id="receiptsTable" class="overflow-x-auto">
+                    <p class="text-gray-500 text-center py-8">No receipts yet. Create your first receipt!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- CREATE/EDIT RECEIPT SECTION -->
+        <div id="createSection" style="display: none;">
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <h2 class="text-xl font-semibold mb-6" id="formTitle">Create New Receipt</h2>
+                
+                <form id="receiptForm" onsubmit="saveReceipt(event)">
+                    <!-- Client Information -->
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-medium">Client Information</h3>
+                            <button type="button" onclick="loadTemplateModal()" class="text-sm text-blue-600 hover:text-blue-800">
+                                Load from Template
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Client Name *</label>
+                                <input 
+                                    type="text" 
+                                    id="clientName" 
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                <input 
+                                    type="email" 
+                                    id="clientEmail" 
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    placeholder="client@example.com"
+                                />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                                <input 
+                                    type="tel" 
+                                    id="clientPhone" 
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    placeholder="+230XXXXXXXX"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Currency & Payment Status -->
+                    <div class="mb-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Currency</label>
+                                <select id="currency" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" onchange="calculateTotal()">
+                                    <option value="MUR">MUR (Rs) - Mauritius Rupee</option>
+                                    <option value="USD">USD ($) - US Dollar</option>
+                                    <option value="EUR">EUR (€) - Euro</option>
+                                    <option value="GBP">GBP (£) - British Pound</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Payment Status</label>
+                                <select id="paymentStatus" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                    <option value="unpaid">Unpaid</option>
+                                    <option value="paid">Paid</option>
+                                    <option value="partial">Partial</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Receipt Items -->
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-medium">Receipt Items</h3>
+                            <button type="button" onclick="addItemRow()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm">
+                                + Add Item
+                            </button>
+                        </div>
+                        <div id="itemsContainer">
+                            <!-- Items will be added here -->
+                        </div>
+                    </div>
+
+                    <!-- Total -->
+                    <div class="mb-6 flex justify-end">
+                        <div class="text-right">
+                            <p class="text-sm text-gray-600">Total Amount</p>
+                            <p class="text-2xl font-bold text-gray-900"><span id="currencySymbol">Rs</span> <span id="totalAmount">0.00</span></p>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex gap-3 justify-end">
+                        <button type="button" onclick="cancelEdit()" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                            Cancel
+                        </button>
+                        <button type="submit" id="submitBtn" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                            Create Receipt
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- RECEIPT PREVIEW MODAL -->
+    <div id="receiptPreviewModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+                <h3 class="text-xl font-bold">Receipt Preview</h3>
+                <button onclick="closePreview()" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div id="receiptPreviewContent" class="p-8">
+                <!-- Receipt will be rendered here -->
+            </div>
+            <div class="sticky bottom-0 bg-gray-50 border-t px-6 py-4 flex gap-3 justify-end">
+                <button onclick="closePreview()" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100">Close</button>
+                <button onclick="sendEmailManual()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">📧 Send Email</button>
+                <button onclick="downloadCurrentPDF()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">📥 Download PDF</button>
+                <button onclick="shareCurrentWhatsApp()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">💬 WhatsApp</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CLIENT HISTORY MODAL -->
+    <div id="clientHistoryModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl p-8 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold" id="clientHistoryTitle">Client History</h3>
+                <button onclick="closeClientHistory()" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div id="clientHistoryContent"></div>
+        </div>
+    </div>
+
+    <script>
+        let editingReceiptId = null;
+        let revenueChart = null;
+        let paymentChart = null;
+        let currentPreviewReceiptId = null;
+
+        const currencySymbols = {
+            'MUR': 'Rs',
+            'USD': '$',
+            'EUR': '€',
+            'GBP': '£'
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            showSection('receipts');
+            loadDraft();
+            addItemRow();
+            
+            // Add test data button for demo
+            if (localStorage.getItem('receipts') === null || JSON.parse(localStorage.getItem('receipts')).length === 0) {
+                addTestDataPrompt();
+            }
+        });
+        
+        function addTestDataPrompt() {
+            const receiptsSection = document.getElementById('receiptsSection');
+            const testBanner = document.createElement('div');
+            testBanner.className = 'bg-blue-50 border-2 border-blue-200 rounded-xl p-6 mb-6';
+            testBanner.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-bold text-lg text-blue-900 mb-2">👋 Welcome to Business Manager Pro!</h3>
+                        <p class="text-blue-700 mb-3">Want to see how it works? Add some test data to explore all features.</p>
+                    </div>
+                    <button onclick="addTestData()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-bold whitespace-nowrap">
+                        Add Test Data
+                    </button>
+                </div>
+            `;
+            receiptsSection.insertBefore(testBanner, receiptsSection.firstChild);
+        }
+        
+        function addTestData() {
+            const testReceipts = [
+                {
+                    id: Date.now().toString() + '1',
+                    reference: 'RCP-0001',
+                    clientName: 'John Smith',
+                    clientEmail: 'john@example.com',
+                    clientPhone: '+23052345678',
+                    items: [
+                        { description: 'Website Development', quantity: 1, price: 15000 },
+                        { description: 'Logo Design', quantity: 1, price: 3500 }
+                    ],
+                    total: 18500,
+                    currency: 'MUR',
+                    paymentStatus: 'paid',
+                    date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
+                },
+                {
+                    id: Date.now().toString() + '2',
+                    reference: 'RCP-0002',
+                    clientName: 'Sarah Johnson',
+                    clientEmail: 'sarah@example.com',
+                    clientPhone: '+23052987654',
+                    items: [
+                        { description: 'Social Media Management', quantity: 1, price: 8000 },
+                        { description: 'Content Creation', quantity: 5, price: 500 }
+                    ],
+                    total: 10500,
+                    currency: 'MUR',
+                    paymentStatus: 'unpaid',
+                    date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
+                },
+                {
+                    id: Date.now().toString() + '3',
+                    reference: 'RCP-0003',
+                    clientName: 'John Smith',
+                    clientEmail: 'john@example.com',
+                    clientPhone: '+23052345678',
+                    items: [
+                        { description: 'Mobile App Development', quantity: 1, price: 25000 }
+                    ],
+                    total: 25000,
+                    currency: 'MUR',
+                    paymentStatus: 'paid',
+                    date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
+                },
+                {
+                    id: Date.now().toString() + '4',
+                    reference: 'RCP-0004',
+                    clientName: 'Maria Garcia',
+                    clientEmail: 'maria@example.com',
+                    clientPhone: '+23052111222',
+                    items: [
+                        { description: 'SEO Optimization', quantity: 1, price: 5000 },
+                        { description: 'Google Ads Setup', quantity: 1, price: 3000 }
+                    ],
+                    total: 8000,
+                    currency: 'MUR',
+                    paymentStatus: 'partial',
+                    date: new Date().toISOString()
+                },
+                {
+                    id: Date.now().toString() + '5',
+                    reference: 'RCP-0005',
+                    clientName: 'Sarah Johnson',
+                    clientEmail: 'sarah@example.com',
+                    clientPhone: '+23052987654',
+                    items: [
+                        { description: 'Email Marketing Campaign', quantity: 1, price: 4500 }
+                    ],
+                    total: 4500,
+                    currency: 'MUR',
+                    paymentStatus: 'paid',
+                    date: new Date().toISOString()
+                }
+            ];
+            
+            localStorage.setItem('receipts', JSON.stringify(testReceipts));
+            localStorage.setItem('lastReceiptNumber', '5');
+            
+            showNotification('✅ Test data added! Check out Clients tab to see it in action!', 'success');
+            
+            // Remove the test data banner
+            const banner = document.querySelector('.bg-blue-50');
+            if (banner) banner.remove();
+            
+            // Reload receipts
+            loadReceipts();
+        }
+
+        function showSection(section) {
+            // Hide all sections
+            document.getElementById('dashboardSection').style.display = 'none';
+            document.getElementById('receiptsSection').style.display = 'none';
+            document.getElementById('createSection').style.display = 'none';
+            document.getElementById('clientsSection').style.display = 'none';
+            document.getElementById('templatesSection').style.display = 'none';
+
+            // Reset all button styles
+            ['dashboardBtn', 'receiptsBtn', 'clientsBtn', 'templatesBtn'].forEach(btnId => {
+                const btn = document.getElementById(btnId);
+                btn.className = 'px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition';
+            });
+
+            // Show selected section and highlight button
+            if (section === 'dashboard') {
+                document.getElementById('dashboardSection').style.display = 'block';
+                document.getElementById('dashboardBtn').className = 'px-4 py-2 bg-blue-100 text-blue-700 rounded-lg transition';
+                loadDashboard();
+            } else if (section === 'receipts') {
+                document.getElementById('receiptsSection').style.display = 'block';
+                document.getElementById('receiptsBtn').className = 'px-4 py-2 bg-blue-100 text-blue-700 rounded-lg transition';
+                loadReceipts();
+            } else if (section === 'clients') {
+                document.getElementById('clientsSection').style.display = 'block';
+                document.getElementById('clientsBtn').className = 'px-4 py-2 bg-blue-100 text-blue-700 rounded-lg transition';
+                loadClients();
+            } else if (section === 'templates') {
+                document.getElementById('templatesSection').style.display = 'block';
+                document.getElementById('templatesBtn').className = 'px-4 py-2 bg-blue-100 text-blue-700 rounded-lg transition';
+                loadTemplates();
+            } else {
+                document.getElementById('createSection').style.display = 'block';
+            }
+        }
+
+        function loadDashboard() {
+            const receipts = JSON.parse(localStorage.getItem('receipts') || '[]');
+            
+            const now = new Date();
+            const thisMonth = receipts.filter(r => {
+                const date = new Date(r.date);
+                return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+            });
+            
+            const totalRevenue = thisMonth.reduce((sum, r) => sum + r.total, 0);
+            const unpaid = receipts.filter(r => r.paymentStatus === 'unpaid' || r.paymentStatus === 'partial');
+            const unpaidAmount = unpaid.reduce((sum, r) => sum + r.total, 0);
+            
+            const uniqueClients = [...new Set(receipts.map(r => r.clientName))];
+            
+            document.getElementById('totalRevenue').textContent = `Rs ${totalRevenue.toFixed(2)}`;
+            document.getElementById('totalReceipts').textContent = receipts.length;
+            document.getElementById('totalClients').textContent = uniqueClients.length;
+            document.getElementById('unpaidAmount').textContent = `Rs ${unpaidAmount.toFixed(2)}`;
+            
+            const last6Months = [];
+            for (let i = 5; i >= 0; i--) {
+                const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                const monthReceipts = receipts.filter(r => {
+                    const rDate = new Date(r.date);
+                    return rDate.getMonth() === date.getMonth() && rDate.getFullYear() === date.getFullYear();
+                });
+                last6Months.push({
+                    month: date.toLocaleDateString('en', { month: 'short' }),
+                    revenue: monthReceipts.reduce((sum, r) => sum + r.total, 0)
+                });
+            }
+            
+            if (revenueChart) revenueChart.destroy();
+            const ctx1 = document.getElementById('revenueChart').getContext('2d');
+            revenueChart = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: last6Months.map(m => m.month),
+                    datasets: [{
+                        label: 'Revenue (Rs)',
+                        data: last6Months.map(m => m.revenue),
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } }
+                }
+            });
+            
+            const paid = receipts.filter(r => r.paymentStatus === 'paid').length;
+            const unpaidCount = receipts.filter(r => r.paymentStatus === 'unpaid').length;
+            const partial = receipts.filter(r => r.paymentStatus === 'partial').length;
+            
+            if (paymentChart) paymentChart.destroy();
+            const ctx2 = document.getElementById('paymentChart').getContext('2d');
+            paymentChart = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Paid', 'Unpaid', 'Partial'],
+                    datasets: [{
+                        data: [paid, unpaidCount, partial],
+                        backgroundColor: ['rgb(34, 197, 94)', 'rgb(239, 68, 68)', 'rgb(251, 191, 36)']
+                    }]
+                },
+                options: { responsive: true }
+            });
+            
+            const clientTotals = {};
+            receipts.forEach(r => {
+                if (!clientTotals[r.clientName]) {
+                    clientTotals[r.clientName] = { total: 0, count: 0 };
+                }
+                clientTotals[r.clientName].total += r.total;
+                clientTotals[r.clientName].count += 1;
+            });
+            
+            const topClients = Object.entries(clientTotals)
+                .sort((a, b) => b[1].total - a[1].total)
+                .slice(0, 5);
+            
+            document.getElementById('topClients').innerHTML = topClients.length > 0 ? `
+                <div class="space-y-3">
+                    ${topClients.map(([name, data]) => `
+                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <div>
+                                <p class="font-medium">${name}</p>
+                                <p class="text-sm text-gray-600">${data.count} receipts</p>
+                            </div>
+                            <p class="text-lg font-bold">Rs ${data.total.toFixed(2)}</p>
+                        </div>
+                    `).join('')}
+                </div>
+            ` : '<p class="text-gray-500 text-center py-4">No clients yet</p>';
+        }
+
+        function loadClients() {
+            const receipts = JSON.parse(localStorage.getItem('receipts') || '[]');
+            
+            if (receipts.length === 0) {
+                document.getElementById('clientsList').innerHTML = '<p class="text-gray-500 text-center py-8">No clients yet. Create your first receipt to see clients here!</p>';
+                return;
+            }
+            
+            const clientData = {};
+            
+            receipts.forEach(r => {
+                if (!clientData[r.clientName]) {
+                    clientData[r.clientName] = {
+                        name: r.clientName,
+                        email: r.clientEmail || '',
+                        phone: r.clientPhone || '',
+                        receipts: [],
+                        total: 0
+                    };
+                }
+                clientData[r.clientName].receipts.push(r);
+                clientData[r.clientName].total += r.total;
+            });
+            
+            const clients = Object.values(clientData).sort((a, b) => b.total - a.total);
+            
+            document.getElementById('clientsList').innerHTML = `
+                <div class="grid gap-4">
+                    ${clients.map((client, index) => `
+                        <div class="border-2 rounded-xl p-6 hover:shadow-lg transition cursor-pointer bg-white hover:border-blue-300" onclick="showClientHistory(${index})">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <h3 class="font-bold text-xl text-gray-900 mb-2">${client.name}</h3>
+                                    <div class="space-y-1">
+                                        ${client.email ? `<p class="text-sm text-gray-600 flex items-center gap-2"><span>📧</span> ${client.email}</p>` : ''}
+                                        ${client.phone ? `<p class="text-sm text-gray-600 flex items-center gap-2"><span>📱</span> ${client.phone}</p>` : ''}
+                                    </div>
+                                </div>
+                                <div class="text-right ml-4">
+                                    <p class="text-2xl font-bold text-green-600 mb-1">Rs ${client.total.toFixed(2)}</p>
+                                    <p class="text-sm text-gray-600 mb-3">${client.receipts.length} receipt${client.receipts.length !== 1 ? 's' : ''}</p>
+                                    <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium">
+                                        View All Receipts →
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            // Store clients data for access by index
+            window.clientsData = clients;
+        }
+
+        function showClientHistory(clientIndex) {
+            if (!window.clientsData || !window.clientsData[clientIndex]) {
+                showNotification('Client not found', 'error');
+                return;
+            }
+            
+            const client = window.clientsData[clientIndex];
+            const clientReceipts = client.receipts.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            document.getElementById('clientHistoryTitle').textContent = `${client.name} - Receipt History (${clientReceipts.length} total)`;
+            
+            document.getElementById('clientHistoryContent').innerHTML = clientReceipts.length > 0 ? `
+                <div class="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm text-gray-600">Total Spent</p>
+                            <p class="text-2xl font-bold text-blue-600">Rs ${client.total.toFixed(2)}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Total Receipts</p>
+                            <p class="text-2xl font-bold text-gray-900">${clientReceipts.length}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="space-y-4">
+                    ${clientReceipts.map(r => `
+                        <div class="border-2 rounded-xl p-5 hover:shadow-md transition bg-white">
+                            <div class="flex justify-between items-start gap-4">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-3 mb-3">
+                                        <p class="font-bold text-xl text-gray-900">${r.reference}</p>
+                                        <span class="px-3 py-1 rounded-full text-xs font-bold ${
+                                            r.paymentStatus === 'paid' ? 'bg-green-100 text-green-800' : 
+                                            r.paymentStatus === 'unpaid' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
+                                        }">
+                                            ${(r.paymentStatus || 'unpaid').toUpperCase()}
+                                        </span>
+                                    </div>
+                                    
+                                    <p class="text-sm text-gray-600 mb-3">
+                                        📅 ${new Date(r.date).toLocaleDateString('en-GB', { 
+                                            day: '2-digit', 
+                                            month: 'long', 
+                                            year: 'numeric',
+                                            weekday: 'short'
+                                        })}
+                                    </p>
+                                    
+                                    <div class="bg-gray-50 rounded-lg p-3 mb-3">
+                                        <p class="text-xs font-semibold text-gray-500 uppercase mb-2">Items Purchased:</p>
+                                        ${r.items.map(item => `
+                                            <div class="flex justify-between text-sm py-1">
+                                                <span class="text-gray-700">• ${item.description}</span>
+                                                <span class="text-gray-600">${item.quantity}x @ ${currencySymbols[r.currency || 'MUR']} ${item.price.toFixed(2)}</span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                                
+                                <div class="text-right">
+                                    <p class="text-3xl font-bold text-gray-900 mb-4">
+                                        ${currencySymbols[r.currency || 'MUR']} ${r.total.toFixed(2)}
+                                    </p>
+                                    <div class="flex flex-col gap-2">
+                                        <button onclick="previewReceiptFromHistory('${r.id}')" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-medium text-sm whitespace-nowrap">
+                                            👁️ Preview
+                                        </button>
+                                        <button onclick="editReceiptFromHistory('${r.id}')" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium text-sm whitespace-nowrap">
+                                            ✏️ Edit
+                                        </button>
+                                        <button onclick="downloadPDF('${r.id}')" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm whitespace-nowrap">
+                                            📥 PDF
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            ` : '<p class="text-gray-500 text-center py-8">No receipts for this client</p>';
+            
+            document.getElementById('clientHistoryModal').classList.remove('hidden');
+            document.getElementById('clientHistoryModal').classList.add('flex');
+        }
+        
+        function previewReceiptFromHistory(receiptId) {
+            previewReceipt(receiptId);
+        }
+        
+        function editReceiptFromHistory(receiptId) {
+            closeClientHistory();
+            editReceipt(receiptId);
+        }
+
+        function closeClientHistory() {
+            document.getElementById('clientHistoryModal').classList.add('hidden');
+            document.getElementById('clientHistoryModal').classList.remove('flex');
+        }
+
+        function previewReceipt(receiptId) {
+            const receipts = JSON.parse(localStorage.getItem('receipts') || '[]');
+            const receipt = receipts.find(r => r.id === receiptId);
+            if (!receipt) return;
+            
+            currentPreviewReceiptId = receiptId;
+            
+            const html = `
+                <div class="max-w-2xl mx-auto bg-white border-2 border-gray-200 rounded-lg p-8" style="font-family: Arial, sans-serif;">
+                    <div class="border-b-2 border-gray-300 pb-6 mb-6">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h1 class="text-3xl font-bold text-gray-900">RECEIPT</h1>
+                                <p class="text-gray-600 mt-1">Business Manager Pro</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="inline-block px-4 py-2 rounded ${
+                                    receipt.paymentStatus === 'paid' ? 'bg-green-100 text-green-800' :
+                                    receipt.paymentStatus === 'partial' ? 'bg-yellow-100 text-yellow-800' :
+                                    'bg-red-100 text-red-800'
+                                } font-semibold">
+                                    ${(receipt.paymentStatus || 'unpaid').toUpperCase()}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <p class="text-sm text-gray-600 mb-1">Receipt Number</p>
+                            <p class="font-semibold text-lg">${receipt.reference}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600 mb-1">Date</p>
+                            <p class="font-semibold">${new Date(receipt.date).toLocaleDateString('en-GB', { 
+                                day: '2-digit', month: 'long', year: 'numeric' 
+                            })}</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                        <p class="text-sm text-gray-600 mb-2">Bill To:</p>
+                        <p class="font-semibold text-lg">${receipt.clientName}</p>
+                        ${receipt.clientEmail ? `<p class="text-sm text-gray-700">📧 ${receipt.clientEmail}</p>` : ''}
+                        ${receipt.clientPhone ? `<p class="text-sm text-gray-700">📱 ${receipt.clientPhone}</p>` : ''}
+                    </div>
+
+                    <table class="w-full mb-6">
+                        <thead>
+                            <tr class="border-b-2 border-gray-300">
+                                <th class="text-left py-3 text-sm font-semibold text-gray-700">DESCRIPTION</th>
+                                <th class="text-center py-3 text-sm font-semibold text-gray-700">QTY</th>
+                                <th class="text-right py-3 text-sm font-semibold text-gray-700">PRICE</th>
+                                <th class="text-right py-3 text-sm font-semibold text-gray-700">AMOUNT</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${receipt.items.map(item => `
+                                <tr class="border-b border-gray-200">
+                                    <td class="py-3 text-gray-900">${item.description}</td>
+                                    <td class="py-3 text-center text-gray-700">${item.quantity}</td>
+                                    <td class="py-3 text-right text-gray-700">${currencySymbols[receipt.currency || 'MUR']} ${item.price.toFixed(2)}</td>
+                                    <td class="py-3 text-right font-medium text-gray-900">${currencySymbols[receipt.currency || 'MUR']} ${(item.quantity * item.price).toFixed(2)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+
+                    <div class="flex justify-end mb-8">
+                        <div class="w-64">
+                            <div class="bg-gray-900 text-white rounded-lg p-4">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-lg font-semibold">TOTAL</span>
+                                    <span class="text-2xl font-bold">${currencySymbols[receipt.currency || 'MUR']} ${receipt.total.toFixed(2)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-t-2 border-gray-300 pt-4 text-center">
+                        <p class="text-sm text-gray-600">Thank you for your business!</p>
+                        <p class="text-xs text-gray-500 mt-2">Generated by Business Manager Pro</p>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('receiptPreviewContent').innerHTML = html;
+            document.getElementById('receiptPreviewModal').classList.remove('hidden');
+            document.getElementById('receiptPreviewModal').classList.add('flex');
+        }
+
+        function closePreview() {
+            document.getElementById('receiptPreviewModal').classList.add('hidden');
+            document.getElementById('receiptPreviewModal').classList.remove('flex');
+            currentPreviewReceiptId = null;
+        }
+
+        function sendEmailManual() {
+            if (!currentPreviewReceiptId) return;
+            
+            const receipts = JSON.parse(localStorage.getItem('receipts') || '[]');
+            const receipt = receipts.find(r => r.id === currentPreviewReceiptId);
+            if (!receipt) return;
+            
+            const subject = `Receipt ${receipt.reference} from Business Manager Pro`;
+            const body = `Dear ${receipt.clientName},\n\nThank you for your business!\n\nReceipt Number: ${receipt.reference}\nDate: ${new Date(receipt.date).toLocaleDateString()}\n\nItems:\n${receipt.items.map(i => `- ${i.description}: ${i.quantity} x ${currencySymbols[receipt.currency]} ${i.price.toFixed(2)} = ${currencySymbols[receipt.currency]} ${(i.quantity * i.price).toFixed(2)}`).join('\n')}\n\nTotal: ${currencySymbols[receipt.currency]} ${receipt.total.toFixed(2)}\nStatus: ${receipt.paymentStatus || 'unpaid'}\n\nBest regards,\nBusiness Manager Pro`;
+            
+            const email = receipt.clientEmail || prompt('Enter email address:');
+            if (email) {
+                window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            }
+        }
+
+        function downloadCurrentPDF() {
+            if (currentPreviewReceiptId) {
+                downloadPDF(currentPreviewReceiptId);
+            }
+        }
+
+        function shareCurrentWhatsApp() {
+            if (currentPreviewReceiptId) {
+                shareWhatsApp(currentPreviewReceiptId);
+            }
+        }
+
+        function loadTemplates() {
+            const templates = JSON.parse(localStorage.getItem('templates') || '[]');
+            
+            document.getElementById('templatesList').innerHTML = templates.length > 0 ? `
+                <div class="grid gap-4">
+                    ${templates.map((t, i) => `
+                        <div class="border rounded-lg p-4">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <h3 class="font-semibold">${t.name}</h3>
+                                    <p class="text-sm text-gray-600">${t.items.length} items</p>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button onclick="useTemplate(${i})" class="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">Use</button>
+                                    <button onclick="deleteTemplate(${i})" class="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700">Delete</button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            ` : '<p class="text-gray-500 text-center py-8">No templates saved yet. Create a receipt with items, then save it as a template!</p>';
+        }
+
+        function saveAsTemplate() {
+            const items = getReceiptItems();
+            if (items.length === 0) {
+                showNotification('Add items first to save as template', 'warning');
+                return;
+            }
+            
+            const name = prompt('Template name:');
+            if (!name) return;
+            
+            const templates = JSON.parse(localStorage.getItem('templates') || '[]');
+            templates.push({ name, items });
+            localStorage.setItem('templates', JSON.stringify(templates));
+            
+            showNotification('Template saved successfully!', 'success');
+        }
+
+        function useTemplate(index) {
+            const templates = JSON.parse(localStorage.getItem('templates') || '[]');
+            const template = templates[index];
+            
+            document.getElementById('itemsContainer').innerHTML = '';
+            template.items.forEach(item => {
+                addItemRow(item.description, item.quantity, item.price);
+            });
+            
+            showSection('create');
+            showNotification('Template loaded!', 'success');
+        }
+
+        function deleteTemplate(index) {
+            if (!confirm('Delete this template?')) return;
+            
+            let templates = JSON.parse(localStorage.getItem('templates') || '[]');
+            templates.splice(index, 1);
+            localStorage.setItem('templates', JSON.stringify(templates));
+            
+            loadTemplates();
+            showNotification('Template deleted', 'success');
+        }
+
+        function generateMonthlyReport() {
+            const receipts = JSON.parse(localStorage.getItem('receipts') || '[]');
+            const now = new Date();
+            
+            const month = prompt('Enter month (1-12):', now.getMonth() + 1);
+            const year = prompt('Enter year:', now.getFullYear());
+            
+            if (!month || !year) return;
+            
+            const monthReceipts = receipts.filter(r => {
+                const date = new Date(r.date);
+                return date.getMonth() + 1 === parseInt(month) && date.getFullYear() === parseInt(year);
+            });
+            
+            if (monthReceipts.length === 0) {
+                showNotification('No receipts for this month', 'warning');
+                return;
+            }
+            
+            const total = monthReceipts.reduce((sum, r) => sum + r.total, 0);
+            const paid = monthReceipts.filter(r => r.paymentStatus === 'paid');
+            const unpaid = monthReceipts.filter(r => r.paymentStatus === 'unpaid');
+            
+            const headers = ['Date', 'Reference', 'Client', 'Status', 'Total'];
+            const rows = monthReceipts.map(r => [
+                new Date(r.date).toLocaleDateString(),
+                r.reference,
+                r.clientName,
+                r.paymentStatus || 'unpaid',
+                `${currencySymbols[r.currency || 'MUR']} ${r.total.toFixed(2)}`
+            ]);
+            
+            rows.push(['', '', '', 'TOTAL:', `Rs ${total.toFixed(2)}`]);
+            rows.push(['', '', '', 'PAID:', `${paid.length} receipts`]);
+            rows.push(['', '', '', 'UNPAID:', `${unpaid.length} receipts`]);
+            
+            let csvContent = headers.join(',') + '\n';
+            rows.forEach(row => {
+                csvContent += row.map(cell => `"${cell}"`).join(',') + '\n';
+            });
+            
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `monthly_report_${year}_${month}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            
+            showNotification('Monthly report generated!', 'success');
+        }
+
+        function addItemRow(description = '', quantity = 1, price = 0) {
+            const container = document.getElementById('itemsContainer');
+            const itemId = Date.now() + Math.random();
+            
+            const itemRow = document.createElement('div');
+            itemRow.className = 'grid grid-cols-12 gap-3 mb-3 items-end';
+            itemRow.id = `item-${itemId}`;
+            itemRow.innerHTML = `
+                <div class="col-span-12 md:col-span-5">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <input 
+                        type="text" 
+                        class="item-description w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        value="${description}"
+                        required
+                        oninput="calculateTotal(); autoSaveDraft();"
+                    />
+                </div>
+                <div class="col-span-6 md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Qty</label>
+                    <input 
+                        type="number" 
+                        class="item-quantity w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        value="${quantity}"
+                        min="1"
+                        required
+                        oninput="calculateTotal(); autoSaveDraft();"
+                    />
+                </div>
+                <div class="col-span-6 md:col-span-3">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Price</label>
+                    <input 
+                        type="number" 
+                        class="item-price w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        value="${price}"
+                        min="0"
+                        step="0.01"
+                        required
+                        oninput="calculateTotal(); autoSaveDraft();"
+                    />
+                </div>
+                <div class="col-span-12 md:col-span-2">
+                    <button type="button" onclick="removeItem('${itemId}')" class="w-full px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition">
+                        Remove
+                    </button>
+                </div>
+            `;
+            
+            container.appendChild(itemRow);
+            calculateTotal();
+        }
+
+        function removeItem(itemId) {
+            const item = document.getElementById(`item-${itemId}`);
+            if (item) {
+                item.remove();
+                calculateTotal();
+                autoSaveDraft();
+            }
+        }
+
+        function calculateTotal() {
+            const items = document.querySelectorAll('#itemsContainer > div');
+            let total = 0;
+            
+            items.forEach(item => {
+                const quantity = parseFloat(item.querySelector('.item-quantity').value) || 0;
+                const price = parseFloat(item.querySelector('.item-price').value) || 0;
+                total += quantity * price;
+            });
+            
+            const currency = document.getElementById('currency').value;
+            document.getElementById('currencySymbol').textContent = currencySymbols[currency];
+            document.getElementById('totalAmount').textContent = total.toFixed(2);
+        }
+
+        function getReceiptItems() {
+            const items = [];
+            const itemRows = document.querySelectorAll('#itemsContainer > div');
+            
+            itemRows.forEach(row => {
+                const description = row.querySelector('.item-description').value;
+                const quantity = parseFloat(row.querySelector('.item-quantity').value);
+                const price = parseFloat(row.querySelector('.item-price').value);
+                
+                if (description && quantity > 0 && price >= 0) {
+                    items.push({ description, quantity, price });
+                }
+            });
+            
+            return items;
+        }
+
+        function generateReference() {
+            let lastNumber = parseInt(localStorage.getItem('lastReceiptNumber') || '0');
+            lastNumber++;
+            localStorage.setItem('lastReceiptNumber', lastNumber.toString());
+            return `RCP-${lastNumber.toString().padStart(4, '0')}`;
+        }
+
+        function validateForm() {
+            const errors = [];
+            const clientName = document.getElementById('clientName').value.trim();
+            const clientEmail = document.getElementById('clientEmail').value.trim();
+            const clientPhone = document.getElementById('clientPhone').value.trim();
+            
+            if (!clientName) errors.push('Client name is required');
+            if (clientEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clientEmail)) errors.push('Invalid email format');
+            if (clientPhone && !/^\+?[0-9]{8,15}$/.test(clientPhone.replace(/\s/g, ''))) errors.push('Invalid phone number');
+            
+            const items = getReceiptItems();
+            if (items.length === 0) errors.push('At least one item is required');
+            
+            if (errors.length > 0) {
+                showNotification(errors.join('\n'), 'error');
+                return false;
+            }
+            return true;
+        }
+
+        function saveReceipt(event) {
+            event.preventDefault();
+            if (!validateForm()) return;
+            
+            const receipts = JSON.parse(localStorage.getItem('receipts') || '[]');
+            const receiptData = {
+                id: editingReceiptId || Date.now().toString(),
+                reference: editingReceiptId ? receipts.find(r => r.id === editingReceiptId).reference : generateReference(),
+                clientName: document.getElementById('clientName').value,
+                clientEmail: document.getElementById('clientEmail').value,
+                clientPhone: document.getElementById('clientPhone').value,
+                items: getReceiptItems(),
+                total: parseFloat(document.getElementById('totalAmount').textContent),
+                currency: document.getElementById('currency').value,
+                paymentStatus: document.getElementById('paymentStatus').value,
+                date: new Date().toISOString()
+            };
+            
+            if (editingReceiptId) {
+                const index = receipts.findIndex(r => r.id === editingReceiptId);
+                receipts[index] = receiptData;
+                showNotification('Receipt updated successfully! 🎉', 'success');
+            } else {
+                receipts.push(receiptData);
+                showNotification('Receipt created successfully! 🎉', 'success');
+            }
+            
+            localStorage.setItem('receipts', JSON.stringify(receipts));
+            localStorage.removeItem('receiptDraft');
+            
+            const newReceiptId = receiptData.id;
+            
+            resetForm();
+            
+            // Show preview of newly created receipt
+            setTimeout(() => {
+                previewReceipt(newReceiptId);
+            }, 500);
+        }
+
+        function shareWhatsApp(receiptId) {
+            const receipts = JSON.parse(localStorage.getItem('receipts') || '[]');
+            const receipt = receipts.find(r => r.id === receiptId);
+            if (!receipt) return;
+            
+            const message = `*RECEIPT ${receipt.reference}*\n\nClient: ${receipt.clientName}\nDate: ${new Date(receipt.date).toLocaleDateString()}\n\nItems:\n${receipt.items.map(i => `• ${i.description}\n  ${i.quantity} x ${currencySymbols[receipt.currency]} ${i.price.toFixed(2)} = ${currencySymbols[receipt.currency]} ${(i.quantity * i.price).toFixed(2)}`).join('\n\n')}\n\n*TOTAL: ${currencySymbols[receipt.currency]} ${receipt.total.toFixed(2)}*\n\nStatus: ${(receipt.paymentStatus || 'unpaid').toUpperCase()}\n\nThank you for your business!\n- Business Manager Pro`;
+            
+            window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+        }
+
+        function editReceipt(receiptId) {
+            const receipts = JSON.parse(localStorage.getItem('receipts') || '[]');
+            const receipt = receipts.find(r => r.id === receiptId);
+            if (!receipt) return;
+            
+            closeClientHistory();
+            closePreview();
+            
+            editingReceiptId = receiptId;
+            document.getElementById('clientName').value = receipt.clientName;
+            document.getElementById('clientEmail').value = receipt.clientEmail || '';
+            document.getElementById('clientPhone').value = receipt.clientPhone || '';
+            document.getElementById('currency').value = receipt.currency || 'MUR';
+            document.getElementById('paymentStatus').value = receipt.paymentStatus || 'unpaid';
+            
+            document.getElementById('itemsContainer').innerHTML = '';
+            receipt.items.forEach(item => addItemRow(item.description, item.quantity, item.price));
+            
+            document.getElementById('formTitle').textContent = 'Edit Receipt';
+            document.getElementById('submitBtn').textContent = 'Update Receipt';
+            showSection('create');
+        }
+
+        function duplicateReceipt(receiptId) {
+            const receipts = JSON.parse(localStorage.getItem('receipts') || '[]');
+            const receipt = receipts.find(r => r.id === receiptId);
+            if (!receipt) return;
+            
+            const duplicate = {
+                ...receipt,
+                id: Date.now().toString(),
+                reference: generateReference(),
+                date: new Date().toISOString()
+            };
+            
+            receipts.push(duplicate);
+            localStorage.setItem('receipts', JSON.stringify(receipts));
+            showNotification('Receipt duplicated successfully!', 'success');
+            loadReceipts();
+        }
+
+        function deleteReceipt(receiptId) {
+            if (!confirm('Are you sure you want to delete this receipt?')) return;
+            let receipts = JSON.parse(localStorage.getItem('receipts') || '[]');
+            receipts = receipts.filter(r => r.id !== receiptId);
+            localStorage.setItem('receipts', JSON.stringify(receipts));
+            showNotification('Receipt deleted', 'success');
+            loadReceipts();
+        }
+
+        function cancelEdit() {
+            if (confirm('Discard changes?')) {
+                resetForm();
+                showSection('receipts');
+            }
+        }
+
+        function resetForm() {
+            editingReceiptId = null;
+            document.getElementById('receiptForm').reset();
+            document.getElementById('itemsContainer').innerHTML = '';
+            addItemRow();
+            document.getElementById('formTitle').textContent = 'Create New Receipt';
+            document.getElementById('submitBtn').textContent = 'Create Receipt';
+            calculateTotal();
+        }
+
+        function loadReceipts() {
+            filterReceipts();
+        }
+
+        function filterReceipts() {
+            const searchTerm = document.getElementById('receiptSearch')?.value.toLowerCase() || '';
+            const dateFilter = document.getElementById('dateFilter')?.value || 'all';
+            const statusFilter = document.getElementById('statusFilter')?.value || 'all';
+            const receipts = JSON.parse(localStorage.getItem('receipts') || '[]');
+            
+            const filtered = receipts.filter(r => {
+                const matchesSearch = 
+                    r.clientName.toLowerCase().includes(searchTerm) ||
+                    r.reference.toLowerCase().includes(searchTerm) ||
+                    r.total.toString().includes(searchTerm);
+                
+                const receiptDate = new Date(r.date);
+                const now = new Date();
+                let matchesDate = true;
+                
+                if (dateFilter === 'today') {
+                    matchesDate = receiptDate.toDateString() === now.toDateString();
+                } else if (dateFilter === 'week') {
+                    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                    matchesDate = receiptDate >= weekAgo;
+                } else if (dateFilter === 'month') {
+                    matchesDate = receiptDate.getMonth() === now.getMonth() && 
+                                 receiptDate.getFullYear() === now.getFullYear();
+                }
+                
+                const matchesStatus = statusFilter === 'all' || r.paymentStatus === statusFilter || (!r.paymentStatus && statusFilter === 'unpaid');
+                
+                return matchesSearch && matchesDate && matchesStatus;
+            });
+            
+            displayReceipts(filtered);
+        }
+
+        function displayReceipts(receipts) {
+            const table = document.getElementById('receiptsTable');
+            
+            if (receipts.length === 0) {
+                table.innerHTML = '<div class="text-center py-12"><p class="text-gray-500 text-lg mb-4">No receipts found</p><button onclick="showSection(\'create\')" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Create Your First Receipt</button></div>';
+                return;
+            }
+            
+            table.innerHTML = `
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reference</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Client</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        ${receipts.sort((a, b) => new Date(b.date) - new Date(a.date)).map(r => `
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-4 py-3 text-sm text-gray-900">${new Date(r.date).toLocaleDateString()}</td>
+                                <td class="px-4 py-3 text-sm font-medium text-gray-900">${r.reference}</td>
+                                <td class="px-4 py-3 text-sm text-gray-900">${r.clientName}</td>
+                                <td class="px-4 py-3 text-sm text-gray-900">${currencySymbols[r.currency || 'MUR']} ${r.total.toFixed(2)}</td>
+                                <td class="px-4 py-3 text-sm">
+                                    <span class="px-2 py-1 rounded text-xs font-medium ${
+                                        r.paymentStatus === 'paid' ? 'bg-green-100 text-green-800' :
+                                        r.paymentStatus === 'partial' ? 'bg-yellow-100 text-yellow-800' :
+                                        'bg-red-100 text-red-800'
+                                    }">
+                                        ${(r.paymentStatus || 'unpaid').toUpperCase()}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-sm">
+                                    <div class="flex gap-2 flex-wrap">
+                                        <button onclick="previewReceipt('${r.id}')" class="text-purple-600 hover:text-purple-800 font-medium">👁️ View</button>
+                                        <button onclick="editReceipt('${r.id}')" class="text-blue-600 hover:text-blue-800">✏️ Edit</button>
+                                        <button onclick="duplicateReceipt('${r.id}')" class="text-green-600 hover:text-green-800">📋 Copy</button>
+                                        <button onclick="downloadPDF('${r.id}')" class="text-indigo-600 hover:text-indigo-800">📥 PDF</button>
+                                        <button onclick="shareWhatsApp('${r.id}')" class="text-emerald-600 hover:text-emerald-800">💬 Share</button>
+                                        <button onclick="deleteReceipt('${r.id}')" class="text-red-600 hover:text-red-800">🗑️ Delete</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function exportReceiptsToExcel() {
+            const receipts = JSON.parse(localStorage.getItem('receipts') || '[]');
+            if (receipts.length === 0) {
+                showNotification('No receipts to export', 'warning');
+                return;
+            }
+            
+            const headers = ['Date', 'Reference', 'Client', 'Email', 'Phone', 'Items', 'Currency', 'Total', 'Status'];
+            const rows = receipts.map(r => [
+                new Date(r.date).toLocaleDateString(),
+                r.reference,
+                r.clientName,
+                r.clientEmail || '',
+                r.clientPhone || '',
+                r.items.map(i => `${i.description} (${i.quantity}x${i.price})`).join('; '),
+                r.currency || 'MUR',
+                r.total.toFixed(2),
+                r.paymentStatus || 'unpaid'
+            ]);
+            
+            let csvContent = headers.join(',') + '\n';
+            rows.forEach(row => {
+                csvContent += row.map(cell => `"${cell}"`).join(',') + '\n';
+            });
+            
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `receipts_export_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            showNotification('Receipts exported successfully!', 'success');
+        }
+
+        function downloadPDF(receiptId) {
+            const receipts = JSON.parse(localStorage.getItem('receipts') || '[]');
+            const receipt = receipts.find(r => r.id === receiptId);
+            if (!receipt) return;
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFillColor(41, 98, 255);
+            doc.rect(0, 0, 210, 40, 'F');
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(28);
+            doc.text('RECEIPT', 20, 25);
+            
+            doc.setFontSize(10);
+            doc.text('Business Manager Pro', 20, 33);
+            
+            const statusColor = receipt.paymentStatus === 'paid' ? [34, 197, 94] : 
+                               receipt.paymentStatus === 'partial' ? [251, 191, 36] : [239, 68, 68];
+            doc.setFillColor(...statusColor);
+            doc.roundedRect(150, 15, 40, 10, 2, 2, 'F');
+            doc.setFontSize(9);
+            doc.text((receipt.paymentStatus || 'UNPAID').toUpperCase(), 170, 21, { align: 'center' });
+            
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(10);
+            doc.text(`Receipt #: ${receipt.reference}`, 20, 55);
+            doc.text(`Date: ${new Date(receipt.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}`, 20, 62);
+            
+            doc.setFillColor(245, 245, 245);
+            doc.roundedRect(20, 70, 170, 25, 3, 3, 'F');
+            doc.setFontSize(8);
+            doc.setTextColor(100, 100, 100);
+            doc.text('BILL TO:', 25, 77);
+            doc.setFontSize(11);
+            doc.setTextColor(0, 0, 0);
+            doc.text(receipt.clientName, 25, 84);
+            doc.setFontSize(9);
+            if (receipt.clientEmail) doc.text(receipt.clientEmail, 25, 89);
+            if (receipt.clientPhone) doc.text(receipt.clientPhone, 25, 93);
+            
+            doc.setFontSize(9);
+            doc.setFillColor(240, 240, 240);
+            doc.rect(20, 105, 170, 8, 'F');
+            doc.setTextColor(0, 0, 0);
+            doc.text('DESCRIPTION', 25, 110);
+            doc.text('QTY', 115, 110, { align: 'center' });
+            doc.text('PRICE', 145, 110, { align: 'right' });
+            doc.text('AMOUNT', 185, 110, { align: 'right' });
+            
+            let y = 120;
+            receipt.items.forEach(item => {
+                doc.text(item.description, 25, y);
+                doc.text(item.quantity.toString(), 115, y, { align: 'center' });
+                doc.text(`${currencySymbols[receipt.currency || 'MUR']} ${item.price.toFixed(2)}`, 145, y, { align: 'right' });
+                doc.text(`${currencySymbols[receipt.currency || 'MUR']} ${(item.quantity * item.price).toFixed(2)}`, 185, y, { align: 'right' });
+                y += 7;
+            });
+            
+            doc.setFillColor(0, 0, 0);
+            doc.roundedRect(130, y + 10, 60, 15, 3, 3, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(11);
+            doc.text('TOTAL', 140, y + 18);
+            doc.setFontSize(14);
+            doc.text(`${currencySymbols[receipt.currency || 'MUR']} ${receipt.total.toFixed(2)}`, 180, y + 19, { align: 'right' });
+            
+            doc.setTextColor(100, 100, 100);
+            doc.setFontSize(9);
+            doc.text('Thank you for your business!', 105, y + 40, { align: 'center' });
+            doc.setFontSize(7);
+            doc.text('Generated by Business Manager Pro', 105, y + 46, { align: 'center' });
+            
+            doc.save(`receipt_${receipt.reference}.pdf`);
+            showNotification('PDF downloaded successfully!', 'success');
+        }
+
+        function showNotification(message, type = 'info') {
+            const colors = {
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                warning: 'bg-yellow-500',
+                info: 'bg-blue-500'
+            };
+            
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-all duration-300 max-w-md`;
+            notification.style.whiteSpace = 'pre-line';
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        function autoSaveDraft() {
+            const draft = {
+                clientName: document.getElementById('clientName').value,
+                clientEmail: document.getElementById('clientEmail').value,
+                clientPhone: document.getElementById('clientPhone').value,
+                items: getReceiptItems(),
+                timestamp: Date.now()
+            };
+            localStorage.setItem('receiptDraft', JSON.stringify(draft));
+        }
+
+        function loadDraft() {
+            const draft = JSON.parse(localStorage.getItem('receiptDraft') || 'null');
+            
+            if (draft && Date.now() - draft.timestamp < 24 * 60 * 60 * 1000) {
+                if (confirm('Restore unsaved draft?')) {
+                    document.getElementById('clientName').value = draft.clientName || '';
+                    document.getElementById('clientEmail').value = draft.clientEmail || '';
+                    document.getElementById('clientPhone').value = draft.clientPhone || '';
+                    
+                    document.getElementById('itemsContainer').innerHTML = '';
+                    if (draft.items && draft.items.length > 0) {
+                        draft.items.forEach(item => addItemRow(item.description, item.quantity, item.price));
+                    } else {
+                        addItemRow();
+                    }
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            ['clientName', 'clientEmail', 'clientPhone'].forEach(id => {
+                const field = document.getElementById(id);
+                if (field) field.addEventListener('input', autoSaveDraft);
+            });
+        });
+    </script>
+</body>
+</html>
