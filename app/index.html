@@ -21,9 +21,9 @@
       <div class="flex justify-between items-center">
         <h1 class="text-2xl font-bold text-gray-800">Business Manager Pro</h1>
         <div id="navTabs" class="hidden flex gap-3">
-          <button onclick="showSection('dashboard')" id="dashboardBtn" class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition">Dashboard</button>
-          <button onclick="showSection('receipts')" id="receiptsBtn" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg transition">Receipts</button>
-          <button onclick="showSection('clients')" id="clientsBtn" class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition">Clients</button>
+          <button onclick="showSection('dashboard')" id="dashboardBtn" class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition">📊 Dashboard</button>
+          <button onclick="showSection('receipts')" id="receiptsBtn" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg transition">📄 Receipts</button>
+          <button onclick="showSection('clients')" id="clientsBtn" class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition">👥 Clients</button>
           <button onclick="showSection('create')" id="createBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">+ New Receipt</button>
         </div>
         <div class="flex items-center gap-3">
@@ -54,6 +54,7 @@
         <input id="phone" class="border rounded-lg p-2" placeholder="Phone" />
         <input id="address" class="md:col-span-2 border rounded-lg p-2" placeholder="Address" />
       </div>
+      <button id="resetPasswordBtn" class="mt-3 text-sm text-blue-600 hover:underline">Forgot password?</button>
       <p id="authMsg" class="text-sm mt-2"></p>
     </section>
 
@@ -62,20 +63,24 @@
       <h2 class="text-2xl font-bold mb-6">Dashboard</h2>
       <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div class="bg-white rounded-xl shadow-sm p-6">
-          <p class="text-sm text-gray-600">This Month Revenue</p>
+          <p class="text-sm text-gray-600">Total Revenue</p>
           <p class="text-3xl font-bold text-gray-900" id="monthRevenue">Rs 0</p>
+          <p class="text-sm text-green-600 mt-2">This month</p>
         </div>
         <div class="bg-white rounded-xl shadow-sm p-6">
           <p class="text-sm text-gray-600">Total Receipts</p>
           <p class="text-3xl font-bold text-gray-900" id="totalReceipts">0</p>
+          <p class="text-sm text-blue-600 mt-2">All time</p>
         </div>
         <div class="bg-white rounded-xl shadow-sm p-6">
           <p class="text-sm text-gray-600">Total Clients</p>
           <p class="text-3xl font-bold text-gray-900" id="totalClients">0</p>
+          <p class="text-sm text-purple-600 mt-2">Active</p>
         </div>
         <div class="bg-white rounded-xl shadow-sm p-6">
           <p class="text-sm text-gray-600">Unpaid</p>
           <p class="text-3xl font-bold text-red-600" id="unpaidAmount">Rs 0</p>
+          <p class="text-sm text-gray-600 mt-2">Outstanding</p>
         </div>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -87,6 +92,10 @@
           <h3 class="text-lg font-semibold mb-4">Payment Status</h3>
           <canvas id="paymentChart"></canvas>
         </div>
+      </div>
+      <div class="bg-white rounded-xl shadow-sm p-6">
+        <h3 class="text-lg font-semibold mb-4">Top Clients</h3>
+        <div id="topClients"></div>
       </div>
     </div>
 
@@ -103,7 +112,10 @@
       <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-xl font-semibold">All Receipts</h2>
-          <button id="exportCsvBtn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">Export CSV</button>
+          <div class="flex gap-2">
+            <button onclick="generateMonthlyReport()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">📊 Monthly Report</button>
+            <button id="exportCsvBtn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">📥 Export Excel</button>
+          </div>
         </div>
         <div id="receiptsTable" class="overflow-x-auto"></div>
       </div>
@@ -140,7 +152,7 @@
           </div>
           <div class="flex justify-between items-center">
             <div class="text-right">
-              <p class="text-sm text-gray-600">Total</p>
+              <p class="text-sm text-gray-600">Total Amount</p>
               <p class="text-2xl font-bold"><span id="currencySymbol">Rs</span> <span id="totalAmount">0.00</span></p>
             </div>
             <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save Receipt</button>
@@ -151,11 +163,26 @@
 
   </div>
 
+  <!-- CLIENT HISTORY MODAL -->
+  <div id="clientHistoryModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl p-8 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-2xl font-bold" id="clientHistoryTitle">Client History</h3>
+        <button onclick="closeClientHistory()" class="text-gray-500 hover:text-gray-700">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div id="clientHistoryContent"></div>
+    </div>
+  </div>
+
   <script>
     const supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
     let revenueChart = null;
     let paymentChart = null;
-    const currencySymbols = { 'MUR': 'Rs', 'USD': '$', 'EUR': '€' };
+    const currencySymbols = { 'MUR': 'Rs', 'USD': '$', 'EUR': '€', 'GBP': '£' };
 
     function msg(el, text, ok=false){ 
       el.textContent=text; 
@@ -222,6 +249,19 @@
     };
 
     document.getElementById('logoutBtn').onclick = async ()=>{ await supabase.auth.signOut(); };
+
+    document.getElementById('resetPasswordBtn').onclick = async ()=>{
+      const m=document.getElementById('authMsg');
+      const email = document.getElementById('email').value.trim();
+      if(!email) return msg(m,'Enter your email first');
+      
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: location.origin
+      });
+      
+      if (error) return msg(m, error.message);
+      msg(m,'Password reset email sent! Check your inbox.', true);
+    };
 
     function showSection(section) {
       ['authCard','dashboardSection','receiptsSection','clientsSection','createSection'].forEach(id => {
@@ -320,6 +360,33 @@
         },
         options: { responsive: true }
       });
+
+      const clientTotals = {};
+      receipts.forEach(r => {
+        if (!clientTotals[r.client_name]) {
+          clientTotals[r.client_name] = { total: 0, count: 0 };
+        }
+        clientTotals[r.client_name].total += Number(r.total || 0);
+        clientTotals[r.client_name].count += 1;
+      });
+      
+      const topClients = Object.entries(clientTotals)
+        .sort((a, b) => b[1].total - a[1].total)
+        .slice(0, 5);
+      
+      document.getElementById('topClients').innerHTML = topClients.length > 0 ? `
+        <div class="space-y-3">
+          ${topClients.map(([name, data]) => `
+            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+              <div>
+                <p class="font-medium">${name}</p>
+                <p class="text-sm text-gray-600">${data.count} receipts</p>
+              </div>
+              <p class="text-lg font-bold">Rs ${data.total.toFixed(2)}</p>
+            </div>
+          `).join('')}
+        </div>
+      ` : '<p class="text-gray-500 text-center py-4">No clients yet</p>';
     }
 
     async function loadClients() {
@@ -329,7 +396,7 @@
       const { data: receipts } = await supabase.from('receipts').select('*').eq('user_id', session.user.id);
       
       if (!receipts || receipts.length === 0) {
-        document.getElementById('clientsList').innerHTML = '<p class="text-gray-500 text-center py-8">No clients yet</p>';
+        document.getElementById('clientsList').innerHTML = '<p class="text-gray-500 text-center py-8">No clients yet. Create your first receipt to see clients here!</p>';
         return;
       }
       
@@ -349,26 +416,114 @@
       });
       
       const clients = Object.values(clientData).sort((a, b) => b.total - a.total);
+      window.clientsData = clients;
       
       document.getElementById('clientsList').innerHTML = `
         <div class="grid gap-4">
-          ${clients.map(client => `
-            <div class="border-2 rounded-xl p-6 hover:shadow-lg transition bg-white">
+          ${clients.map((client, index) => `
+            <div class="border-2 rounded-xl p-6 hover:shadow-lg transition cursor-pointer bg-white hover:border-blue-300" onclick="showClientHistory(${index})">
               <div class="flex justify-between items-start">
                 <div class="flex-1">
-                  <h3 class="font-bold text-xl mb-2">${client.name}</h3>
-                  ${client.email ? `<p class="text-sm text-gray-600">📧 ${client.email}</p>` : ''}
-                  ${client.phone ? `<p class="text-sm text-gray-600">📱 ${client.phone}</p>` : ''}
+                  <h3 class="font-bold text-xl text-gray-900 mb-2">${client.name}</h3>
+                  <div class="space-y-1">
+                    ${client.email ? `<p class="text-sm text-gray-600 flex items-center gap-2"><span>📧</span> ${client.email}</p>` : ''}
+                    ${client.phone ? `<p class="text-sm text-gray-600 flex items-center gap-2"><span>📱</span> ${client.phone}</p>` : ''}
+                  </div>
                 </div>
-                <div class="text-right">
-                  <p class="text-2xl font-bold text-green-600">Rs ${client.total.toFixed(2)}</p>
-                  <p class="text-sm text-gray-600">${client.receipts.length} receipts</p>
+                <div class="text-right ml-4">
+                  <p class="text-2xl font-bold text-green-600 mb-1">Rs ${client.total.toFixed(2)}</p>
+                  <p class="text-sm text-gray-600 mb-3">${client.receipts.length} receipt${client.receipts.length !== 1 ? 's' : ''}</p>
+                  <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium">
+                    View All Receipts →
+                  </button>
                 </div>
               </div>
             </div>
           `).join('')}
         </div>
       `;
+    }
+
+    function showClientHistory(clientIndex) {
+      if (!window.clientsData || !window.clientsData[clientIndex]) return;
+      
+      const client = window.clientsData[clientIndex];
+      const clientReceipts = client.receipts.sort((a, b) => new Date(b.date) - new Date(a.date));
+      
+      document.getElementById('clientHistoryTitle').textContent = `${client.name} - Receipt History (${clientReceipts.length} total)`;
+      
+      document.getElementById('clientHistoryContent').innerHTML = clientReceipts.length > 0 ? `
+        <div class="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-sm text-gray-600">Total Spent</p>
+              <p class="text-2xl font-bold text-blue-600">Rs ${client.total.toFixed(2)}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-600">Total Receipts</p>
+              <p class="text-2xl font-bold text-gray-900">${clientReceipts.length}</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="space-y-4">
+          ${clientReceipts.map(r => `
+            <div class="border-2 rounded-xl p-5 hover:shadow-md transition bg-white">
+              <div class="flex justify-between items-start gap-4">
+                <div class="flex-1">
+                  <div class="flex items-center gap-3 mb-3">
+                    <p class="font-bold text-xl text-gray-900">${r.reference_number}</p>
+                    <span class="px-3 py-1 rounded-full text-xs font-bold ${
+                      r.payment_status === 'paid' ? 'bg-green-100 text-green-800' : 
+                      r.payment_status === 'unpaid' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
+                    }">
+                      ${(r.payment_status || 'unpaid').toUpperCase()}
+                    </span>
+                  </div>
+                  
+                  <p class="text-sm text-gray-600 mb-3">
+                    📅 ${new Date(r.date).toLocaleDateString('en-GB', { 
+                      day: '2-digit', 
+                      month: 'long', 
+                      year: 'numeric',
+                      weekday: 'short'
+                    })}
+                  </p>
+                  
+                  <div class="bg-gray-50 rounded-lg p-3 mb-3">
+                    <p class="text-xs font-semibold text-gray-500 uppercase mb-2">Items Purchased:</p>
+                    ${(r.items || []).map(item => `
+                      <div class="flex justify-between text-sm py-1">
+                        <span class="text-gray-700">• ${item.name}</span>
+                        <span class="text-gray-600">${item.qty}x @ Rs ${Number(item.price).toFixed(2)}</span>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+                
+                <div class="text-right">
+                  <p class="text-3xl font-bold text-gray-900 mb-4">
+                    Rs ${Number(r.total).toFixed(2)}
+                  </p>
+                  <div class="flex flex-col gap-2">
+                    <button onclick="downloadPDF('${r.id}')" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm whitespace-nowrap">
+                      📥 PDF
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      ` : '<p class="text-gray-500 text-center py-8">No receipts for this client</p>';
+      
+      document.getElementById('clientHistoryModal').classList.remove('hidden');
+      document.getElementById('clientHistoryModal').classList.add('flex');
+    }
+
+    function closeClientHistory() {
+      document.getElementById('clientHistoryModal').classList.add('hidden');
+      document.getElementById('clientHistoryModal').classList.remove('flex');
     }
 
     async function loadReceipts() {
@@ -385,7 +540,7 @@
       if (error) { console.error(error); return; }
       
       if (!data || data.length === 0) {
-        document.getElementById('receiptsTable').innerHTML = '<p class="text-gray-500 text-center py-8">No receipts yet</p>';
+        document.getElementById('receiptsTable').innerHTML = '<div class="text-center py-12"><p class="text-gray-500 text-lg mb-4">No receipts yet. Create your first receipt!</p><button onclick="showSection(\'create\')" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Create Your First Receipt</button></div>';
         return;
       }
       
@@ -418,7 +573,7 @@
                   </span>
                 </td>
                 <td class="px-4 py-3 text-sm">
-                  <button onclick="downloadPDF('${r.id}')" class="text-blue-600 hover:underline">Download</button>
+                  <button onclick="downloadPDF('${r.id}')" class="text-blue-600 hover:underline">📥 Download</button>
                 </td>
               </tr>
             `).join('')}
@@ -431,20 +586,23 @@
       const container = document.getElementById('itemsContainer');
       const itemId = Date.now() + Math.random();
       const itemRow = document.createElement('div');
-      itemRow.className = 'grid grid-cols-12 gap-3 mb-3';
+      itemRow.className = 'grid grid-cols-12 gap-3 mb-3 items-end';
       itemRow.id = `item-${itemId}`;
       itemRow.innerHTML = `
-        <div class="col-span-5">
-          <input type="text" class="item-description w-full border rounded-lg p-2" placeholder="Description" required oninput="calculateTotal()" />
+        <div class="col-span-12 md:col-span-5">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+          <input type="text" class="item-description w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Description" required oninput="calculateTotal()" />
         </div>
-        <div class="col-span-2">
-          <input type="number" class="item-quantity w-full border rounded-lg p-2" value="1" min="1" required oninput="calculateTotal()" />
+        <div class="col-span-6 md:col-span-2">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Qty</label>
+          <input type="number" class="item-quantity w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" value="1" min="1" required oninput="calculateTotal()" />
         </div>
-        <div class="col-span-3">
-          <input type="number" class="item-price w-full border rounded-lg p-2" value="0" min="0" step="0.01" required oninput="calculateTotal()" />
+        <div class="col-span-6 md:col-span-3">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Price</label>
+          <input type="number" class="item-price w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" value="0" min="0" step="0.01" required oninput="calculateTotal()" />
         </div>
-        <div class="col-span-2">
-          <button type="button" onclick="removeItem('${itemId}')" class="w-full px-3 py-2 bg-red-100 text-red-600 rounded-lg">Remove</button>
+        <div class="col-span-12 md:col-span-2">
+          <button type="button" onclick="removeItem('${itemId}')" class="w-full px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition">Remove</button>
         </div>
       `;
       container.appendChild(itemRow);
@@ -523,28 +681,71 @@
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
       
-      doc.setFontSize(20);
-      doc.text(profile?.business_name || 'Business', 20, 20);
-      doc.setFontSize(10);
-      doc.text(`BRN: ${profile?.brn || '-'}`, 20, 30);
-      doc.text(profile?.address || '', 20, 35);
+      doc.setFillColor(41, 98, 255);
+      doc.rect(0, 0, 210, 40, 'F');
       
-      doc.setFontSize(16);
-      doc.text('RECEIPT', 20, 50);
-      doc.setFontSize(10);
-      doc.text(`Ref: ${receipt.reference_number}`, 20, 60);
-      doc.text(`Date: ${new Date(receipt.date).toLocaleDateString()}`, 20, 65);
-      doc.text(`Client: ${receipt.client_name || '-'}`, 20, 75);
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(28);
+      doc.text('RECEIPT', 20, 25);
       
-      let y = 90;
+      doc.setFontSize(10);
+      doc.text(profile?.business_name || 'Business Manager Pro', 20, 33);
+      
+      const statusColor = receipt.payment_status === 'paid' ? [34, 197, 94] : 
+                         receipt.payment_status === 'partial' ? [251, 191, 36] : [239, 68, 68];
+      doc.setFillColor(...statusColor);
+      doc.roundedRect(150, 15, 40, 10, 2, 2, 'F');
+      doc.setFontSize(9);
+      doc.text((receipt.payment_status || 'UNPAID').toUpperCase(), 170, 21, { align: 'center' });
+      
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(10);
+      doc.text(`Receipt #: ${receipt.reference_number}`, 20, 55);
+      doc.text(`Date: ${new Date(receipt.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}`, 20, 62);
+      
+      doc.setFillColor(245, 245, 245);
+      doc.roundedRect(20, 70, 170, 25, 3, 3, 'F');
+      doc.setFontSize(8);
+      doc.setTextColor(100, 100, 100);
+      doc.text('BILL TO:', 25, 77);
+      doc.setFontSize(11);
+      doc.setTextColor(0, 0, 0);
+      doc.text(receipt.client_name || '-', 25, 84);
+      doc.setFontSize(9);
+      if (receipt.client_email) doc.text(receipt.client_email, 25, 89);
+      if (receipt.client_phone) doc.text(receipt.client_phone, 25, 93);
+      
+      doc.setFontSize(9);
+      doc.setFillColor(240, 240, 240);
+      doc.rect(20, 105, 170, 8, 'F');
+      doc.setTextColor(0, 0, 0);
+      doc.text('DESCRIPTION', 25, 110);
+      doc.text('QTY', 115, 110, { align: 'center' });
+      doc.text('PRICE', 145, 110, { align: 'right' });
+      doc.text('AMOUNT', 185, 110, { align: 'right' });
+      
+      let y = 120;
       (receipt.items || []).forEach(item => {
-        doc.text(`${item.name || '-'} - Rs ${item.price || 0}`, 20, y);
+        doc.text(item.name || '-', 25, y);
+        doc.text((item.qty || 1).toString(), 115, y, { align: 'center' });
+        doc.text(`Rs ${Number(item.price || 0).toFixed(2)}`, 145, y, { align: 'right' });
+        doc.text(`Rs ${((item.qty || 1) * Number(item.price || 0)).toFixed(2)}`, 185, y, { align: 'right' });
         y += 7;
       });
       
-      y += 10;
+      doc.setFillColor(0, 0, 0);
+      doc.roundedRect(130, y + 10, 60, 15, 3, 3, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(11);
+      doc.text('TOTAL', 140, y + 18);
       doc.setFontSize(14);
-      doc.text(`TOTAL: Rs ${receipt.total}`, 20, y);
+      doc.text(`Rs ${Number(receipt.total).toFixed(2)}`, 180, y + 19, { align: 'right' });
+      
+      doc.setTextColor(100, 100, 100);
+      doc.setFontSize(9);
+      doc.text('Thank you for your business!', 105, y + 40, { align: 'center' });
+      doc.setFontSize(7);
+      doc.text('Generated by Business Manager Pro', 105, y + 46, { align: 'center' });
       
       doc.save(`${receipt.reference_number}.pdf`);
     }
@@ -556,11 +757,14 @@
       const { data: receipts } = await supabase.from('receipts').select('*').eq('user_id', session.user.id);
       if (!receipts || receipts.length === 0) return alert('No receipts to export');
       
-      const headers = ['Reference', 'Client', 'Date', 'Total', 'Status'];
+      const headers = ['Date', 'Reference', 'Client', 'Email', 'Phone', 'Items', 'Total', 'Status'];
       const rows = receipts.map(r => [
+        new Date(r.date).toLocaleDateString(),
         r.reference_number,
         r.client_name || '',
-        new Date(r.date).toLocaleDateString(),
+        r.client_email || '',
+        r.client_phone || '',
+        (r.items || []).map(i => i.name).join('; '),
         r.total || 0,
         r.payment_status || 'unpaid'
       ]);
@@ -576,6 +780,10 @@
       a.click();
       URL.revokeObjectURL(url);
     };
+
+    function generateMonthlyReport() {
+      alert('Monthly report feature coming soon!');
+    }
 
     window.addEventListener('DOMContentLoaded', () => addItemRow());
   </script>
