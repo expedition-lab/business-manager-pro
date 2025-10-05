@@ -1,0 +1,27 @@
+<script>
+async function saveProfile(e) {
+  e.preventDefault();
+  const token = await getAccessToken();
+  if (!token) return alert("Please sign in.");
+
+  const payload = {
+    email: profileForm.email.value,
+    full_name: profileForm.full_name.value,
+    business_name: profileForm.business_name.value,
+    brn: profileForm.brn.value,
+    phone: profileForm.phone.value,
+    address: profileForm.address.value,
+    vat: profileForm.vat.value,
+    company_type: profileForm.company_type.value,
+  };
+
+  const r = await fetch("/api/profile-upsert", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload)
+  });
+  const json = await r.json();
+  if (!json.ok) return alert(json.error || "Save failed");
+  alert("Profile saved ✅");
+}
+</script>
