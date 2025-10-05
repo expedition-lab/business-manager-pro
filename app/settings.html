@@ -1,27 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Settings · Business Manager Pro</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+<style>
+  .container { max-width: 760px; }
+  .muted { color: #6b7280; font-size: 12px; }
+  .row { display:grid; gap:12px; grid-template-columns: 1fr 1fr; }
+  @media (max-width: 640px){ .row { grid-template-columns:1fr; } }
+  .ok { color:#16a34a; }
+  .err { color:#dc2626; }
+</style>
+</head>
+<body>
+<main class="container" style="padding: 28px 0;">
+  <header style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px;">
+    <h1 style="margin:0;">Business Settings</h1>
+    <nav style="display:flex; gap:10px;">
+      <a href="/app/">← Dashboard</a>
+      <a href="#" id="signOut">Sign out</a>
+    </nav>
+  </header>
+
+  <p class="muted">Fill your company details once. Every receipt will automatically include this info (BRN, address, etc.).</p>
+
+  <article>
+    <form id="profileForm" class="grid" style="gap:14px;">
+      <div class="row">
+        <label>Email
+          <input id="email" name="email" type="email" placeholder="you@company.com" required>
+        </label>
+        <label>Full name
+          <input id="full_name" name="full_name" placeholder="John Doe" required>
+        </label>
+      </div>
+
+      <div class="row">
+        <label>Business name
+          <input id="business_name" name="business_name" placeholder="BlueXpedition Ltd" required>
+        </label>
+        <label>BRN
+          <input id="brn" name="brn" placeholder="C0xxxxxx" required>
+        </label>
+      </div>
+
+      <div class="row">
+        <label>Phone
+          <input id="phone" name="phone" placeholder="+230 5xxxxxx" required>
+        </label>
+        <label>VAT (optional)
+          <input id="vat" name="vat" placeholder="VAT-xxxxx">
+        </label>
+      </div>
+
+      <label>Address
+        <input id="address" name="address" placeholder="Street, City, Mauritius" required>
+      </label>
+
+      <label>Company Type (optional)
+        <input id="company_type" name="company_type" placeholder="Ltd / Sole Trader / SARL …">
+      </label>
+
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <button type="submit" id="saveBtn">Save profile</button>
+        <button type="button" id="testReceipt" class="secondary">Create test receipt</button>
+        <small id="msg" class="muted"></small>
+      </div>
+    </form>
+  </article>
+
+  <footer style="margin-top:22px;">
+    <p class="muted">* Receipts are designed to align with MRA requirements (BRN, business name, address, date). Always confirm your legal obligations.</p>
+  </footer>
+</main>
+
+<!-- Supabase + All logic in one page -->
+<script src="https://esm.sh/@supabase/supabase-js@2"></script>
 <script>
+/* =========================
+   0) CONFIG — FILL THESE
+   ========================= */
+const SUPABASE_URL = "YOUR_SUPABASE_URL";
+const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+
+/* =========================
+   1) Auth helper (inline)
+   ========================= */
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+async function getAccessToken() {
+  const { data: { session }, error } = await sb.auth.getSession();
+  if (error) console.error(error);
+  return session?.access_token || null;
+}
+async function requireAuth() {
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) window.location.href = "/app/login.html";
+  return user;
+}
+async function signOut() {
+  await sb.auth.signOut();
+  window.location.href = "/app/login.html";
+}
+
+/* =========================
+   2) Profile load + save
+   ========================= */
+const form = () => document.getElementById("profileForm");
+const msg = (txt, cls="muted") => {
+  const m = document.getElementById("msg");
+  m.textContent = txt || "";
+  m.className = cls;
+};
+
+function validateProfilePayload(p) {
+  const missing = [];
+  if (!p.email)         missing.push("Email");
+  if (!p.full_name)     missing.push("Full name");
+  if (!p.business_name) missing.push("Business name");
+  if (!p.brn)           missing.push("BRN");
+  if (!p.phone)         missing.push("Phone");
+  if (!p.address)       missing.push("Address");
+  return missing;
+}
+
+async function loadProfileIntoForm() {
+  const { data, error } = await sb.from("business_profiles").select("*").maybeSingle();
+  if (error) { console.warn("loadProfile:", error.message); return; }
+  if (!data) return;
+
+  const f = form();
+  f.email.value         = data.email || "";
+  f.full_name.value     = data.full_name || "";
+  f.business_name.value = data.business_name || "";
+  f.brn.value           = data.brn || "";
+  f.phone.value         = data.phone || "";
+  f.address.value       = data.address || "";
+  f.vat.value           = data.vat || "";
+  f.company_type.value  = data.company_type || "";
+}
+
 async function saveProfile(e) {
   e.preventDefault();
+  await requireAuth();
+
   const token = await getAccessToken();
-  if (!token) return alert("Please sign in.");
+  if (!token) { alert("Please sign in."); return; }
+
+  const f = form();
+  const payload = {
+    email:         f.email.value.trim(),
+    full_name:     f.full_name.value.trim(),
+    business_name: f.business_name.value.trim(),
+    brn:           f.brn.value.trim(),
+    phone:         f.phone.value.trim(),
+    address:       f.address.value.trim(),
+    vat:           (f.vat.value || "").trim(),
+    company_type:  (f.company_type.value || "").trim(),
+  };
+  const missing = validateProfilePayload(payload);
+  if (missing.length) { alert("Please fill: " + missing.join(", ")); return; }
+
+  const btn = document.getElementById("saveBtn");
+  const prev = btn.textContent; btn.disabled = true; btn.textContent = "Saving…"; msg("");
+
+  try {
+    const r = await fetch("/api/profile-upsert", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+      body: JSON.stringify(payload)
+    });
+    const json = await r.json();
+    if (!r.ok || !json.ok) throw new Error(json?.error || `Save failed (HTTP ${r.status})`);
+    msg("Profile saved ✔", "ok");
+  } catch (err) {
+    console.error(err);
+    msg(err.message || "Network error", "err");
+    alert(err.message || "Save failed");
+  } finally {
+    btn.disabled = false; btn.textContent = prev;
+  }
+}
+
+/* ====================================================
+   3) Quick sanity: Create a test receipt from this page
+      (verifies your DB trigger copies BRN/address)
+   ==================================================== */
+async function createTestReceipt() {
+  await requireAuth();
+  const token = await getAccessToken();
+  if (!token) { alert("Please sign in."); return; }
+
+  // Optional guard: ensure profile exists
+  const { data: prof } = await sb.from("business_profiles").select("user_id").maybeSingle();
+  if (!prof) { alert("Please save your business profile first."); return; }
 
   const payload = {
-    email: profileForm.email.value,
-    full_name: profileForm.full_name.value,
-    business_name: profileForm.business_name.value,
-    brn: profileForm.brn.value,
-    phone: profileForm.phone.value,
-    address: profileForm.address.value,
-    vat: profileForm.vat.value,
-    company_type: profileForm.company_type.value,
+    reference_number: "TEST-" + Math.random().toString(36).slice(2, 7).toUpperCase(),
+    client_name: "Test Client",
+    client_phone: "+230 5xxxxxx",
+    client_email: "client@example.com",
+    items: [{ desc: "Service", qty: 1, price: 95 }],
+    subtotal: 95,
+    tax: 0,
+    total: 95
   };
 
-  const r = await fetch("/api/profile-upsert", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-    body: JSON.stringify(payload)
-  });
-  const json = await r.json();
-  if (!json.ok) return alert(json.error || "Save failed");
-  alert("Profile saved ✅");
+  try {
+    const r = await fetch("/api/receipts-insert", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+      body: JSON.stringify(payload)
+    });
+    const json = await r.json();
+    if (!r.ok || !json.ok) throw new Error(json?.error || `Insert failed (HTTP ${r.status})`);
+
+    msg("Test receipt created ✔ — opening…", "ok");
+    // Navigate to your receipt page if you have it:
+    window.location.href = `/app/receipt.html?id=${encodeURIComponent(json.receipt.id)}`;
+  } catch (err) {
+    console.error(err);
+    msg(err.message || "Insert failed", "err");
+    alert(err.message || "Insert failed");
+  }
 }
+
+/* =========================
+   4) Bootstrap
+   ========================= */
+document.addEventListener("DOMContentLoaded", async () => {
+  document.getElementById("signOut").addEventListener("click", (e) => {
+    e.preventDefault(); signOut();
+  });
+  document.getElementById("testReceipt").addEventListener("click", createTestReceipt);
+  await requireAuth();
+  await loadProfileIntoForm();
+  form().addEventListener("submit", saveProfile);
+});
 </script>
+</body>
+</html>
