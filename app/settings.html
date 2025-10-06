@@ -76,40 +76,65 @@
   </footer>
 </main>
 
-<!-- Supabase + All logic in one page -->
+<!-- Supabase + logic -->
 <script src="https://esm.sh/@supabase/supabase-js@2"></script>
 <script>
 /* =========================
-   0) CONFIG — FILL THESE
+   0) CONFIG
+   - Set these globally OR replace with your values.
    ========================= */
-const SUPABASE_URL = "YOUR_SUPABASE_URL";
-const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+const SUPABASE_URL = window.SUPABASE_URL || "YOUR_SUPABASE_URL";
+const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
 
 /* =========================
-   1) Auth helper (inline)
+   1) Auth client + helpers
    ========================= */
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+});
 
-async function getAccessToken() {
-  const { data: { session }, error } = await sb.auth.getSession();
-  if (error) console.error(error);
-  return session?.access_token || null;
-}
 async function requireAuth() {
   const { data: { user } } = await sb.auth.getUser();
-  if (!user) window.location.href = "/app/login.html";
+  if (!user) window.location.href = "/app/auth.html";
   return user;
 }
+
+async function waitForSessionToken(timeoutMs = 6000) {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session?.access_token) return session.access_token;
+    await new Promise(r => setTimeout(r, 120));
+  }
+  throw new Error("No session token yet");
+}
+
+async function callApi(url, payload) {
+  const token = await waitForSessionToken();
+  const r = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+    body: JSON.stringify(payload || {})
+  });
+  // Your /api routes sometimes return raw PostgREST JSON (array), not {ok:true}
+  const text = await r.text();
+  let json = {};
+  try { json = text ? JSON.parse(text) : {}; } catch { json = { raw: text }; }
+  if (!r.ok) throw new Error(json?.error || `HTTP ${r.status}`);
+  return json;
+}
+
 async function signOut() {
   await sb.auth.signOut();
-  window.location.href = "/app/login.html";
+  window.location.href = "/app/auth.html";
 }
 
 /* =========================
    2) Profile load + save
+   (matches your current DB columns)
    ========================= */
-const form = () => document.getElementById("profileForm");
-const msg = (txt, cls="muted") => {
+const formEl = () => document.getElementById("profileForm");
+const setMsg = (txt, cls="muted") => {
   const m = document.getElementById("msg");
   m.textContent = txt || "";
   m.className = cls;
@@ -131,7 +156,7 @@ async function loadProfileIntoForm() {
   if (error) { console.warn("loadProfile:", error.message); return; }
   if (!data) return;
 
-  const f = form();
+  const f = formEl();
   f.email.value         = data.email || "";
   f.full_name.value     = data.full_name || "";
   f.business_name.value = data.business_name || "";
@@ -146,10 +171,7 @@ async function saveProfile(e) {
   e.preventDefault();
   await requireAuth();
 
-  const token = await getAccessToken();
-  if (!token) { alert("Please sign in."); return; }
-
-  const f = form();
+  const f = formEl();
   const payload = {
     email:         f.email.value.trim(),
     full_name:     f.full_name.value.trim(),
@@ -164,20 +186,16 @@ async function saveProfile(e) {
   if (missing.length) { alert("Please fill: " + missing.join(", ")); return; }
 
   const btn = document.getElementById("saveBtn");
-  const prev = btn.textContent; btn.disabled = true; btn.textContent = "Saving…"; msg("");
+  const prev = btn.textContent; btn.disabled = true; btn.textContent = "Saving…"; setMsg("");
 
   try {
-    const r = await fetch("/api/profile-upsert", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-      body: JSON.stringify(payload)
-    });
-    const json = await r.json();
-    if (!r.ok || !json.ok) throw new Error(json?.error || `Save failed (HTTP ${r.status})`);
-    msg("Profile saved ✔", "ok");
+    // Uses your /api/profile-upsert (expects user JWT; does RLS)
+    const res = await callApi("/api/profile-upsert", payload);
+    // If your handler returns {ok:true} it's fine; if not, no error thrown means success
+    setMsg("Profile saved ✔", "ok");
   } catch (err) {
     console.error(err);
-    msg(err.message || "Network error", "err");
+    setMsg(err.message || "Save failed", "err");
     alert(err.message || "Save failed");
   } finally {
     btn.disabled = false; btn.textContent = prev;
@@ -185,15 +203,14 @@ async function saveProfile(e) {
 }
 
 /* ====================================================
-   3) Quick sanity: Create a test receipt from this page
-      (verifies your DB trigger copies BRN/address)
+   3) Create a test receipt (verifies trigger snapshot)
+   - Works with your current /api/receipts-insert which
+     proxies to PostgREST and returns inserted row(s).
    ==================================================== */
 async function createTestReceipt() {
   await requireAuth();
-  const token = await getAccessToken();
-  if (!token) { alert("Please sign in."); return; }
 
-  // Optional guard: ensure profile exists
+  // Ensure profile exists before test
   const { data: prof } = await sb.from("business_profiles").select("user_id").maybeSingle();
   if (!prof) { alert("Please save your business profile first."); return; }
 
@@ -209,20 +226,16 @@ async function createTestReceipt() {
   };
 
   try {
-    const r = await fetch("/api/receipts-insert", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-      body: JSON.stringify(payload)
-    });
-    const json = await r.json();
-    if (!r.ok || !json.ok) throw new Error(json?.error || `Insert failed (HTTP ${r.status})`);
-
-    msg("Test receipt created ✔ — opening…", "ok");
-    // Navigate to your receipt page if you have it:
-    window.location.href = `/app/receipt.html?id=${encodeURIComponent(json.receipt.id)}`;
+    const json = await callApi("/api/receipts-insert", payload);
+    // PostgREST 'return=representation' usually returns an array with the row
+    const row = Array.isArray(json) ? json[0] : (json.receipt || json);
+    setMsg("Test receipt created ✔", "ok");
+    if (row?.id) {
+      window.location.href = `/app/receipt.html?id=${encodeURIComponent(row.id)}`;
+    }
   } catch (err) {
     console.error(err);
-    msg(err.message || "Insert failed", "err");
+    setMsg(err.message || "Insert failed", "err");
     alert(err.message || "Insert failed");
   }
 }
@@ -237,7 +250,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("testReceipt").addEventListener("click", createTestReceipt);
   await requireAuth();
   await loadProfileIntoForm();
-  form().addEventListener("submit", saveProfile);
+  formEl().addEventListener("submit", saveProfile);
 });
 </script>
 </body>
