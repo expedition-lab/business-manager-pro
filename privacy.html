@@ -1,9 +1,108 @@
-<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Privacy — Business Manager Pro</title>
-<link rel="icon" href="/favicon.ico">
-<body style="max-width:800px;margin:40px auto;padding:0 16px;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;line-height:1.6">
-<h1>Privacy Policy</h1>
-<p>We store only the minimum required to operate receipts. Demo mode uses localStorage on your device.</p>
-<h2>Data</h2><p>When we connect a database, we’ll update this page with details of storage and retention.</p>
-<h2>Contact</h2><p>Email: privacy@business-manager-pro.vercel.app</p>
-</body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Privacy Policy · Business Manager Pro</title>
+  <link rel="icon" href="/favicon.ico">
+  <style>
+    body{max-width:840px;margin:40px auto;padding:0 16px;font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#0f172a}
+    h1{font-size:28px;margin:.2rem 0 1rem}
+    h2{font-size:20px;margin:1.4rem 0 .4rem}
+    ul{padding-left:1.2rem}
+    .muted{color:#64748b}
+    header,footer{display:flex;justify-content:space-between;gap:8px;align-items:center}
+    footer{margin-top:28px;padding-top:12px;border-top:1px solid #e2e8f0;font-size:14px}
+    a{color:#2563eb;text-decoration:none} a:hover{text-decoration:underline}
+    .pill{display:inline-block;padding:2px 10px;border-radius:999px;background:#eef2ff;color:#3730a3;font-size:12px}
+  </style>
+</head>
+<body>
+  <header>
+    <div><span class="pill">Privacy</span></div>
+    <a href="/">← Back to site</a>
+  </header>
+
+  <h1>Privacy Policy</h1>
+  <p class="muted">Last updated: <span id="lastUpdated"></span></p>
+
+  <p>
+    Business Manager Pro (“we”, “us”, “our”) helps you generate and share professional e-receipts.
+    We collect and process only what’s needed to operate the service, and you remain the owner of your data.
+  </p>
+
+  <h2>What we collect</h2>
+  <ul>
+    <li><strong>Account</strong>: email address and authentication identifiers.</li>
+    <li><strong>Business profile</strong>: business name, BRN, VAT (if any), address, phone.</li>
+    <li><strong>Clients</strong>: company name, BRN, contact name, email/phone, address.</li>
+    <li><strong>Receipts</strong>: line items, amounts, currency, taxes, status, reference numbers.</li>
+    <li><strong>Product usage</strong>: basic event logs (e.g., sign-in, create receipt) for reliability and abuse prevention.</li>
+  </ul>
+
+  <h2>What we <em>don’t</em> collect</h2>
+  <p>
+    We do <strong>not</strong> store bank card numbers or online banking credentials.
+    If you pay us via JUICE or PayPal, payment details are processed by those providers.
+  </p>
+
+  <h2>Why we use your data</h2>
+  <ul>
+    <li>To provide the app: authentication, saving profiles/clients/receipts, generating PDFs.</li>
+    <li>To secure and improve the service: detect fraud/abuse, fix bugs, plan features.</li>
+    <li>To communicate: account notices, support responses, critical product updates.</li>
+  </ul>
+
+  <h2>Where and how data is stored</h2>
+  <p>
+    We use <strong>Supabase</strong> (managed Postgres) for storage. Data is encrypted at rest and in transit.
+    We enforce <strong>Row-Level Security (RLS)</strong> so your account can only access your own data.
+    Files you upload (e.g., logo) are stored in Supabase Storage.
+  </p>
+
+  <h2>Sharing</h2>
+  <p>
+    We don’t sell personal data. Limited access by staff may occur for troubleshooting or support and is subject to confidentiality.
+    When you share a receipt via link, anyone with that link can view the receipt—treat links as public unless protected.
+  </p>
+
+  <h2>Retention & deletion</h2>
+  <p>
+    We keep your data while your account is active. You can request export (CSV/PDF) or deletion at any time.
+    Backups may persist for a short period after deletion for disaster recovery.
+  </p>
+
+  <h2>Your rights</h2>
+  <p>
+    You may access, correct, export, or delete your data. Contact us and we’ll respond within a reasonable timeframe.
+  </p>
+
+  <h2>Children</h2>
+  <p>
+    The service is not intended for children under 16. Do not sign up or submit data for minors.
+  </p>
+
+  <h2>Changes</h2>
+  <p>
+    We may update this policy from time to time. Material changes will be highlighted on this page.
+  </p>
+
+  <h2>Contact</h2>
+  <p>
+    Email: <a href="mailto:support@businessmanager.pro">support@businessmanager.pro</a><br>
+    WhatsApp: <a href="https://wa.me/2305XXXXXXX" target="_blank" rel="noopener">+230 5XXXXXXX</a>
+  </p>
+
+  <footer>
+    <span>© <span id="year"></span> Business Manager Pro</span>
+    <span><a href="/terms.html">Terms of Service</a></span>
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+    // Use file timestamp if served statically; otherwise default to today
+    document.getElementById("lastUpdated").textContent =
+      new Date(document.lastModified || Date.now()).toISOString().slice(0,10);
+  </script>
+</body>
+</html>
