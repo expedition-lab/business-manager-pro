@@ -1,11 +1,95 @@
-<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Terms — Business Manager Pro</title>
-<link rel="icon" href="/favicon.ico">
-<body style="max-width:800px;margin:40px auto;padding:0 16px;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;line-height:1.6">
-<h1>Terms & Conditions</h1>
-<p>By using Business Manager Pro (“BMP”), you agree to these terms. BMP may operate in demo mode; payment flows can be sandbox.</p>
-<h2>Use</h2><p>You are responsible for the data you input (clients, receipts). Do not store card data.</p>
-<h2>Payments</h2><p>PayPal/JUICE may be demo until confirmed. No charges occur without explicit confirmation.</p>
-<h2>Liability</h2><p>We are not liable for indirect losses. Maximum liability is limited to fees paid in the last 30 days.</p>
-<h2>Contact</h2><p>Email: support@business-manager-pro.vercel.app</p>
-</body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Terms of Service · Business Manager Pro</title>
+  <link rel="icon" href="/favicon.ico">
+  <style>
+    body{max-width:840px;margin:40px auto;padding:0 16px;font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#0f172a}
+    h1{font-size:28px;margin:.2rem 0 1rem}
+    h2{font-size:20px;margin:1.4rem 0 .4rem}
+    a{color:#2563eb;text-decoration:none} a:hover{text-decoration:underline}
+    .muted{color:#64748b}
+    header,footer{display:flex;justify-content:space-between;gap:8px;align-items:center}
+    footer{margin-top:28px;padding-top:12px;border-top:1px solid #e2e8f0;font-size:14px}
+    .pill{display:inline-block;padding:2px 10px;border-radius:999px;background:#eff6ff;color:#1e3a8a;font-size:12px}
+  </style>
+</head>
+<body>
+  <header>
+    <div><span class="pill">Terms</span></div>
+    <a href="/">← Back to site</a>
+  </header>
+
+  <h1>Terms & Conditions</h1>
+  <p class="muted">Last updated: <span id="lastUpdated"></span></p>
+
+  <p>
+    Welcome to Business Manager Pro (“BMP”). By accessing or using this service, you agree to the following terms and conditions.
+  </p>
+
+  <h2>1. Use of the Service</h2>
+  <p>
+    You are responsible for the accuracy and legality of any data you enter — such as client names, contact details, or receipts.
+    You must not upload or store any payment card data, banking credentials, or sensitive personal information not required for your business receipts.
+  </p>
+
+  <h2>2. Payments</h2>
+  <p>
+    Subscription fees, where applicable, may be paid using <strong>JUICE</strong> or <strong>PayPal</strong>.
+    Your JUICE payment reference should be sent to our support team for account activation.
+    For demo users, payment flows may operate in sandbox mode until confirmation.
+  </p>
+  <ul>
+    <li>JUICE Number: <strong>+230 5496 0101</strong></li>
+    <li>PayPal: <strong>peeroosuhail047@gmail.com</strong></li>
+  </ul>
+
+  <h2>3. Data Ownership</h2>
+  <p>
+    You own your data — including clients, receipts, and company profiles. We simply provide the software to manage, store, and export it.
+    You can export or delete your data at any time by contacting our support team.
+  </p>
+
+  <h2>4. Availability & Maintenance</h2>
+  <p>
+    While we aim for uninterrupted service, downtime may occur for maintenance or upgrades.
+    We are not liable for any loss of business or profits arising from temporary unavailability.
+  </p>
+
+  <h2>5. Limitation of Liability</h2>
+  <p>
+    To the fullest extent permitted by law, our liability is limited to the total subscription fees paid during the previous 30 days.
+    We are not responsible for indirect, incidental, or consequential damages such as data loss or business interruption.
+  </p>
+
+  <h2>6. Termination</h2>
+  <p>
+    You may stop using Business Manager Pro at any time. We may suspend or terminate accounts found violating these terms or the law.
+  </p>
+
+  <h2>7. Updates</h2>
+  <p>
+    We may modify these terms from time to time. Continued use of the service constitutes acceptance of the updated terms.
+  </p>
+
+  <h2>8. Contact</h2>
+  <p>
+    For questions or support, reach us at:<br>
+    Email: <a href="mailto:support@businessmanager.pro">support@businessmanager.pro</a><br>
+    WhatsApp: <a href="https://wa.me/23054960101" target="_blank" rel="noopener">+230 5496 0101</a>
+  </p>
+
+  <footer>
+    <span>© <span id="year"></span> Business Manager Pro</span>
+    <span><a href="/privacy.html">Privacy Policy</a></span>
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+    document.getElementById("lastUpdated").textContent =
+      new Date(document.lastModified || Date.now()).toISOString().slice(0,10);
+  </script>
+</body>
+</html>
