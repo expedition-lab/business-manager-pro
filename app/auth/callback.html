@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Signing you in…</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; padding: 32px; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <h1>Signing you in…</h1>
+  <p>Please wait a moment.</p>
+
+  <script>
+    (async () => {
+      // TODO: replace with your actual values
+      const SUPABASE_URL = "https://YOUR_PROJECT_ID.supabase.co";
+      const SUPABASE_ANON_KEY = "YOUR_ANON_KEY";
+
+      const redirectAfter = "/app/index.html"; // change if your private area is different
+
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get("code");
+
+      if (!code) {
+        window.location.href = "/";
+        return;
+      }
+
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      try {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error) throw error;
+
+        // (Optional) create/upsert user row here by calling your API
+        // await fetch("/api/ensure-user", { method: "POST" });
+
+        window.location.href = redirectAfter;
+      } catch (e) {
+        console.error(e);
+        alert("Login failed: " + (e?.message || e));
+        window.location.href = "/"; // fallback
+      }
+    })();
+  </script>
+</body>
+</html>
