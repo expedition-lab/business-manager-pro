@@ -16,7 +16,7 @@
 <body class="bg-gray-50">
   
   <!-- HEADER -->
-  <div class="bg-white shadow-sm border-b">
+  <div class="bg-white shadow-sm border-b sticky top-0 z-10">
     <div class="container mx-auto px-4 py-4">
       <div class="flex justify-between items-center">
         <h1 class="text-2xl font-bold text-gray-800">Business Manager Pro</h1>
@@ -28,7 +28,7 @@
         </div>
         <div class="flex items-center gap-3">
           <span id="userEmail" class="hidden text-sm px-3 py-1 rounded-full border"></span>
-          <button id="logoutBtn" class="hidden px-3 py-1.5 rounded-lg border text-sm">Sign out</button>
+          <button id="logoutBtn" class="hidden px-3 py-1.5 rounded-lg border text-sm hover:bg-gray-50">Sign out</button>
         </div>
       </div>
     </div>
@@ -37,22 +37,22 @@
   <div class="container mx-auto px-4 py-8 max-w-7xl">
     
     <!-- AUTH SECTION -->
-    <section id="authCard" class="rounded-xl border bg-white p-6 max-w-2xl mx-auto">
+    <section id="authCard" class="rounded-xl border bg-white p-6 max-w-2xl mx-auto shadow-sm">
       <h2 class="text-2xl font-bold mb-4">Create account / Sign in</h2>
       <div class="grid md:grid-cols-3 gap-3">
-        <input id="email" class="border rounded-lg p-2" placeholder="Email" />
-        <input id="password" type="password" class="border rounded-lg p-2" placeholder="Password (min 8)" />
+        <input id="email" type="email" class="border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Email" />
+        <input id="password" type="password" class="border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Password (min 8)" />
         <div class="flex gap-2">
-          <button id="signupBtn" class="flex-1 px-3 py-2 rounded-lg bg-blue-600 text-white">Create</button>
-          <button id="loginBtn" class="flex-1 px-3 py-2 rounded-lg border">Log in</button>
+          <button id="signupBtn" class="flex-1 px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition">Create</button>
+          <button id="loginBtn" class="flex-1 px-3 py-2 rounded-lg border hover:bg-gray-50 transition">Log in</button>
         </div>
       </div>
       <div class="mt-4 grid md:grid-cols-2 gap-3">
-        <input id="fullName" class="border rounded-lg p-2" placeholder="Full name" />
-        <input id="bizName" class="border rounded-lg p-2" placeholder="Business name" />
-        <input id="brn" class="border rounded-lg p-2 uppercase" placeholder="BRN" />
-        <input id="phone" class="border rounded-lg p-2" placeholder="Phone" />
-        <input id="address" class="md:col-span-2 border rounded-lg p-2" placeholder="Address" />
+        <input id="fullName" class="border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Full name" />
+        <input id="bizName" class="border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Business name" />
+        <input id="brn" class="border rounded-lg p-2 uppercase focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="BRN" />
+        <input id="phone" class="border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Phone" />
+        <input id="address" class="md:col-span-2 border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Address" />
       </div>
       <button id="resetPasswordBtn" class="mt-3 text-sm text-blue-600 hover:underline">Forgot password?</button>
       <p id="authMsg" class="text-sm mt-2"></p>
@@ -62,22 +62,22 @@
     <div id="dashboardSection" style="display: none;">
       <h2 class="text-2xl font-bold mb-6">Dashboard</h2>
       <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white rounded-xl shadow-sm p-6">
+        <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition">
           <p class="text-sm text-gray-600">Total Revenue</p>
           <p class="text-3xl font-bold text-gray-900" id="monthRevenue">Rs 0</p>
           <p class="text-sm text-green-600 mt-2">This month</p>
         </div>
-        <div class="bg-white rounded-xl shadow-sm p-6">
+        <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition">
           <p class="text-sm text-gray-600">Total Receipts</p>
           <p class="text-3xl font-bold text-gray-900" id="totalReceipts">0</p>
           <p class="text-sm text-blue-600 mt-2">All time</p>
         </div>
-        <div class="bg-white rounded-xl shadow-sm p-6">
+        <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition">
           <p class="text-sm text-gray-600">Total Clients</p>
           <p class="text-3xl font-bold text-gray-900" id="totalClients">0</p>
           <p class="text-sm text-purple-600 mt-2">Active</p>
         </div>
-        <div class="bg-white rounded-xl shadow-sm p-6">
+        <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition">
           <p class="text-sm text-gray-600">Unpaid</p>
           <p class="text-3xl font-bold text-red-600" id="unpaidAmount">Rs 0</p>
           <p class="text-sm text-gray-600 mt-2">Outstanding</p>
@@ -114,7 +114,7 @@
           <h2 class="text-xl font-semibold">All Receipts</h2>
           <div class="flex gap-2">
             <button onclick="generateMonthlyReport()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">📊 Monthly Report</button>
-            <button id="exportCsvBtn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">📥 Export Excel</button>
+            <button id="exportCsvBtn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">📥 Export CSV</button>
           </div>
         </div>
         <div id="receiptsTable" class="overflow-x-auto"></div>
@@ -127,26 +127,42 @@
         <h2 class="text-xl font-semibold mb-6">Create Receipt</h2>
         <form id="receiptForm" onsubmit="saveReceipt(event)">
           <div class="grid md:grid-cols-3 gap-4 mb-6">
-            <input id="clientName" class="border rounded-lg p-2" placeholder="Client name" required />
-            <input id="clientEmail" type="email" class="border rounded-lg p-2" placeholder="Client email" />
-            <input id="clientPhone" class="border rounded-lg p-2" placeholder="Client phone" />
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Client Name *</label>
+              <input id="clientName" class="border rounded-lg p-2 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Client name" required />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <input id="clientEmail" type="email" class="border rounded-lg p-2 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="client@example.com" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+              <input id="clientPhone" type="tel" class="border rounded-lg p-2 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="+230 5XXX XXXX" />
+            </div>
           </div>
           <div class="grid md:grid-cols-2 gap-4 mb-6">
-            <select id="currency" class="border rounded-lg p-2">
-              <option value="MUR">MUR (Rs)</option>
-              <option value="USD">USD ($)</option>
-              <option value="EUR">EUR (€)</option>
-            </select>
-            <select id="paymentStatus" class="border rounded-lg p-2">
-              <option value="unpaid">Unpaid</option>
-              <option value="paid">Paid</option>
-              <option value="partial">Partial</option>
-            </select>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Currency</label>
+              <select id="currency" class="border rounded-lg p-2 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500" onchange="calculateTotal()">
+                <option value="MUR">MUR (Rs)</option>
+                <option value="USD">USD ($)</option>
+                <option value="EUR">EUR (€)</option>
+                <option value="GBP">GBP (£)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Payment Status</label>
+              <select id="paymentStatus" class="border rounded-lg p-2 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <option value="unpaid">Unpaid</option>
+                <option value="paid">Paid</option>
+                <option value="partial">Partial</option>
+              </select>
+            </div>
           </div>
           <div class="mb-6">
             <div class="flex justify-between items-center mb-4">
               <h3 class="font-medium">Items</h3>
-              <button type="button" onclick="addItemRow()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm">+ Add Item</button>
+              <button type="button" onclick="addItemRow()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition">+ Add Item</button>
             </div>
             <div id="itemsContainer"></div>
           </div>
@@ -155,7 +171,7 @@
               <p class="text-sm text-gray-600">Total Amount</p>
               <p class="text-2xl font-bold"><span id="currencySymbol">Rs</span> <span id="totalAmount">0.00</span></p>
             </div>
-            <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save Receipt</button>
+            <button type="submit" id="saveReceiptBtn" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Save Receipt</button>
           </div>
         </form>
       </div>
@@ -164,11 +180,11 @@
   </div>
 
   <!-- CLIENT HISTORY MODAL -->
-  <div id="clientHistoryModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl p-8 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+  <div id="clientHistoryModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4" onclick="closeClientHistoryIfClickedOutside(event)">
+    <div class="bg-white rounded-2xl p-8 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto" onclick="event.stopPropagation()">
       <div class="flex justify-between items-center mb-6">
         <h3 class="text-2xl font-bold" id="clientHistoryTitle">Client History</h3>
-        <button onclick="closeClientHistory()" class="text-gray-500 hover:text-gray-700">
+        <button onclick="closeClientHistory()" class="text-gray-500 hover:text-gray-700 p-1 hover:bg-gray-100 rounded-full transition">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
@@ -183,6 +199,27 @@
     let revenueChart = null;
     let paymentChart = null;
     const currencySymbols = { 'MUR': 'Rs', 'USD': '$', 'EUR': '€', 'GBP': '£' };
+
+    // Notification system
+    function showNotification(message, type = 'info') {
+      const colors = {
+        success: 'bg-green-500',
+        error: 'bg-red-500',
+        warning: 'bg-yellow-500',
+        info: 'bg-blue-500'
+      };
+      
+      const notification = document.createElement('div');
+      notification.className = `fixed top-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-all duration-300 max-w-md`;
+      notification.textContent = message;
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => notification.remove(), 300);
+      }, 4000);
+    }
 
     function msg(el, text, ok=false){ 
       el.textContent=text; 
@@ -208,6 +245,11 @@
     });
 
     document.getElementById('signupBtn').onclick = async ()=>{
+      const btn = document.getElementById('signupBtn');
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Creating...';
+      
       const m=document.getElementById('authMsg');
       const email = document.getElementById('email').value.trim();
       const pass = document.getElementById('password').value.trim();
@@ -217,13 +259,22 @@
       const phone = document.getElementById('phone').value.trim();
       const address = document.getElementById('address').value.trim();
 
-      if(!email || pass.length < 8 || !fullName || !bizName) return msg(m,'Fill all required fields');
+      if(!email || pass.length < 8 || !fullName || !bizName) {
+        btn.disabled = false;
+        btn.textContent = originalText;
+        return msg(m,'Fill all required fields: email, password (8+ chars), full name, and business name');
+      }
 
       const { data: signUp, error: signUpErr } = await supabase.auth.signUp({
         email, password: pass,
         options: { emailRedirectTo: location.origin }
       });
-      if (signUpErr) return msg(m, signUpErr.message);
+      
+      if (signUpErr) {
+        btn.disabled = false;
+        btn.textContent = originalText;
+        return msg(m, signUpErr.message);
+      }
 
       const { error: insErr } = await supabase
         .from('business_profiles')
@@ -232,23 +283,47 @@
           email, full_name: fullName, business_name: bizName,
           brn, phone, address
         }]);
+      
+      btn.disabled = false;
+      btn.textContent = originalText;
+      
       if (insErr) return msg(m, insErr.message);
 
-      msg(m,'Account created! Check your email.', true);
+      msg(m,'Account created! Check your email to verify.', true);
+      showNotification('Account created successfully! Please check your email.', 'success');
     };
 
     document.getElementById('loginBtn').onclick = async ()=>{
+      const btn = document.getElementById('loginBtn');
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Logging in...';
+      
       const m=document.getElementById('authMsg');
       const email = document.getElementById('email').value.trim();
       const pass = document.getElementById('password').value.trim();
-      if(!email || pass.length < 8) return msg(m,'Enter email and password');
+      
+      if(!email || pass.length < 8) {
+        btn.disabled = false;
+        btn.textContent = originalText;
+        return msg(m,'Enter valid email and password (min 8 characters)');
+      }
 
       const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
+      
+      btn.disabled = false;
+      btn.textContent = originalText;
+      
       if (error) return msg(m, error.message);
+      
       msg(m,'Logged in!', true);
+      showNotification('Welcome back!', 'success');
     };
 
-    document.getElementById('logoutBtn').onclick = async ()=>{ await supabase.auth.signOut(); };
+    document.getElementById('logoutBtn').onclick = async ()=>{ 
+      await supabase.auth.signOut();
+      showNotification('Signed out successfully', 'info');
+    };
 
     document.getElementById('resetPasswordBtn').onclick = async ()=>{
       const m=document.getElementById('authMsg');
@@ -261,6 +336,7 @@
       
       if (error) return msg(m, error.message);
       msg(m,'Password reset email sent! Check your inbox.', true);
+      showNotification('Password reset email sent!', 'success');
     };
 
     function showSection(section) {
@@ -340,7 +416,7 @@
             tension: 0.4
           }]
         },
-        options: { responsive: true, plugins: { legend: { display: false } } }
+        options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } } }
       });
       
       const paid = receipts.filter(r => r.payment_status === 'paid').length;
@@ -358,7 +434,7 @@
             backgroundColor: ['rgb(34, 197, 94)', 'rgb(239, 68, 68)', 'rgb(251, 191, 36)']
           }]
         },
-        options: { responsive: true }
+        options: { responsive: true, maintainAspectRatio: true }
       });
 
       const clientTotals = {};
@@ -377,10 +453,10 @@
       document.getElementById('topClients').innerHTML = topClients.length > 0 ? `
         <div class="space-y-3">
           ${topClients.map(([name, data]) => `
-            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
               <div>
                 <p class="font-medium">${name}</p>
-                <p class="text-sm text-gray-600">${data.count} receipts</p>
+                <p class="text-sm text-gray-600">${data.count} receipt${data.count !== 1 ? 's' : ''}</p>
               </div>
               <p class="text-lg font-bold">Rs ${data.total.toFixed(2)}</p>
             </div>
@@ -445,7 +521,10 @@
     }
 
     function showClientHistory(clientIndex) {
-      if (!window.clientsData || !window.clientsData[clientIndex]) return;
+      if (!window.clientsData || !window.clientsData[clientIndex]) {
+        showNotification('Client not found', 'error');
+        return;
+      }
       
       const client = window.clientsData[clientIndex];
       const clientReceipts = client.receipts.sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -507,7 +586,7 @@
                   </p>
                   <div class="flex flex-col gap-2">
                     <button onclick="downloadPDF('${r.id}')" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm whitespace-nowrap">
-                      📥 PDF
+                      📥 Download PDF
                     </button>
                   </div>
                 </div>
@@ -526,6 +605,12 @@
       document.getElementById('clientHistoryModal').classList.remove('flex');
     }
 
+    function closeClientHistoryIfClickedOutside(event) {
+      if (event.target === document.getElementById('clientHistoryModal')) {
+        closeClientHistory();
+      }
+    }
+
     async function loadReceipts() {
       const session = (await supabase.auth.getSession()).data.session;
       if (!session) return;
@@ -537,7 +622,11 @@
         .order('created_at', { ascending: false })
         .limit(50);
       
-      if (error) { console.error(error); return; }
+      if (error) { 
+        console.error(error); 
+        showNotification('Error loading receipts', 'error');
+        return;
+      }
       
       if (!data || data.length === 0) {
         document.getElementById('receiptsTable').innerHTML = '<div class="text-center py-12"><p class="text-gray-500 text-lg mb-4">No receipts yet. Create your first receipt!</p><button onclick="showSection(\'create\')" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Create Your First Receipt</button></div>';
@@ -591,7 +680,7 @@
       itemRow.innerHTML = `
         <div class="col-span-12 md:col-span-5">
           <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-          <input type="text" class="item-description w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Description" required oninput="calculateTotal()" />
+          <input type="text" class="item-description w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Item description" required oninput="calculateTotal()" />
         </div>
         <div class="col-span-6 md:col-span-2">
           <label class="block text-sm font-medium text-gray-700 mb-1">Qty</label>
@@ -630,7 +719,7 @@
     function getReceiptItems() {
       const items = [];
       document.querySelectorAll('#itemsContainer > div').forEach(row => {
-        const description = row.querySelector('.item-description').value;
+        const description = row.querySelector('.item-description').value.trim();
         const quantity = parseFloat(row.querySelector('.item-quantity').value);
         const price = parseFloat(row.querySelector('.item-price').value);
         if (description && quantity > 0 && price >= 0) {
@@ -642,11 +731,27 @@
 
     async function saveReceipt(event) {
       event.preventDefault();
+      
+      const btn = document.getElementById('saveReceiptBtn');
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+      
       const session = (await supabase.auth.getSession()).data.session;
-      if (!session) return alert('Please sign in first');
+      if (!session) {
+        btn.disabled = false;
+        btn.textContent = originalText;
+        showNotification('Please sign in first', 'error');
+        return;
+      }
 
       const items = getReceiptItems();
-      if (items.length === 0) return alert('Add at least one item');
+      if (items.length === 0) {
+        btn.disabled = false;
+        btn.textContent = originalText;
+        showNotification('Add at least one item', 'warning');
+        return;
+      }
 
       const total = parseFloat(document.getElementById('totalAmount').textContent);
       const payload = {
@@ -665,9 +770,17 @@
       };
 
       const { error } = await supabase.from('receipts').insert([payload]);
-      if (error) return alert('Error: ' + error.message);
+      
+      btn.disabled = false;
+      btn.textContent = originalText;
+      
+      if (error) {
+        console.error(error);
+        showNotification('Error saving receipt: ' + error.message, 'error');
+        return;
+      }
 
-      alert('Receipt saved!');
+      showNotification('Receipt saved successfully! 🎉', 'success');
       document.getElementById('receiptForm').reset();
       document.getElementById('itemsContainer').innerHTML = '';
       addItemRow();
@@ -675,79 +788,92 @@
     }
 
     window.downloadPDF = async function(receiptId) {
-      const { data: receipt } = await supabase.from('receipts').select('*').eq('id', receiptId).single();
-      const { data: profile } = await supabase.from('business_profiles').select('*').eq('user_id', receipt.user_id).single();
+      showNotification('Generating PDF...', 'info');
       
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      
-      doc.setFillColor(41, 98, 255);
-      doc.rect(0, 0, 210, 40, 'F');
-      
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(28);
-      doc.text('RECEIPT', 20, 25);
-      
-      doc.setFontSize(10);
-      doc.text(profile?.business_name || 'Business Manager Pro', 20, 33);
-      
-      const statusColor = receipt.payment_status === 'paid' ? [34, 197, 94] : 
-                         receipt.payment_status === 'partial' ? [251, 191, 36] : [239, 68, 68];
-      doc.setFillColor(...statusColor);
-      doc.roundedRect(150, 15, 40, 10, 2, 2, 'F');
-      doc.setFontSize(9);
-      doc.text((receipt.payment_status || 'UNPAID').toUpperCase(), 170, 21, { align: 'center' });
-      
-      doc.setTextColor(0, 0, 0);
-      doc.setFontSize(10);
-      doc.text(`Receipt #: ${receipt.reference_number}`, 20, 55);
-      doc.text(`Date: ${new Date(receipt.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}`, 20, 62);
-      
-      doc.setFillColor(245, 245, 245);
-      doc.roundedRect(20, 70, 170, 25, 3, 3, 'F');
-      doc.setFontSize(8);
-      doc.setTextColor(100, 100, 100);
-      doc.text('BILL TO:', 25, 77);
-      doc.setFontSize(11);
-      doc.setTextColor(0, 0, 0);
-      doc.text(receipt.client_name || '-', 25, 84);
-      doc.setFontSize(9);
-      if (receipt.client_email) doc.text(receipt.client_email, 25, 89);
-      if (receipt.client_phone) doc.text(receipt.client_phone, 25, 93);
-      
-      doc.setFontSize(9);
-      doc.setFillColor(240, 240, 240);
-      doc.rect(20, 105, 170, 8, 'F');
-      doc.setTextColor(0, 0, 0);
-      doc.text('DESCRIPTION', 25, 110);
-      doc.text('QTY', 115, 110, { align: 'center' });
-      doc.text('PRICE', 145, 110, { align: 'right' });
-      doc.text('AMOUNT', 185, 110, { align: 'right' });
-      
-      let y = 120;
-      (receipt.items || []).forEach(item => {
-        doc.text(item.name || '-', 25, y);
-        doc.text((item.qty || 1).toString(), 115, y, { align: 'center' });
-        doc.text(`Rs ${Number(item.price || 0).toFixed(2)}`, 145, y, { align: 'right' });
-        doc.text(`Rs ${((item.qty || 1) * Number(item.price || 0)).toFixed(2)}`, 185, y, { align: 'right' });
-        y += 7;
-      });
-      
-      doc.setFillColor(0, 0, 0);
-      doc.roundedRect(130, y + 10, 60, 15, 3, 3, 'F');
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(11);
-      doc.text('TOTAL', 140, y + 18);
-      doc.setFontSize(14);
-      doc.text(`Rs ${Number(receipt.total).toFixed(2)}`, 180, y + 19, { align: 'right' });
-      
-      doc.setTextColor(100, 100, 100);
-      doc.setFontSize(9);
-      doc.text('Thank you for your business!', 105, y + 40, { align: 'center' });
-      doc.setFontSize(7);
-      doc.text('Generated by Business Manager Pro', 105, y + 46, { align: 'center' });
-      
-      doc.save(`${receipt.reference_number}.pdf`);
+      try {
+        const { data: receipt } = await supabase.from('receipts').select('*').eq('id', receiptId).single();
+        if (!receipt) {
+          showNotification('Receipt not found', 'error');
+          return;
+        }
+        
+        const { data: profile } = await supabase.from('business_profiles').select('*').eq('user_id', receipt.user_id).single();
+        
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        doc.setFillColor(41, 98, 255);
+        doc.rect(0, 0, 210, 40, 'F');
+        
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(28);
+        doc.text('RECEIPT', 20, 25);
+        
+        doc.setFontSize(10);
+        doc.text(profile?.business_name || 'Business Manager Pro', 20, 33);
+        
+        const statusColor = receipt.payment_status === 'paid' ? [34, 197, 94] : 
+                           receipt.payment_status === 'partial' ? [251, 191, 36] : [239, 68, 68];
+        doc.setFillColor(...statusColor);
+        doc.roundedRect(150, 15, 40, 10, 2, 2, 'F');
+        doc.setFontSize(9);
+        doc.text((receipt.payment_status || 'UNPAID').toUpperCase(), 170, 21, { align: 'center' });
+        
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(10);
+        doc.text(`Receipt #: ${receipt.reference_number}`, 20, 55);
+        doc.text(`Date: ${new Date(receipt.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}`, 20, 62);
+        
+        doc.setFillColor(245, 245, 245);
+        doc.roundedRect(20, 70, 170, 25, 3, 3, 'F');
+        doc.setFontSize(8);
+        doc.setTextColor(100, 100, 100);
+        doc.text('BILL TO:', 25, 77);
+        doc.setFontSize(11);
+        doc.setTextColor(0, 0, 0);
+        doc.text(receipt.client_name || '-', 25, 84);
+        doc.setFontSize(9);
+        if (receipt.client_email) doc.text(receipt.client_email, 25, 89);
+        if (receipt.client_phone) doc.text(receipt.client_phone, 25, 93);
+        
+        doc.setFontSize(9);
+        doc.setFillColor(240, 240, 240);
+        doc.rect(20, 105, 170, 8, 'F');
+        doc.setTextColor(0, 0, 0);
+        doc.text('DESCRIPTION', 25, 110);
+        doc.text('QTY', 115, 110, { align: 'center' });
+        doc.text('PRICE', 145, 110, { align: 'right' });
+        doc.text('AMOUNT', 185, 110, { align: 'right' });
+        
+        let y = 120;
+        (receipt.items || []).forEach(item => {
+          doc.text(item.name || '-', 25, y);
+          doc.text((item.qty || 1).toString(), 115, y, { align: 'center' });
+          doc.text(`Rs ${Number(item.price || 0).toFixed(2)}`, 145, y, { align: 'right' });
+          doc.text(`Rs ${((item.qty || 1) * Number(item.price || 0)).toFixed(2)}`, 185, y, { align: 'right' });
+          y += 7;
+        });
+        
+        doc.setFillColor(0, 0, 0);
+        doc.roundedRect(130, y + 10, 60, 15, 3, 3, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(11);
+        doc.text('TOTAL', 140, y + 18);
+        doc.setFontSize(14);
+        doc.text(`Rs ${Number(receipt.total).toFixed(2)}`, 180, y + 19, { align: 'right' });
+        
+        doc.setTextColor(100, 100, 100);
+        doc.setFontSize(9);
+        doc.text('Thank you for your business!', 105, y + 40, { align: 'center' });
+        doc.setFontSize(7);
+        doc.text('Generated by Business Manager Pro', 105, y + 46, { align: 'center' });
+        
+        doc.save(`${receipt.reference_number}.pdf`);
+        showNotification('PDF downloaded successfully!', 'success');
+      } catch (error) {
+        console.error(error);
+        showNotification('Error generating PDF', 'error');
+      }
     }
 
     document.getElementById('exportCsvBtn').onclick = async () => {
@@ -755,7 +881,10 @@
       if (!session) return;
       
       const { data: receipts } = await supabase.from('receipts').select('*').eq('user_id', session.user.id);
-      if (!receipts || receipts.length === 0) return alert('No receipts to export');
+      if (!receipts || receipts.length === 0) {
+        showNotification('No receipts to export', 'warning');
+        return;
+      }
       
       const headers = ['Date', 'Reference', 'Client', 'Email', 'Phone', 'Items', 'Total', 'Status'];
       const rows = receipts.map(r => [
@@ -779,13 +908,18 @@
       a.download = `receipts-${new Date().toISOString().split('T')[0]}.csv`;
       a.click();
       URL.revokeObjectURL(url);
+      
+      showNotification('CSV exported successfully!', 'success');
     };
 
     function generateMonthlyReport() {
-      alert('Monthly report feature coming soon!');
+      showNotification('Monthly report feature coming soon!', 'info');
     }
 
-    window.addEventListener('DOMContentLoaded', () => addItemRow());
+    // Initialize
+    window.addEventListener('DOMContentLoaded', () => {
+      addItemRow();
+    });
   </script>
 </body>
 </html>
