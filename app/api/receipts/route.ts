@@ -1,4 +1,4 @@
-// POST /api/receipts  -> creates a receipt and COPIES seller info onto it + enforces plan/quota
+// POST /api/receipts -> creates a receipt, enforces plan/quota, and snapshots seller info
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 
@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
 
-  // 1) read user's plan (expects a table or view named user_plans)
+  // 1) read user's plan (table or view named user_plans)
   const { data: planRow } = await sb
     .from("user_plans")
     .select("plan, subscription_status, current_period_end, receipt_limit")
@@ -22,11 +22,12 @@ export async function POST(req: NextRequest) {
   // sensible defaults if row missing
   const now = new Date();
   const plan = (planRow?.plan as "trial" | "starter" | "business") ?? "trial";
-  const status = (planRow?.subscription_status as "trialing" | "active" | "canceled" | "past_due" | string) ?? "trialing";
+  const status =
+    (planRow?.subscription_status as "trialing" | "active" | "canceled" | "past_due" | string) ?? "trialing";
   const currentPeriodEndISO =
-    planRow?.current_period_end ??
-    new Date(now.getTime() + 3 * 24 * 3600 * 1000).toISOString(); // trial 3 days
-  const receiptLimit = planRow?.receipt_limit ?? (plan === "trial" ? 10 : plan === "starter" ? 250 : null); // business=null (unlimited)
+    planRow?.current_period_end ?? new Date(now.getTime() + 3 * 24 * 3600 * 1000).toISOString(); // trial 3 days
+  const receiptLimit =
+    planRow?.receipt_limit ?? (plan === "trial" ? 10 : plan === "starter" ? 200 : null); // starter=200, business=null
 
   // 1a) trial window enforcement
   if (plan === "trial") {
@@ -54,20 +55,23 @@ export async function POST(req: NextRequest) {
       .from("receipts")
       .select("*", { count: "exact", head: true })
       .eq("user_id", uid);
+
     if (cErr) {
       return NextResponse.json({ error: "Cannot check quota." }, { status: 500 });
     }
+
     const used = count ?? 0;
     remaining = Math.max(0, receiptLimit - used);
+
     if (used >= receiptLimit) {
-      const label = plan === "trial" ? "Trial limit reached (10 receipts)." : "Starter plan limit reached (250).";
+      const label = plan === "trial" ? "Trial limit reached (10 receipts)." : "Starter plan limit reached (200).";
       return NextResponse.json(
         { error: `${label} Upgrade to Business for unlimited receipts.`, plan, status, remaining: 0 },
         { status: 402 }
       );
     }
   } else {
-    // business
+    // business: unlimited
     remaining = null;
   }
 
@@ -78,12 +82,14 @@ export async function POST(req: NextRequest) {
     .eq("user_id", uid)
     .single();
 
-  if (perr) return NextResponse.json({ error: "Business profile missing. Fill Settings first." }, { status: 400 });
+  if (perr) {
+    return NextResponse.json({ error: "Business profile missing. Fill Settings first." }, { status: 400 });
+  }
 
   // 3) insert receipt with **snapshot** of seller fields
   const payload = {
     user_id: uid,
-    reference_number: body.reference_number, // you can auto-generate if missing
+    reference_number: body.reference_number, // TODO: generate if you want when missing
     date: body.date ?? new Date().toISOString(),
     client_name: body.client_name ?? null,
     client_email: body.client_email ?? null,
