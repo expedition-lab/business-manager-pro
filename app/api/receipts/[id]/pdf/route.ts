@@ -18,7 +18,17 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   return new NextResponse(html, { headers: { "Content-Type": "text/html; charset=utf-8" } });
 }
 
-// ---------- helpers ----------
+/** ---------- helpers ---------- */
+
+// escape HTML entities in any user-provided text
+function esc(s?: string) {
+  return (s ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
 
 function fmt(n: unknown) {
   const num = typeof n === "number" ? n : Number(n ?? 0);
@@ -28,7 +38,12 @@ function fmt(n: unknown) {
 function asItems(raw: unknown): Array<{ description?: string; qty?: number; unit_price?: number }> {
   if (Array.isArray(raw)) return raw as any[];
   if (typeof raw === "string") {
-    try { const v = JSON.parse(raw); return Array.isArray(v) ? v : []; } catch { return []; }
+    try {
+      const v = JSON.parse(raw);
+      return Array.isArray(v) ? v : [];
+    } catch {
+      return [];
+    }
   }
   return [];
 }
@@ -39,7 +54,7 @@ function renderHTML(r: any) {
     brn: r.brn || "",
     // support either column name
     vat: r.vat_number || r.vat || "",
-    address: (r.business_address || "").replace(/\n/g, "<br>"),
+    addressHtml: esc(r.business_address || "").replace(/\n/g, "<br>"),
     email: r.business_email || "",
     phone: r.business_phone || "",
     logo: r.logo_url || "",
@@ -48,7 +63,7 @@ function renderHTML(r: any) {
   const items = asItems(r.items);
   const issued = r.date ? new Date(r.date) : new Date();
 
-  return `<!doctype html><html><head><meta charset="utf-8"><title>Receipt ${r.reference_number||r.id}</title>
+  return `<!doctype html><html><head><meta charset="utf-8"><title>Receipt ${esc(r.reference_number||r.id)}</title>
 <style>
 :root{--fg:#0f172a;--muted:#64748b;--line:#e2e8f0}
 *{box-sizing:border-box}body{margin:0;font:14px/1.5 ui-sans-serif,system-ui;color:var(--fg)}
@@ -65,29 +80,29 @@ img.logo{height:56px;object-fit:contain}
 
 <div class="row header">
   <div class="col">
-    ${issuer.logo ? `<img class="logo" src="${issuer.logo}" alt="logo">` : ""}
-    <h1 style="margin:6px 0 0">RECEIPT</h1>
-    <div class="muted">Receipt #: <span class="title">${r.reference_number || r.id}</span></div>
-    <div class="muted">Date: <span class="title">${issued.toLocaleDateString()}</span></div>
+    ${issuer.logo ? `<img class="logo" src="${esc(issuer.logo)}" alt="logo">` : ""}
+    <h1 style="margin:6px 0 0">RECEIPT v2</h1>
+    <div class="muted">Receipt #: <span class="title">${esc(r.reference_number || r.id)}</span></div>
+    <div class="muted">Date: <span class="title">${esc(issued.toLocaleDateString())}</span></div>
   </div>
   <div class="col" style="text-align:right">
-    <div class="title" style="font-size:16px">${issuer.name}</div>
-    <div>${issuer.address}</div>
-    <div>${issuer.email}${issuer.phone ? " · " + issuer.phone : ""}</div>
-    <div>${issuer.brn ? "BRN: " + issuer.brn : ""}${issuer.vat ? (issuer.brn ? " · " : "") + "VAT: " + issuer.vat : ""}</div>
+    <div class="title" style="font-size:16px">${esc(issuer.name)}</div>
+    <div>${issuer.addressHtml}</div>
+    <div>${esc(issuer.email)}${issuer.phone ? " · " + esc(issuer.phone) : ""}</div>
+    <div>${issuer.brn ? "BRN: " + esc(issuer.brn) : ""}${issuer.vat ? (issuer.brn ? " · " : "") + "VAT: " + esc(issuer.vat) : ""}</div>
   </div>
 </div>
 
 <div class="row" style="margin-top:16px">
   <div class="col card">
     <div class="title" style="margin-bottom:8px">Bill to</div>
-    <div>${r.client_name || "-"}</div>
-    <div class="muted">${r.client_email || ""}${r.client_phone ? " · " + r.client_phone : ""}</div>
+    <div>${esc(r.client_name || "-")}</div>
+    <div class="muted">${esc(r.client_email || "")}${r.client_phone ? " · " + esc(r.client_phone) : ""}</div>
   </div>
   <div class="col card">
     <div class="title" style="margin-bottom:8px">Payment</div>
     <div class="muted">Currency</div><div>Rs (MUR)</div>
-    <div class="muted">Status</div><div>${r.payment_status || "PAID"}</div>
+    <div class="muted">Status</div><div>${esc(r.payment_status || "PAID")}</div>
   </div>
 </div>
 
@@ -97,8 +112,8 @@ img.logo{height:56px;object-fit:contain}
     <tbody>
       ${items.map((it:any)=>`
         <tr>
-          <td>${(it.description||"").replace(/[<>]/g,"")}</td>
-          <td class="right">${it.qty ?? 1}</td>
+          <td>${esc(it.description||"")}</td>
+          <td class="right">${esc(String(it.qty ?? 1))}</td>
           <td class="right">${fmt(it.unit_price)}</td>
           <td class="right">${fmt((it.qty ?? 1)*(it.unit_price ?? 0))}</td>
         </tr>`).join("")}
