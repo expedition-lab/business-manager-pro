@@ -189,7 +189,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
   }
 });
 
-/* ===== Signup with feedback and profile creation ===== */
+/* ===== Signup - trigger creates profile automatically ===== */
 document.getElementById("signupForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const email = document.getElementById("signupEmail").value.trim();
@@ -205,7 +205,7 @@ document.getElementById("signupForm").addEventListener("submit", async (e) => {
   err.textContent = ""; setStatus(""); loading(btn, true);
 
   try {
-    // Step 1: Create auth user FIRST
+    // Step 1: Create auth user (trigger will create basic profile automatically)
     const { data: { user }, error: signUpError } = await sb.auth.signUp({ 
       email, 
       password 
@@ -221,32 +221,35 @@ document.getElementById("signupForm").addEventListener("submit", async (e) => {
       return;
     }
 
-    // Step 2: Create business profile with the user ID
-    const { error: profileError } = await sb.from('business_profiles').insert({
-      user_id: user.id,
-      email: email,
-      full_name: `${firstName} ${lastName}`,
-      business_name: brn,
-      brn: brn,
-      phone: phone,
-      address: address
-    });
+    // Step 2: Wait a moment for trigger to complete
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
-    if (profileError) {
-      console.error('Profile creation error:', profileError);
-      err.textContent = "Account created but profile setup failed. Please contact support.";
-      return;
+    // Step 3: Update profile with additional details
+    const { error: updateError } = await sb
+      .from('business_profiles')
+      .update({
+        full_name: `${firstName} ${lastName}`,
+        business_name: brn,
+        brn: brn,
+        phone: phone,
+        address: address
+      })
+      .eq('user_id', user.id);
+
+    if (updateError) {
+      console.error('Profile update error:', updateError);
+      // Don't fail signup if update fails - they can update later
     }
 
-    setStatus("Account created successfully! Check your inbox to confirm.", "ok");
+    setStatus("Account created successfully! Redirecting...", "ok");
     
-    // Optional: Auto-redirect after 2 seconds
+    // Redirect after 1.5 seconds
     setTimeout(() => {
       location.href = "/app/";
-    }, 2000);
+    }, 1500);
     
   } catch (ex) {
-    console.error(ex);
+    console.error('Signup error:', ex);
     err.textContent = ex.message || "Signup failed. Please try again.";
   } finally {
     loading(btn, false);
