@@ -189,7 +189,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
   }
 });
 
-/* ===== Signup - trigger creates profile automatically ===== */
+/* ===== Signup with trigger-compatible metadata ===== */
 document.getElementById("signupForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const email = document.getElementById("signupEmail").value.trim();
@@ -205,10 +205,19 @@ document.getElementById("signupForm").addEventListener("submit", async (e) => {
   err.textContent = ""; setStatus(""); loading(btn, true);
 
   try {
-    // Step 1: Create auth user (trigger will create basic profile automatically)
+    // Create auth user with metadata for the trigger
     const { data: { user }, error: signUpError } = await sb.auth.signUp({ 
       email, 
-      password 
+      password,
+      options: {
+        data: {
+          full_name: `${firstName} ${lastName}`,
+          business_name: brn,
+          brn: brn,
+          phone: phone,
+          address: address
+        }
+      }
     });
     
     if (signUpError) { 
@@ -221,29 +230,10 @@ document.getElementById("signupForm").addEventListener("submit", async (e) => {
       return;
     }
 
-    // Step 2: Wait a moment for trigger to complete
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // Step 3: Update profile with additional details
-    const { error: updateError } = await sb
-      .from('business_profiles')
-      .update({
-        full_name: `${firstName} ${lastName}`,
-        business_name: brn,
-        brn: brn,
-        phone: phone,
-        address: address
-      })
-      .eq('user_id', user.id);
-
-    if (updateError) {
-      console.error('Profile update error:', updateError);
-      // Don't fail signup if update fails - they can update later
-    }
-
+    // Success message
     setStatus("Account created successfully! Redirecting...", "ok");
     
-    // Redirect after 1.5 seconds
+    // Redirect to dashboard
     setTimeout(() => {
       location.href = "/app/";
     }, 1500);
