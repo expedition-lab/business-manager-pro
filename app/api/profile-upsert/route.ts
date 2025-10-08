@@ -37,25 +37,52 @@ function isHttpUrl(v: string | null) {
   }
 }
 
+function noStore(json: any, init?: number | ResponseInit) {
+  const res = NextResponse.json(json, init);
+  res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+  return res;
+}
+
+/** ---------- GET: fetch current user's profile ---------- */
+export async function GET() {
+  const sb = createClient();
+  const { data: gu } = await sb.auth.getUser();
+  const user = gu?.user;
+  if (!user) return noStore({ error: "Not authenticated" }, { status: 401 });
+
+  const { data, error } = await sb
+    .from("business_profiles")
+    .select("*")
+    .eq("user_id", user.id)
+    .single();
+
+  if (error && error.code !== "PGRST116") {
+    // PGRST116 = no rows; treat as not found
+    return noStore({ error: "Could not load profile" }, { status: 400 });
+  }
+  if (!data) return noStore({ profile: null });
+
+  return noStore({ profile: data });
+}
+
+/** ---------- POST: create/update the profile (RLS-safe) ---------- */
 export async function POST(req: NextRequest) {
   const sb = createClient();
 
-  // 0) must be signed in (RLS depends on JWT)
+  // must be signed in (RLS depends on JWT)
   const { data: gu } = await sb.auth.getUser();
   const user = gu?.user;
-  if (!user) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-  }
+  if (!user) return noStore({ error: "Not authenticated" }, { status: 401 });
 
-  // 1) parse JSON safely
+  // parse JSON safely
   let body: any = null;
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return noStore({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  // 2) normalize & basic validation (keep it light—no external deps)
+  // normalize & validate
   const email = clip(sOrNull(body.email) ?? user.email ?? null, MAX.email);
   const full_name = clip(sOrNull(body.full_name), MAX.name);
   const business_name = clip(sOrNull(body.business_name), MAX.name);
@@ -65,49 +92,52 @@ export async function POST(req: NextRequest) {
   const address = clip(sOrNull(body.address), MAX.address);
   const logo_url = clip(sOrNull(body.logo_url), MAX.url);
 
-  if (!isEmail(email)) {
-    return NextResponse.json({ error: "Please enter a valid email address." }, { status: 400 });
-  }
-  if (logo_url && !isHttpUrl(logo_url)) {
-    return NextResponse.json({ error: "Logo URL must be http(s)." }, { status: 400 });
-  }
+  if (!isEmail(email)) return noStore({ error: "Please enter a valid email address." }, { status: 400 });
+  if (logo_url && !isHttpUrl(logo_url)) return noStore({ error: "Logo URL must be http(s)." }, { status: 400 });
 
-  // 3) build RLS-safe payload (⚠️ never send user_id)
-  const payload = {
-    email,
-    full_name,
-    business_name,
-    brn,
-    vat,
-    phone,
-    address,
-    logo_url,
-  };
+  const payload = { email, full_name, business_name, brn, vat, phone, address, logo_url };
 
-  // 4) upsert idempotently; one row per user via onConflict(user_id)
-  //    DB should have: user_id DEFAULT auth.uid(), UNIQUE(user_id)
   try {
+    // check if a row already exists (to choose 201 vs 200 and avoid no-op writes)
+    const { data: existing } = await sb
+      .from("business_profiles")
+      .select("email, full_name, business_name, brn, vat, phone, address, logo_url")
+      .eq("user_id", user.id)
+      .single();
+
+    const isNoop =
+      existing &&
+      existing.email === payload.email &&
+      existing.full_name === payload.full_name &&
+      existing.business_name === payload.business_name &&
+      existing.brn === payload.brn &&
+      existing.vat === payload.vat &&
+      existing.phone === payload.phone &&
+      existing.address === payload.address &&
+      existing.logo_url === payload.logo_url;
+
+    if (isNoop) return noStore({ profile: existing, unchanged: true }, { status: 200 });
+
     const { data, error } = await sb
       .from("business_profiles")
-      .upsert(payload, { onConflict: "user_id" })
+      .upsert(payload, { onConflict: "user_id" }) // user_id DEFAULT auth.uid()
       .select()
       .single();
 
     if (error) {
-      // Surface friendly messages (hide raw SQL)
-      // Handle common cases explicitly
       const msg =
         error.code === "42501"
           ? "You don't have permission to update this profile."
           : error.code === "23505"
           ? "You already have a profile. Try reloading."
           : "Could not save profile. Please try again.";
-      return NextResponse.json({ error: msg }, { status: 400 });
+      return noStore({ error: msg }, { status: 400 });
     }
 
-    return NextResponse.json({ profile: data });
-  } catch (e) {
-    // Network/client exception (rare)
-    return NextResponse.json({ error: "Unexpected error. Please retry." }, { status: 500 });
+    // return 201 on first create, 200 on update
+    const status = existing ? 200 : 201;
+    return noStore({ profile: data }, { status });
+  } catch {
+    return noStore({ error: "Unexpected error. Please retry." }, { status: 500 });
   }
 }
