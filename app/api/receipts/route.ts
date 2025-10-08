@@ -75,10 +75,10 @@ export async function POST(req: NextRequest) {
     remaining = null;
   }
 
-  // 2) load the user's business profile to snapshot seller fields
+  // 2) load the user's business profile to snapshot seller fields - FIXED TO MATCH YOUR TABLE
   const { data: bp, error: perr } = await sb
     .from("business_profiles")
-    .select("business_name, brn, vat, address, phone, email, logo_url, id")
+    .select("full_name, business_name, brn, address, phone, email")
     .eq("user_id", uid)
     .single();
 
@@ -100,14 +100,14 @@ export async function POST(req: NextRequest) {
     total: Number(body.total ?? 0),
     payment_status: body.payment_status ?? "PAID",
 
-    // snapshot fields (match your receipts columns)
-    business_name: bp?.business_name ?? null,
+    // snapshot fields - FIXED TO USE YOUR ACTUAL COLUMNS
+    business_name: bp?.business_name || bp?.full_name || null,
     brn: bp?.brn ?? null,
-    vat_number: bp?.vat ?? null,
+    vat_number: null, // Add this column to business_profiles if needed
     business_address: bp?.address ?? null,
     business_phone: bp?.phone ?? null,
     business_email: bp?.email ?? null,
-    logo_url: bp?.logo_url ?? null,
+    logo_url: null, // Add this column to business_profiles if needed
   };
 
   const { data, error } = await sb.from("receipts").insert(payload).select().single();
