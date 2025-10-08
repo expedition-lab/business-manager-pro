@@ -40,6 +40,11 @@
     <form id="signupForm" class="grid hidden" style="gap:12px;">
       <label>Email <input id="signupEmail" type="email" required autocomplete="username" /></label>
       <label>Password <input id="signupPwd" type="password" required autocomplete="new-password" minlength="6"/></label>
+      <label>First Name <input id="signupFirstName" type="text" required /></label>
+      <label>Last Name <input id="signupLastName" type="text" required /></label>
+      <label>BRN (Business Registration Number) <input id="signupBRN" type="text" required /></label>
+      <label>Phone <input id="signupPhone" type="tel" required /></label>
+      <label>Address <input id="signupAddress" type="text" required /></label>
       <button type="submit" id="signupBtn">Create account</button>
       <small id="signupErr" class="err"></small>
       <small class="muted">You may receive a confirmation email.</small>
@@ -60,7 +65,7 @@
     <form id="forgotForm" class="grid" style="gap:12px;">
       <label>Email <input id="forgotEmail" type="email" required /></label>
       <button type="submit" id="forgotBtn">Send reset link</button>
-      <small class="muted">We’ll email you a link. After clicking, you’ll come back here to set a new password.</small>
+      <small class="muted">We'll email you a link. After clicking, you'll come back here to set a new password.</small>
       <small id="forgotErr" class="err"></small>
       <small id="forgotOk" class="ok"></small>
     </form>
@@ -88,7 +93,7 @@ const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
 
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
-    persistSession: true,         // keep users signed in
+    persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true
   }
@@ -110,20 +115,18 @@ async function handleHashTokensIfAny() {
   const hash = new URLSearchParams(location.hash.slice(1));
   const access_token  = hash.get("access_token");
   const refresh_token = hash.get("refresh_token");
-  const type          = hash.get("type"); // optional: "recovery"
+  const type          = hash.get("type");
   if (!access_token || !refresh_token) return;
 
   const { error } = await sb.auth.setSession({ access_token, refresh_token });
   if (error) { setStatus(error.message || "Invalid or expired link.", "err"); return; }
 
-  // Clean hash to avoid re-running on refresh
   history.replaceState(null, "", location.pathname + location.search);
 
   if (type === "recovery") {
     setStatus("Link verified. Set a new password below.");
     hide(authCard); hide(forgotCard); show(resetCard);
   } else {
-    // Magic link / confirmation
     location.href = "/app/";
   }
 }
@@ -132,7 +135,7 @@ async function handleHashTokensIfAny() {
 async function handleEmailLinksIfAny() {
   const url = new URL(window.location.href);
   const code = url.searchParams.get("code");
-  const type = url.searchParams.get("type"); // 'recovery' for reset
+  const type = url.searchParams.get("type");
   if (!code) return;
 
   try {
@@ -145,7 +148,7 @@ async function handleEmailLinksIfAny() {
       hide(authCard); hide(forgotCard); show(resetCard);
     } else {
       setStatus("Signed in. Redirecting…");
-      location.href = "/app/"; // already logged in by magic link
+      location.href = "/app/";
     }
   } catch (err) {
     console.error(err);
@@ -178,7 +181,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
   try {
     const { error } = await sb.auth.signInWithPassword({ email, password });
     if (error) { err.textContent = error.message || "Invalid email or password."; return; }
-    location.href = "/app/"; // success
+    location.href = "/app/";
   } catch (ex) {
     err.textContent = ex.message || "Login failed.";
   } finally {
@@ -186,21 +189,65 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
   }
 });
 
-/* ===== Signup with feedback ===== */
+/* ===== Signup with feedback and profile creation ===== */
 document.getElementById("signupForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const email = document.getElementById("signupEmail").value.trim();
   const password = document.getElementById("signupPwd").value;
+  const firstName = document.getElementById("signupFirstName").value.trim();
+  const lastName = document.getElementById("signupLastName").value.trim();
+  const brn = document.getElementById("signupBRN").value.trim();
+  const phone = document.getElementById("signupPhone").value.trim();
+  const address = document.getElementById("signupAddress").value.trim();
+  
   const btn = document.getElementById("signupBtn");
   const err = document.getElementById("signupErr");
   err.textContent = ""; setStatus(""); loading(btn, true);
 
   try {
-    const { error } = await sb.auth.signUp({ email, password });
-    if (error) { err.textContent = error.message; return; }
-    setStatus("Check your inbox to confirm (if confirmations are enabled).", "ok");
+    // Step 1: Create auth user FIRST
+    const { data: { user }, error: signUpError } = await sb.auth.signUp({ 
+      email, 
+      password 
+    });
+    
+    if (signUpError) { 
+      err.textContent = signUpError.message; 
+      return; 
+    }
+
+    if (!user || !user.id) {
+      err.textContent = "Signup failed. Please try again.";
+      return;
+    }
+
+    // Step 2: Create business profile with the user ID
+    const { error: profileError } = await sb.from('business_profiles').insert({
+      user_id: user.id,
+      email: email,
+      full_name: `${firstName} ${lastName}`,
+      business_name: brn,
+      brn: brn,
+      phone: phone,
+      address: address
+    });
+
+    if (profileError) {
+      console.error('Profile creation error:', profileError);
+      err.textContent = "Account created but profile setup failed. Please contact support.";
+      return;
+    }
+
+    setStatus("Account created successfully! Check your inbox to confirm.", "ok");
+    
+    // Optional: Auto-redirect after 2 seconds
+    setTimeout(() => {
+      location.href = "/app/";
+    }, 2000);
+    
   } catch (ex) {
-    err.textContent = ex.message || "Signup failed.";
+    console.error(ex);
+    err.textContent = ex.message || "Signup failed. Please try again.";
   } finally {
     loading(btn, false);
   }
@@ -215,7 +262,6 @@ document.getElementById("magicForm").addEventListener("submit", async (e) => {
   msg.textContent = ""; loading(btn, true);
 
   try {
-    // Works for both auth.html and hash routes
     const redirectTo = `${location.origin}/app/auth.html`;
     const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo } });
     if (error) throw error;
@@ -276,8 +322,8 @@ document.getElementById("resetForm").addEventListener("submit", async (e) => {
 
 /* ===== Boot: handle BOTH link styles ===== */
 document.addEventListener("DOMContentLoaded", async () => {
-  await handleHashTokensIfAny();   // handles #access_token=...
-  await handleEmailLinksIfAny();   // handles ?code=...
+  await handleHashTokensIfAny();
+  await handleEmailLinksIfAny();
 });
 </script>
 </body>
