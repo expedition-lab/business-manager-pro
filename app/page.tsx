@@ -1,4 +1,5 @@
 // app/page.tsx
+import Link from "next/link";
 import PricingButtons from "@/components/PricingButtons";
 
 export default function Home() {
@@ -13,14 +14,29 @@ export default function Home() {
 
       <section style={{ marginBottom: 28 }}>
         <h2 style={{ fontSize: 20, marginBottom: 12 }}>Quick links</h2>
-        <ul style={{ display: "grid", gap: 8, gridTemplateColumns: "repeat(3, minmax(0,1fr))" }}>
-          <li><a href="/auth">Auth</a></li>
-          <li><a href="/settings">Settings</a></li>
-          <li><a href="/offline">Offline</a></li>
+        <ul
+          style={{
+            display: "grid",
+            gap: 8,
+            gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+            listStyle: "none",
+            padding: 0,
+            margin: 0,
+          }}
+        >
+          <li>
+            <Link href="/auth">Auth</Link>
+          </li>
+          <li>
+            <Link href="/settings">Settings</Link>
+          </li>
+          <li>
+            <Link href="/offline">Offline</Link>
+          </li>
         </ul>
       </section>
 
-      <section style={{ marginTop: 12 }}>
+      <section id="pricing" style={{ marginTop: 12 }}>
         <h2 style={{ fontSize: 22, marginBottom: 12 }}>Choose your plan</h2>
 
         <div
@@ -54,7 +70,7 @@ export default function Home() {
             </p>
             <ul style={{ margin: 0, paddingLeft: 18, color: "#334155" }}>
               <li>All Starter features</li>
-              <li>Team seats & logo upload</li>
+              <li>Team seats &amp; logo upload</li>
               <li>Priority support</li>
             </ul>
             <div style={{ marginTop: 14 }}>
@@ -62,7 +78,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Pro */}
+          {/* Professional */}
           <div style={{ border: "1px solid #e2e8f0", borderRadius: 12, padding: 16 }}>
             <h3 style={{ marginTop: 0, marginBottom: 8 }}>Professional</h3>
             <p style={{ margin: "6px 0 12px", color: "#475569" }}>
@@ -70,7 +86,7 @@ export default function Home() {
             </p>
             <ul style={{ margin: 0, paddingLeft: 18, color: "#334155" }}>
               <li>All Business features</li>
-              <li>API access & webhooks</li>
+              <li>API access &amp; webhooks</li>
               <li>Dedicated support</li>
             </ul>
             <div style={{ marginTop: 14 }}>
@@ -81,7 +97,7 @@ export default function Home() {
       </section>
 
       <footer style={{ marginTop: 28, fontSize: 12, color: "#64748b" }}>
-        <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a>
+        <Link href="/privacy.html">Privacy</Link> · <Link href="/terms.html">Terms</Link>
       </footer>
     </main>
   );
