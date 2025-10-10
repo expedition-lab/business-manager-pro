@@ -2,6 +2,7 @@
 import "./globals.css";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import ClearSW from "./_components/ClearSW"; // ← add this
 
 export const metadata = {
   title: "Business Manager Pro",
@@ -30,8 +31,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <Link href="/features">Features</Link>
             <Link href="/pricing">Pricing</Link>
             <Link href="/try-demo">Try Demo</Link>
-
-            {/* Real auth links (replaces any old modal buttons) */}
             <Link href="/auth" className="btn-ghost">Sign In</Link>
             <Link href="/auth?mode=signup" className="btn-primary">Sign Up Free</Link>
           </nav>
@@ -39,6 +38,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 
         {/* Page content */}
         <main>{children}</main>
+
+        {/* TEMP: clear old SW + caches causing stale HTML/JS */}
+        <ClearSW />   {/* ← keep for one deploy; remove after confirming */}
       </body>
     </html>
   );
