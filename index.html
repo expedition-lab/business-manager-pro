@@ -6,136 +6,123 @@
 <title>Business Manager Pro – Smart E-Receipts for Modern Businesses</title>
 <meta name="description" content="Create and send professional e-receipts in seconds. Track revenue, export to Excel. 3-day free trial. Starting at Rs 599/month. Trusted by 800+ Mauritian businesses."/>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
-
-<!-- QR code (already used by the demo) -->
+<!-- QR -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-<!-- ✅ Supabase Auth SDK -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <style>
-/* …………… your CSS unchanged …………… */
-:root{
-  --ink:#0f172a; --muted:#475569; --light-muted:#94a3b8; --line:#e5e7eb; --bg:#f8fafc;
-  --primary:#2563eb; --primary-dark:#1e40af; --dark:#0b1324; --success:#10b981; --warning:#f59e0b;
-}
-* { box-sizing:border-box; margin:0; padding:0; }
-html,body { background:var(--bg); color:var(--ink); font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif; line-height:1.6; scroll-behavior:smooth; }
-.wrap { max-width:1200px; margin:0 auto; padding:20px; }
-.btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:14px 24px; border-radius:10px; border:1px solid rgba(15,23,42,0.1); background:#fff; cursor:pointer; text-decoration:none; color:var(--ink); font-weight:600; font-size:15px; transition:all 0.2s ease; white-space:nowrap; }
-.btn:hover { transform:translateY(-2px); box-shadow:0 10px 25px rgba(0,0,0,0.1); }
-.btn.primary { background:linear-gradient(135deg,#2563eb,#1e40af); color:#fff; border:none; box-shadow:0 10px 30px rgba(37,99,235,.3); }
-.btn.primary:hover { box-shadow:0 15px 40px rgba(37,99,235,.4); }
-.btn.ghost { background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); color:#fff; backdrop-filter:blur(10px); }
-.btn.secondary { background:#f1f5f9; border-color:#e2e8f0; }
-.badge { display:inline-flex; gap:8px; align-items:center; border:1px solid rgba(255,255,255,0.35); border-radius:999px; padding:6px 14px; color:#e0ecff; background:rgba(255,255,255,0.15); font-weight:700; font-size:13px; backdrop-filter:blur(10px); }
-.pulse-dot { width:8px; height:8px; background:#86efac; border-radius:999px; display:inline-block; animation:pulse 2s infinite; }
-@keyframes pulse { 0%, 100% { opacity:1; transform:scale(1); } 50% { opacity:0.6; transform:scale(0.95); } }
-.hero { background:linear-gradient(135deg,#0b1324 0%,#1e3a8a 45%,#3b82f6 100%); color:#fff; position:relative; overflow:hidden; }
-.hero::before { content:''; position:absolute; inset:0; background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); opacity:0.4; }
-.hero .wrap { position:relative; z-index:1; display:grid; grid-template-columns:1.1fr 0.9fr; gap:40px; align-items:center; padding-top:60px; padding-bottom:60px; }
-.card { background:#fff; border:1px solid #e5e7eb; border-radius:16px; padding:24px; box-shadow:0 4px 20px rgba(2,6,23,.06); transition:all 0.3s ease; }
-.card:hover { box-shadow:0 8px 30px rgba(2,6,23,.12); transform:translateY(-2px); }
-.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
-.grid3 { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
-.grid4 { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; }
-.nav { position:sticky; top:0; background:rgba(11,19,36,0.95); color:#e2e8f0; border-bottom:1px solid rgba(15,23,42,0.4); z-index:100; backdrop-filter:blur(10px); }
-.nav .wrap { display:flex; align-items:center; gap:24px; padding:16px 20px; }
-.nav a { color:#e2e8f0; text-decoration:none; font-size:14px; font-weight:500; opacity:0.9; transition:opacity 0.2s; }
-.nav a:hover { opacity:1; }
-.brand { display:flex; align-items:center; gap:10px; font-weight:800; font-size:16px; text-decoration:none; color:#e2e8f0; }
-.brand-logo { width:36px; height:36px; background:#2563eb; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:20px; color:#fff; font-weight:800; }
-.trust { display:flex; gap:12px; flex-wrap:wrap; margin-top:20px; }
-.trust .pill { border:1px solid rgba(255,255,255,0.3); background:rgba(255,255,255,0.12); color:#e6f2ff; border-radius:9999px; padding:8px 14px; font-size:13px; font-weight:500; backdrop-filter:blur(10px); }
-.kpi { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:24px; }
-.kpi .glass { backdrop-filter:blur(10px); background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.25); border-radius:14px; padding:16px; text-align:center; transition:all 0.3s ease; }
-.kpi .glass:hover { background:rgba(255,255,255,0.2); transform:scale(1.05); }
-.kpi .glass div { font-weight:800; font-size:24px; margin-bottom:4px; }
-.kpi .glass small { font-size:12px; opacity:0.9; }
-.receipt-preview { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:24px; box-shadow:0 10px 40px rgba(0,0,0,0.1); }
-.receipt-header { display:flex; justify-content:space-between; align-items:flex-start; padding-bottom:16px; border-bottom:2px solid #e5e7eb; }
-.logo-placeholder { font-weight:800; font-size:18px; color:#2563eb; }
-.receipt-status { background:#dcfce7; color:#166534; padding:6px 14px; border-radius:999px; font-size:12px; font-weight:700; border:1px solid #86efac; }
-.receipt-body { padding:20px 0; }
-.receipt-row { display:flex; justify-content:space-between; padding:8px 0; font-size:14px; }
-.receipt-row.bold { font-weight:700; font-size:16px; padding-top:12px; border-top:1px solid #e5e7eb; }
-section { padding:60px 0; }
-section h2 { font-size:clamp(28px,4vw,40px); margin-bottom:12px; color:var(--ink); font-weight:800; }
-section h3 { font-size:20px; margin-bottom:12px; color:var(--ink); font-weight:700; }
-.pricing-card { position:relative; }
-.pricing-card.featured { border:2px solid #2563eb; box-shadow:0 15px 50px rgba(37,99,235,0.2); transform:scale(1.05); }
-.pricing-card.best-value { border:2px solid #10b981; box-shadow:0 15px 50px rgba(16,185,129,0.2); }
-.pricing-card .price { font-size:36px; font-weight:800; color:var(--ink); margin:16px 0; }
-.pricing-card .price-note { font-size:14px; color:var(--muted); font-weight:400; margin-top:4px; }
-.pricing-card ul { list-style:none; margin:20px 0; }
-.pricing-card ul li { padding:10px 0; padding-left:24px; position:relative; font-size:14px; }
-.pricing-card ul li::before { content:'✓'; position:absolute; left:0; color:#10b981; font-weight:700; }
-.testimonial { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:24px; position:relative; }
-.testimonial::before { content:'"'; font-size:60px; color:#e5e7eb; position:absolute; top:10px; left:20px; font-family:Georgia,serif; }
-.testimonial-text { position:relative; z-index:1; font-style:italic; color:#475569; margin-bottom:16px; }
-.testimonial-author { display:flex; align-items:center; gap:12px; margin-top:16px; }
-.testimonial-avatar { width:48px; height:48px; border-radius:999px; background:linear-gradient(135deg,#3b82f6,#2563eb); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:18px; }
-.testimonial-info { flex:1; }
-.testimonial-name { font-weight:700; color:var(--ink); }
-.testimonial-role { font-size:14px; color:var(--muted); }
-.faq { background:#fff; border:1px solid #e5e7eb; border-radius:12px; margin-bottom:12px; overflow:hidden; }
-.faq-question { padding:20px 24px; cursor:pointer; font-weight:600; display:flex; justify-content:space-between; align-items:center; background:#fff; transition:background 0.2s; }
-.faq-question:hover { background:#f8fafc; }
-.faq-answer { padding:0 24px; max-height:0; overflow:hidden; transition:all 0.3s ease; color:var(--muted); }
-.faq-answer.open { padding:0 24px 20px 24px; max-height:500px; }
-.faq-icon { transition:transform 0.3s; }
-.faq-icon.open { transform:rotate(180deg); }
-.comparison-table { background:#fff; border-radius:12px; overflow:hidden; border:1px solid #e5e7eb; }
-.comparison-table table { width:100%; border-collapse:collapse; }
-.comparison-table th { background:#f8fafc; padding:16px; text-align:left; font-weight:700; border-bottom:2px solid #e5e7eb; }
-.comparison-table td { padding:16px; border-bottom:1px solid #f1f5f9; }
-.comparison-table tr:last-child td { border-bottom:none; }
-.check { color:#10b981; font-weight:700; }
-.cross { color:#ef4444; font-weight:700; }
-footer { border-top:1px solid var(--line); background:#fff; padding:40px 0; }
-footer .wrap { font-size:14px; color:#64748b; }
-.cta-section { background:linear-gradient(135deg,#1e3a8a,#2563eb); color:#fff; text-align:center; padding:60px 20px; border-radius:20px; margin:40px 0; }
-.modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:1000; align-items:center; justify-content:center; padding:20px; }
-.modal.active { display:flex; }
-.modal-content { background:#fff; border-radius:20px; max-width:500px; width:100%; padding:40px; position:relative; max-height:90vh; overflow-y:auto; }
-@media(max-width:1100px){ .modal-content{ max-width:95% } .modal-content form > div[style*="grid-template-columns"]{ grid-template-columns:1fr !important } }
-.modal-close { position:absolute; top:20px; right:20px; background:none; border:none; font-size:32px; cursor:pointer; color:#64748b; line-height:1; padding:0; width:32px; height:32px; }
-.modal-close:hover { color:var(--ink); }
-.form-group { margin-bottom:20px; }
-.form-label { display:block; font-size:14px; font-weight:600; color:var(--ink); margin-bottom:8px; }
-.form-input,.form-select { width:100%; padding:12px 16px; border:1px solid #e5e7eb; border-radius:10px; font-size:15px; transition:all 0.2s; }
-.form-input:focus,.form-select:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(37,99,235,0.1); }
-textarea.form-input { font-family:inherit; }
-.divider { display:flex; align-items:center; gap:12px; margin:24px 0; color:#64748b; font-size:14px; }
-.divider::before,.divider::after { content:''; flex:1; height:1px; background:#e5e7eb; }
-.generator-container { display:grid; grid-template-columns:1fr 1.3fr; gap:24px; margin-top:40px; }
-.receipt-container { background:#fff; border:1px solid #e5e7eb; border-radius:16px; padding:40px; box-shadow:0 8px 30px rgba(3,7,18,0.08); position:sticky; top:90px; }
-.info-box { background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:16px; margin-top:20px; }
-.info-box h3 { font-size:14px; font-weight:700; color:#1e40af; margin-bottom:8px; }
-.info-box ul { list-style:none; padding:0; margin:0; }
-.info-box li { font-size:13px; color:#1e40af; padding:4px 0; padding-left:20px; position:relative; }
-.info-box li::before { content:"✓"; position:absolute; left:0; color:#2563eb; font-weight:700; }
-.disclaimer { background:#fef3c7; border:1px solid #fde047; border-radius:12px; padding:16px; margin-top:20px; }
-.disclaimer strong { color:#92400e; font-size:14px; }
-.disclaimer p { color:#78350f; font-size:13px; margin-top:4px; line-height:1.5; }
-@media(max-width:1200px){ .grid4{ grid-template-columns:repeat(2,1fr) } }
-@media(max-width:1024px){ .generator-container{ grid-template-columns:1fr } .receipt-container{ position:static } }
-@media(max-width:960px){ .hero .wrap{ grid-template-columns:1fr; gap:30px } .grid2,.grid3{ grid-template-columns:1fr } }
-@media(max-width:768px){ .nav .wrap{ flex-wrap:wrap; gap:12px } .hero .wrap{ padding-top:40px; padding-bottom:40px } .kpi{ grid-template-columns:1fr } section{ padding:40px 0 } .grid4{ grid-template-columns:1fr } }
-@media print { body * { visibility:hidden } #printable, #printable * { visibility:visible } #printable { position:absolute; left:0; top:0; width:100% } }
+/* ===== styles unchanged (your CSS) ===== */
+:root{--ink:#0f172a;--muted:#475569;--light-muted:#94a3b8;--line:#e5e7eb;--bg:#f8fafc;--primary:#2563eb;--primary-dark:#1e40af;--dark:#0b1324;--success:#10b981;--warning:#f59e0b}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;line-height:1.6;scroll-behavior:smooth}
+.wrap{max-width:1200px;margin:0 auto;padding:20px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 24px;border-radius:10px;border:1px solid rgba(15,23,42,0.1);background:#fff;cursor:pointer;text-decoration:none;color:var(--ink);font-weight:600;font-size:15px;transition:all .2s ease;white-space:nowrap}
+.btn:hover{transform:translateY(-2px);box-shadow:0 10px 25px rgba(0,0,0,.1)}
+.btn.primary{background:linear-gradient(135deg,#2563eb,#1e40af);color:#fff;border:none;box-shadow:0 10px 30px rgba(37,99,235,.3)}
+.btn.primary:hover{box-shadow:0 15px 40px rgba(37,99,235,.4)}
+.btn.ghost{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;backdrop-filter:blur(10px)}
+.btn.secondary{background:#f1f5f9;border-color:#e2e8f0}
+.badge{display:inline-flex;gap:8px;align-items:center;border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:6px 14px;color:#e0ecff;background:rgba(255,255,255,.15);font-weight:700;font-size:13px;backdrop-filter:blur(10px)}
+.pulse-dot{width:8px;height:8px;background:#86efac;border-radius:999px;display:inline-block;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.95)}}
+.hero{background:linear-gradient(135deg,#0b1324 0%,#1e3a8a 45%,#3b82f6 100%);color:#fff;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");opacity:.4}
+.hero .wrap{position:relative;z-index:1;display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center;padding:60px 20px}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:24px;box-shadow:0 4px 20px rgba(2,6,23,.06);transition:all .3s ease}
+.card:hover{box-shadow:0 8px 30px rgba(2,6,23,.12);transform:translateY(-2px)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.nav{position:sticky;top:0;background:rgba(11,19,36,.95);color:#e2e8f0;border-bottom:1px solid rgba(15,23,42,.4);z-index:100;backdrop-filter:blur(10px)}
+.nav .wrap{display:flex;align-items:center;gap:24px;padding:16px 20px}
+.nav a{color:#e2e8f0;text-decoration:none;font-size:14px;font-weight:500;opacity:.9;transition:opacity .2s}
+.nav a:hover{opacity:1}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:16px;text-decoration:none;color:#e2e8f0}
+.brand-logo{width:36px;height:36px;background:#2563eb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;font-weight:800}
+.trust{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px}
+.trust .pill{border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#e6f2ff;border-radius:9999px;padding:8px 14px;font-size:13px;font-weight:500;backdrop-filter:blur(10px)}
+.kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:24px}
+.kpi .glass{backdrop-filter:blur(10px);background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:14px;padding:16px;text-align:center;transition:all .3s ease}
+.kpi .glass:hover{background:rgba(255,255,255,.2);transform:scale(1.05)}
+.kpi .glass div{font-weight:800;font-size:24px;margin-bottom:4px}
+.kpi .glass small{font-size:12px;opacity:.9}
+.receipt-preview{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:24px;box-shadow:0 10px 40px rgba(0,0,0,.1)}
+.receipt-header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:16px;border-bottom:2px solid #e5e7eb}
+.logo-placeholder{font-weight:800;font-size:18px;color:#2563eb}
+.receipt-status{background:#dcfce7;color:#166534;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid #86efac}
+.receipt-body{padding:20px 0}
+.receipt-row{display:flex;justify-content:space-between;padding:8px 0;font-size:14px}
+.receipt-row.bold{font-weight:700;font-size:16px;padding-top:12px;border-top:1px solid #e5e7eb}
+section{padding:60px 0}
+section h2{font-size:clamp(28px,4vw,40px);margin-bottom:12px;color:var(--ink);font-weight:800}
+section h3{font-size:20px;margin-bottom:12px;color:var(--ink);font-weight:700}
+.pricing-card{position:relative}
+.pricing-card.featured{border:2px solid #2563eb;box-shadow:0 15px 50px rgba(37,99,235,.2);transform:scale(1.05)}
+.pricing-card.best-value{border:2px solid #10b981;box-shadow:0 15px 50px rgba(16,185,129,.2)}
+.pricing-card .price{font-size:36px;font-weight:800;color:var(--ink);margin:16px 0}
+.pricing-card .price-note{font-size:14px;color:var(--muted);font-weight:400;margin-top:4px}
+.pricing-card ul{list-style:none;margin:20px 0}
+.pricing-card ul li{padding:10px 0;padding-left:24px;position:relative;font-size:14px}
+.pricing-card ul li::before{content:'✓';position:absolute;left:0;color:#10b981;font-weight:700}
+.testimonial{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:24px;position:relative}
+.testimonial::before{content:'"';font-size:60px;color:#e5e7eb;position:absolute;top:10px;left:20px;font-family:Georgia,serif}
+.testimonial-text{position:relative;z-index:1;font-style:italic;color:#475569;margin-bottom:16px}
+.testimonial-author{display:flex;align-items:center;gap:12px;margin-top:16px}
+.testimonial-avatar{width:48px;height:48px;border-radius:999px;background:linear-gradient(135deg,#3b82f6,#2563eb);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px}
+.testimonial-info{flex:1}
+.testimonial-name{font-weight:700;color:var(--ink)}
+.testimonial-role{font-size:14px;color:var(--muted)}
+.faq{background:#fff;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:12px;overflow:hidden}
+.faq-question{padding:20px 24px;cursor:pointer;font-weight:600;display:flex;justify-content:space-between;align-items:center;background:#fff;transition:background .2s}
+.faq-question:hover{background:#f8fafc}
+.faq-answer{padding:0 24px;max-height:0;overflow:hidden;transition:all .3s ease;color:var(--muted)}
+.faq-answer.open{padding:0 24px 20px 24px;max-height:500px}
+.faq-icon{transition:transform .3s}
+.faq-icon.open{transform:rotate(180deg)}
+.comparison-table{background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb}
+.comparison-table table{width:100%;border-collapse:collapse}
+.comparison-table th{background:#f8fafc;padding:16px;text-align:left;font-weight:700;border-bottom:2px solid #e5e7eb}
+.comparison-table td{padding:16px;border-bottom:1px solid #f1f5f9}
+.comparison-table tr:last-child td{border-bottom:none}
+.check{color:#10b981;font-weight:700}
+.cross{color:#ef4444;font-weight:700}
+footer{border-top:1px solid var(--line);background:#fff;padding:40px 0}
+footer .wrap{font-size:14px;color:#64748b}
+.cta-section{background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;text-align:center;padding:60px 20px;border-radius:20px;margin:40px 0}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center;padding:20px}
+.modal.active{display:flex}
+.modal-content{background:#fff;border-radius:20px;max-width:500px;width:100%;padding:40px;position:relative;max-height:90vh;overflow-y:auto}
+@media(max-width:1100px){.modal-content{max-width:95%}.modal-content form>div[style*="grid-template-columns"]{grid-template-columns:1fr!important}}
+.modal-close{position:absolute;top:20px;right:20px;background:none;border:none;font-size:32px;cursor:pointer;color:#64748b;line-height:1;padding:0;width:32px;height:32px}
+.modal-close:hover{color:var(--ink)}
+.form-group{margin-bottom:20px}
+.form-label{display:block;font-size:14px;font-weight:600;color:var(--ink);margin-bottom:8px}
+.form-input,.form-select{width:100%;padding:12px 16px;border:1px solid #e5e7eb;border-radius:10px;font-size:15px;transition:all .2s}
+.form-input:focus,.form-select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+textarea.form-input{font-family:inherit}
+.divider{display:flex;align-items:center;gap:12px;margin:24px 0;color:#64748b;font-size:14px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:#e5e7eb}
+.generator-container{display:grid;grid-template-columns:1fr 1.3fr;gap:24px;margin-top:40px}
+.receipt-container{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:40px;box-shadow:0 8px 30px rgba(3,7,18,.08);position:sticky;top:90px}
+.info-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:16px;margin-top:20px}
+.info-box h3{font-size:14px;font-weight:700;color:#1e40af;margin-bottom:8px}
+.info-box ul{list-style:none;padding:0;margin:0}
+.info-box li{font-size:13px;color:#1e40af;padding:4px 0;padding-left:20px;position:relative}
+.info-box li::before{content:"✓";position:absolute;left:0;color:#2563eb;font-weight:700}
+.disclaimer{background:#fef3c7;border:1px solid #fde047;border-radius:12px;padding:16px;margin-top:20px}
+.disclaimer strong{color:#92400e;font-size:14px}
+.disclaimer p{color:#78350f;font-size:13px;margin-top:4px;line-height:1.5}
+@media(max-width:1200px){.grid4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:1024px){.generator-container{grid-template-columns:1fr}.receipt-container{position:static}}
+@media(max-width:960px){.hero .wrap{grid-template-columns:1fr;gap:30px}.grid2,.grid3{grid-template-columns:1fr}}
+@media(max-width:768px){.nav .wrap{flex-wrap:wrap;gap:12px}.hero .wrap{padding-top:40px;padding-bottom:40px}.kpi{grid-template-columns:1fr}section{padding:40px 0}.grid4{grid-template-columns:1fr}}
+@media print{body *{visibility:hidden}#printable,#printable *{visibility:visible}#printable{position:absolute;left:0;top:0;width:100%}}
 </style>
 </head>
 <body>
 
 <nav class="nav">
   <div class="wrap">
-    <a href="#home" class="brand">
-      <div class="brand-logo">B</div>
-      <span>Business Manager Pro</span>
-    </a>
-    <a href="#features">Features</a>
-    <a href="#pricing">Pricing</a>
-    <a href="#generator">Try Demo</a>
-    <a href="#faq">FAQ</a>
+    <a href="#home" class="brand"><div class="brand-logo">B</div><span>Business Manager Pro</span></a>
+    <a href="#features">Features</a><a href="#pricing">Pricing</a><a href="#generator">Try Demo</a><a href="#faq">FAQ</a>
     <div style="margin-left:auto;display:flex;gap:10px;flex-wrap:wrap">
       <a class="btn" href="#" onclick="openModal('signinModal');return false">Sign In</a>
       <a class="btn primary" href="#" onclick="openModal('signupModal');return false">Sign Up Free</a>
@@ -143,38 +130,28 @@ textarea.form-input { font-family:inherit; }
   </div>
 </nav>
 
+<!-- ===== hero / features / pricing (unchanged content from your last file) ===== -->
 <section class="hero" id="home">
   <div class="wrap">
     <div>
       <span class="badge"><span class="pulse-dot"></span> VAT · BRN · PDF · QR Code</span>
-      <h1 style="font-size:clamp(32px,5vw,58px);line-height:1.1;margin:0.5em 0 0.3em 0;font-weight:900">Smart E-Receipts for Modern Businesses</h1>
-      <p style="font-size:18px;max-width:560px;opacity:0.95;margin-bottom:24px">Create and send professional e-receipts in seconds. Track revenue, export to Excel. Join 800+ Mauritian businesses using our MRA-compliant platform.</p>
+      <h1 style="font-size:clamp(32px,5vw,58px);line-height:1.1;margin:.5em 0 .3em 0;font-weight:900">Smart E-Receipts for Modern Businesses</h1>
+      <p style="font-size:18px;max-width:560px;opacity:.95;margin-bottom:24px">Create and send professional e-receipts in seconds. Track revenue, export to Excel. Join 800+ Mauritian businesses using our MRA-compliant platform.</p>
       <div style="display:flex;gap:12px;flex-wrap:wrap">
         <a class="btn primary" href="#" onclick="openModal('signupModal');return false" style="font-size:16px;padding:16px 32px">Start Free Trial (3 Days) →</a>
         <a class="btn ghost" href="#generator">See Live Demo</a>
       </div>
-      <p style="font-size:14px;opacity:0.85;margin-top:12px">✓ No credit card required · ✓ Cancel anytime · ✓ Setup in 2 minutes</p>
-      <div class="trust">
-        <div class="pill">🔒 Bank-grade security</div><div class="pill">☁️ Daily backups</div><div class="pill">✓ MRA compliant</div><div class="pill">💳 JUICE payments</div>
-      </div>
-      <div class="kpi">
-        <div class="glass"><div>&lt; 30s</div><small>Create receipt</small></div>
-        <div class="glass"><div>Rs 599</div><small>Starting price</small></div>
-        <div class="glass"><div>800+</div><small>Businesses trust us</small></div>
-      </div>
+      <p style="font-size:14px;opacity:.85;margin-top:12px">✓ No credit card required · ✓ Cancel anytime · ✓ Setup in 2 minutes</p>
+      <div class="trust"><div class="pill">🔒 Bank-grade security</div><div class="pill">☁️ Daily backups</div><div class="pill">✓ MRA compliant</div><div class="pill">💳 JUICE payments</div></div>
+      <div class="kpi"><div class="glass"><div>&lt; 30s</div><small>Create receipt</small></div><div class="glass"><div>Rs 599</div><small>Starting price</small></div><div class="glass"><div>800+</div><small>Businesses trust us</small></div></div>
     </div>
-
     <div>
-      <div class="card" style="box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+      <div class="card" style="box-shadow:0 20px 60px rgba(0,0,0,.3)">
         <h3 style="margin-bottom:8px">Real Receipt Preview</h3>
         <p style="color:#64748b;font-size:14px;margin-bottom:20px">Professional receipts your customers will love</p>
         <div class="receipt-preview">
           <div class="receipt-header">
-            <div>
-              <div class="logo-placeholder">Your Company Ltd</div>
-              <div style="font-size:12px;color:#64748b;margin-top:4px">Port Louis, Mauritius</div>
-              <div style="font-size:12px;color:#64748b">BRN: C12345678</div>
-            </div>
+            <div><div class="logo-placeholder">Your Company Ltd</div><div style="font-size:12px;color:#64748b;margin-top:4px">Port Louis, Mauritius</div><div style="font-size:12px;color:#64748b">BRN: C12345678</div></div>
             <span class="receipt-status">PAID</span>
           </div>
           <div class="receipt-body">
@@ -183,152 +160,16 @@ textarea.form-input { font-family:inherit; }
             <div class="receipt-row"><span>VAT (15%)</span><span>Rs 375</span></div>
             <div class="receipt-row bold"><span>Total</span><span>Rs 2,875</span></div>
           </div>
-          <div style="margin-top:16px;padding-top:16px;border-top:1px solid #e5e7eb;font-size:12px;color:#64748b">
-            <div style="margin-bottom:8px">Payment via JUICE</div>
-            <div>🔗 Verify at: verify.bmp.mu/R2025-0142</div>
-          </div>
+          <div style="margin-top:16px;padding-top:16px;border-top:1px solid #e5e7eb;font-size:12px;color:#64748b"><div style="margin-bottom:8px">Payment via JUICE</div><div>🔗 Verify at: verify.bmp.mu/R2025-0142</div></div>
         </div>
-        <div class="grid2" style="margin-top:20px">
-          <a href="#generator" class="btn primary">📄 Try Generator</a>
-          <a href="#pricing" class="btn">💰 See Pricing</a>
-        </div>
+        <div class="grid2" style="margin-top:20px"><a href="#generator" class="btn primary">📄 Try Generator</a><a href="#pricing" class="btn">💰 See Pricing</a></div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- …………… features / pricing / generator / testimonials / faq / cta / footer unchanged …………… -->
-<section id="features">
-  <div class="wrap">
-    <h2>Everything you need to succeed</h2>
-    <p style="color:var(--muted);font-size:18px;margin-bottom:40px">Professional tools that don't break the bank</p>
-    <div class="grid3">
-      <div class="card"><div style="font-size:32px;margin-bottom:12px">📄</div><h3>Professional Receipts</h3><p style="color:var(--muted)">Add your logo, customize colors, include all required details. Look professional even as a small business.</p></div>
-      <div class="card"><div style="font-size:32px;margin-bottom:12px">✓</div><h3>MRA Compliant</h3><p style="color:var(--muted)">Automatic VAT calculation (15%), BRN fields, verification URLs. Stay compliant without accounting headaches.</p></div>
-      <div class="card"><div style="font-size:32px;margin-bottom:12px">⚡</div><h3>Lightning Fast</h3><p style="color:var(--muted)">Create receipts in under 30 seconds. No complicated forms. Works on any device, even slow connections.</p></div>
-      <div class="card"><div style="font-size:32px;margin-bottom:12px">💳</div><h3>JUICE Integration</h3><p style="color:var(--muted)">Accept payments via JUICE, cards, or bank transfer. Perfect for Mauritian businesses serving local customers.</p></div>
-      <div class="card"><div style="font-size:32px;margin-bottom:12px">📊</div><h3>Simple Dashboard</h3><p style="color:var(--muted)">Track revenue, see outstanding payments, export for your accountant. Everything you need, nothing you don't.</p></div>
-      <div class="card"><div style="font-size:32px;margin-bottom:12px">🔒</div><h3>Secure & Backed Up</h3><p style="color:var(--muted)">Bank-grade encryption, daily backups, secure servers. Your data is safe and always accessible.</p></div>
-    </div>
-  </div>
-</section>
-
-<section id="pricing" style="background:#f8fafc">
-  <div class="wrap">
-    <h2>Pricing built for every business</h2>
-    <p style="color:var(--muted);font-size:18px;margin-bottom:16px">Choose the plan that fits your needs. All plans include 3-day free trial.</p>
-    <p style="color:var(--success);font-size:16px;font-weight:700;margin-bottom:40px">💰 Pay annually and save 2 months free on all plans!</p>
-    <div class="grid4">
-      <div class="card pricing-card"><h3>Free Trial</h3><div class="price">Rs 0 <span style="font-size:18px;font-weight:400;color:var(--muted)">/3 days</span></div><p style="color:var(--muted);margin-bottom:20px">Try before you buy</p><ul><li>3 days full access</li><li>50 test receipts</li><li>All features unlocked</li><li>PDF & share links</li><li>Email support</li><li>No credit card needed</li></ul><a class="btn" href="#" onclick="openModal('signupModal');return false" style="width:100%;margin-top:20px">Start Free Trial</a></div>
-      <div class="card pricing-card best-value"><div class="badge" style="margin-bottom:12px;border-color:#10b981;background:#d1fae5;color:#065f46">💚 Best Value</div><h3>Starter</h3><div class="price">Rs 599 <span style="font-size:18px;font-weight:400;color:var(--muted)">/month</span></div><div class="price-note">Rs 5,990/year (save Rs 1,198)</div><p style="color:var(--muted);margin-bottom:20px">Perfect for small businesses</p><ul><li><strong>200 receipts/month</strong></li><li>Custom logo & branding</li><li>MUR, USD, EUR support</li><li>PDF download & share</li><li>CSV & Excel exports</li><li>Email support (24h)</li><li>QR verification codes</li><li>Revenue tracking</li></ul><a class="btn primary" href="#" onclick="openModal('signupModal');return false" style="width:100%;margin-top:20px">Choose Starter</a></div>
-      <div class="card pricing-card featured"><div class="badge" style="margin-bottom:12px;border-color:#2563eb;background:#dbeafe;color:#1e40af">⭐ Most Popular</div><h3>Business</h3><div class="price">Rs 1,199 <span style="font-size:18px;font-weight:400;color:var(--muted)">/month</span></div><div class="price-note">Rs 11,990/year (save Rs 2,398)</div><p style="color:var(--muted);margin-bottom:20px">For growing teams</p><ul><li><strong>1,000 receipts/month</strong></li><li>Everything in Starter, plus:</li><li>5 team members</li><li>Priority support (&lt;8h)</li><li>Advanced analytics dashboard</li><li>Custom receipt templates</li><li>Payment tracking & reminders</li><li>Multi-currency invoicing</li><li>Department-level reports</li></ul><a class="btn primary" href="#" onclick="openModal('signupModal');return false" style="width:100%;margin-top:20px">Choose Business</a><p style="font-size:12px;color:var(--muted);text-align:center;margin-top:12px">Most popular among Mauritian businesses</p></div>
-      <div class="card pricing-card"><h3>Professional</h3><div class="price">Rs 1,899 <span style="font-size:18px;font-weight:400;color:var(--muted)">/month</span></div><div class="price-note">Rs 18,990/year (save Rs 3,798)</div><p style="color:var(--muted);margin-bottom:20px">For established businesses</p><ul><li><strong>Unlimited receipts</strong></li><li>Everything in Business, plus:</li><li>15 team members</li><li>Priority support (&lt;2h)</li><li>API access</li><li>Custom integrations</li><li>Dedicated account manager</li><li>White-label branding</li><li>Advanced security features</li><li>Custom approval workflows</li></ul><a class="btn" href="#" onclick="openModal('signupModal');return false" style="width:100%;margin-top:20px">Choose Professional</a></div>
-    </div>
-  </div>
-</section>
-
-<section id="generator">
-  <div class="wrap">
-    <h2>Try the Receipt Generator</h2>
-    <p style="color:var(--muted);font-size:18px;margin-bottom:40px">Test it yourself - create a professional receipt right now. No signup required for the demo.</p>
-    <div class="generator-container">
-      <div>
-        <div class="card">
-          <h3>Receipt Details</h3>
-          <p style="color:var(--muted);font-size:14px;margin-bottom:24px">Fill in your information</p>
-          <div style="margin-bottom:20px">
-            <h4 style="font-size:15px;font-weight:700;margin-bottom:12px">Business Info</h4>
-            <div class="form-group"><label class="form-label">Business Name</label><input id="biz" class="form-input" value="Your Business Name" placeholder="Enter your business name"></div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-              <div class="form-group"><label class="form-label">BRN</label><input id="brn" class="form-input" value="C12345678" placeholder="C12345678"></div>
-              <div class="form-group"><label class="form-label">VAT</label><input id="vat" class="form-input" value="VAT123456" placeholder="VAT123456"></div>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-              <div class="form-group"><label class="form-label">Address</label><input id="addr" class="form-input" value="Port Louis"></div>
-              <div class="form-group"><label class="form-label">Phone</label><input id="phone" class="form-input" value="+230 5XXX XXXX"></div>
-            </div>
-          </div>
-          <div style="margin-bottom:20px">
-            <h4 style="font-size:15px;font-weight:700;margin-bottom:12px">Customer</h4>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-              <div class="form-group"><label class="form-label">Name</label><input id="cust" class="form-input" value="Customer Name"></div>
-              <div class="form-group"><label class="form-label">Address</label><input id="custaddr" class="form-input" value="Curepipe"></div>
-            </div>
-          </div>
-          <div style="margin-bottom:20px">
-            <h4 style="font-size:15px;font-weight:700;margin-bottom:12px">Item Details</h4>
-            <div class="form-group"><label class="form-label">Description</label><input id="item" class="form-input" value="Professional Services"></div>
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-              <div class="form-group"><label class="form-label">Qty</label><input id="qty" type="number" min="1" value="1" class="form-input"></div>
-              <div class="form-group"><label class="form-label">Price</label><input id="price" type="number" min="0" step="0.01" value="2500" class="form-input"></div>
-              <div class="form-group"><label class="form-label">Currency</label><select id="cur" class="form-select"><option value="MUR" selected>MUR (Rs)</option><option value="USD">USD ($)</option><option value="EUR">EUR (€)</option></select></div>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-              <div class="form-group"><label class="form-label">Payment</label><select id="pay" class="form-select"><option>Cash</option><option selected>JUICE</option><option>Card</option><option>Bank Transfer</option></select></div>
-              <div class="form-group"><label class="form-label">Notes</label><input id="notes" class="form-input" placeholder="Optional"></div>
-            </div>
-          </div>
-          <button type="button" id="update" class="btn primary" style="width:100%;font-size:16px">🔄 Update Preview</button>
-          <div class="info-box"><h3>✨ This is just a demo</h3><ul><li>Real-time preview updates</li><li>No data stored</li><li>Try all features free</li><li>Sign up to save receipts</li></ul></div>
-          <div class="disclaimer"><strong>⚠️ Disclaimer</strong><p>This is an e-receipt generator. You are responsible for data accuracy and tax compliance. This tool does not constitute legal or accounting advice.</p></div>
-        </div>
-      </div>
-      <div>
-        <div class="receipt-container" id="printable">
-          <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:24px;padding-bottom:20px;border-bottom:2px solid #e5e7eb">
-            <div><h2 style="font-size:32px;font-weight:800;margin-bottom:8px">Receipt</h2><div style="font-size:13px;color:#64748b">Ref: <strong id="invoiceNo">—</strong></div><div style="font-size:13px;color:#64748b">Date: <strong id="datePaid">—</strong></div></div>
-            <div style="text-align:right"><div style="font-size:16px;font-weight:700" id="bizName">Your Business</div><div style="font-size:13px;color:#64748b" id="bizAddr">—</div><div style="font-size:13px;color:#64748b" id="bizPhone">—</div><div style="font-size:13px;color:#64748b">BRN: <span id="bizBrn">—</span> • VAT: <span id="bizVat">—</span></div></div>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-bottom:24px">
-            <div><div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b;margin-bottom:8px">From</div><div style="font-weight:600" id="fromName">—</div><div style="font-size:13px;color:#64748b" id="fromAddr">—</div></div>
-            <div><div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b;margin-bottom:8px">Bill To</div><div style="font-weight:600" id="billName">—</div><div style="font-size:13px;color:#64748b" id="billAddr">—</div></div>
-          </div>
-          <div style="border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;margin-bottom:24px">
-            <table style="width:100%;border-collapse:collapse">
-              <thead><tr style="background:#f8fafc">
-                <th style="padding:12px 16px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b">Description</th>
-                <th style="padding:12px 16px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b">Qty</th>
-                <th style="padding:12px 16px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b">Price</th>
-                <th style="padding:12px 16px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b">Amount</th>
-              </tr></thead>
-              <tbody><tr>
-                <td style="padding:16px;border-top:1px solid #f1f5f9" id="tdDesc">—</td>
-                <td style="padding:16px;text-align:right;border-top:1px solid #f1f5f9" id="tdQty">1</td>
-                <td style="padding:16px;text-align:right;border-top:1px solid #f1f5f9" id="tdPrice">—</td>
-                <td style="padding:16px;text-align:right;border-top:1px solid #f1f5f9" id="tdAmt">—</td>
-              </tr></tbody>
-            </table>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr auto;gap:24px">
-            <div style="font-size:14px;color:#64748b"><div style="margin-bottom:8px">Payment: <strong id="payMethod" style="color:var(--ink)">—</strong></div><div>Notes: <strong id="notesOut" style="color:var(--ink)">—</strong></div></div>
-            <div style="border:1px solid #e5e7eb;border-radius:12px;padding:20px;min-width:250px">
-              <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:14px"><span style="color:#64748b">Subtotal</span><span style="font-weight:600" id="subt">—</span></div>
-              <div style="display:flex;justify-content:space-between;padding:12px 0;font-size:18px;border-top:2px solid #e5e7eb;margin-top:8px"><span style="font-weight:700">Total</span><span style="font-weight:700" id="total">—</span></div>
-              <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:14px"><span style="color:#64748b">Paid</span><span style="font-weight:600;color:#10b981" id="paid">—</span></div>
-            </div>
-          </div>
-          <div style="margin-top:32px;padding-top:24px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center">
-            <div style="font-size:13px;color:#64748b">Thank you for your business.</div>
-            <div style="display:flex;align-items:center;gap:12px">
-              <canvas id="qr" width="80" height="80" style="border-radius:8px;background:#f8fafc"></canvas>
-              <div style="font-size:12px;color:#64748b">Scan to verify</div>
-            </div>
-          </div>
-        </div>
-        <div style="display:flex;gap:12px;margin-top:20px">
-          <button id="printBtn" class="btn secondary" style="flex:1">📄 Download PDF</button>
-          <button id="shareBtn" class="btn secondary" style="flex:1">🔗 Copy Link</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="testimonials" style="background:#f8fafc">…<!-- unchanged content -->…</section>
-<section id="faq">…<!-- unchanged content -->…</section>
-<section id="cta" style="background:#f8fafc">…<!-- unchanged content -->…</section>
-
-<footer>…<!-- unchanged content -->…</footer>
+<!-- ===== (features, pricing, testimonials, faq, footer) keep your same markup from the last message ===== -->
+<!-- ... omitted here for brevity ... -->
 
 <!-- Sign Up Modal -->
 <div id="signupModal" class="modal">
@@ -340,24 +181,20 @@ textarea.form-input { font-family:inherit; }
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-bottom:24px">
         <div>
           <h3 style="font-size:18px;margin-bottom:20px">Owner details</h3>
-          <div class="form-group"><label class="form-label" style="text-transform:none">Full name</label><input type="text" class="form-input" placeholder="e.g. Jane Doe" required></div>
-          <div class="form-group"><label class="form-label" style="text-transform:none">Email</label><!-- ✅ id -->
-            <input id="signupEmail" type="email" class="form-input" placeholder="you@company.com" required>
-          </div>
-          <div class="form-group"><label class="form-label" style="text-transform:none">Phone</label><input type="tel" class="form-input" placeholder="+230 5xx xxxx" required></div>
-          <div class="form-group"><label class="form-label" style="text-transform:none">Password</label><!-- ✅ id -->
-            <input id="signupPassword" type="password" class="form-input" placeholder="Minimum 8 characters" required minlength="8">
-          </div>
+          <div class="form-group"><label class="form-label">Full name</label><input id="signupName" type="text" class="form-input" placeholder="e.g. Jane Doe" required></div>
+          <div class="form-group"><label class="form-label">Email</label><input id="signupEmail" type="email" class="form-input" placeholder="you@company.com" required></div>
+          <div class="form-group"><label class="form-label">Phone</label><input id="signupPhone" type="tel" class="form-input" placeholder="+230 5xx xxxx" required></div>
+          <div class="form-group"><label class="form-label">Password</label><input id="signupPassword" type="password" class="form-input" placeholder="Minimum 8 characters" required minlength="8"></div>
         </div>
         <div>
           <h3 style="font-size:18px;margin-bottom:20px">Company details</h3>
-          <div class="form-group"><label class="form-label" style="text-transform:none">Legal name</label><input type="text" class="form-input" placeholder="Your Company Ltd" required></div>
-          <div class="form-group"><label class="form-label" style="text-transform:none">BRN</label><input type="text" class="form-input" placeholder="Cxxxxxxxx" required></div>
-          <div class="form-group"><label class="form-label" style="text-transform:none">VAT</label><input type="text" class="form-input" placeholder="VAT xxxxxx"></div>
-          <div class="form-group"><label class="form-label" style="text-transform:none">Address</label><textarea class="form-input" rows="3" placeholder="Street, City, Country" style="resize:vertical" required></textarea></div>
+          <div class="form-group"><label class="form-label">Legal name</label><input id="signupCompany" type="text" class="form-input" placeholder="Your Company Ltd" required></div>
+          <div class="form-group"><label class="form-label">BRN</label><input id="signupBRN" type="text" class="form-input" placeholder="Cxxxxxxxx" required></div>
+          <div class="form-group"><label class="form-label">VAT</label><input id="signupVAT" type="text" class="form-input" placeholder="VAT xxxxxx"></div>
+          <div class="form-group"><label class="form-label">Address</label><textarea id="signupAddr" class="form-input" rows="3" placeholder="Street, City, Country" style="resize:vertical" required></textarea></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-            <div class="form-group"><label class="form-label" style="text-transform:none">Default currency</label><select class="form-select" required><option value="MUR">MUR (Rs)</option><option value="USD">USD ($)</option><option value="EUR">EUR (€)</option><option value="GBP">GBP (£)</option></select></div>
-            <div class="form-group"><label class="form-label" style="text-transform:none">Time zone</label><select class="form-select" required><option value="Indian/Mauritius">Indian/Mauritius</option><option value="Africa/Nairobi">Africa/Nairobi</option><option value="Europe/Paris">Europe/Paris</option><option value="America/New_York">America/New_York</option></select></div>
+            <div class="form-group"><label class="form-label">Default currency</label><select id="signupCurrency" class="form-select" required><option value="MUR">MUR (Rs)</option><option value="USD">USD ($)</option><option value="EUR">EUR (€)</option><option value="GBP">GBP (£)</option></select></div>
+            <div class="form-group"><label class="form-label">Time zone</label><select id="signupTz" class="form-select" required><option value="Indian/Mauritius">Indian/Mauritius</option><option value="Africa/Nairobi">Africa/Nairobi</option><option value="Europe/Paris">Europe/Paris</option><option value="America/New_York">America/New_York</option></select></div>
           </div>
         </div>
       </div>
@@ -377,15 +214,9 @@ textarea.form-input { font-family:inherit; }
     <h2 style="margin-bottom:8px">Welcome Back</h2>
     <p style="color:var(--muted);margin-bottom:24px">Sign in to your account</p>
     <form onsubmit="handleSignin(event)">
-      <div class="form-group"><label class="form-label">Email Address</label><!-- ✅ id -->
-        <input id="signinEmail" type="email" class="form-input" placeholder="you@example.com" required>
-      </div>
-      <div class="form-group"><label class="form-label">Password</label><!-- ✅ id -->
-        <input id="signinPassword" type="password" class="form-input" placeholder="Enter password" required>
-      </div>
-      <div style="text-align:right;margin-bottom:20px">
-        <a href="#" onclick="handleForgotPassword();return false" style="color:var(--primary);font-size:14px;text-decoration:none">Forgot password?</a>
-      </div>
+      <div class="form-group"><label class="form-label">Email Address</label><input id="signinEmail" type="email" class="form-input" placeholder="you@example.com" required></div>
+      <div class="form-group"><label class="form-label">Password</label><input id="signinPassword" type="password" class="form-input" placeholder="Enter password" required></div>
+      <div style="text-align:right;margin-bottom:20px"><a href="#" onclick="handleForgotPassword();return false" style="color:var(--primary);font-size:14px;text-decoration:none">Forgot password?</a></div>
       <button type="submit" class="btn primary" style="width:100%;padding:16px;font-size:16px">Sign In →</button>
     </form>
     <div class="divider">OR</div>
@@ -393,152 +224,123 @@ textarea.form-input { font-family:inherit; }
   </div>
 </div>
 
-<script>
-// ===== Modals =====
-function openModal(id){ document.getElementById(id).classList.add('active'); document.body.style.overflow='hidden' }
-function closeModal(id){ document.getElementById(id).classList.remove('active'); document.body.style.overflow='' }
-document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{ if(e.target===m){ m.classList.remove('active'); document.body.style.overflow='' } }));
+<!-- ===== App Scripts (module) ===== -->
+<script type="module">
+  // --- Supabase SDK via ESM ---
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-// ===== Supabase Auth (fill in your keys) =====
-const SUPABASE_URL = "https://hppgouoexhqgecntpkei.supabase.co;   // <-- replace
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhwcGdvdW9leGhxZ2VjbnRwa2VpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyMzUzMDQsImV4cCI6MjA3NDgxMTMwNH0.twfjnJ7uirm4FaQBr4wFqT9KW-cH_lrqohA66oWNFJo";                     // <-- replace
-const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const SUPABASE_URL = 'https://YOUR-PROJECT-REF.supabase.co';   // <-- set me
+  const SUPABASE_ANON_KEY = 'YOUR-ANON-KEY';                     // <-- set me
 
-// Guard if script not loaded
-if(!sb){ console.warn('Supabase SDK not loaded'); }
+  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  window.sb = sb; // expose for debugging if you want
 
-// Sign Up
-async function handleSignup(e){
-  e.preventDefault();
-  try{
-    const email = document.getElementById('signupEmail').value.trim();
-    const password = document.getElementById('signupPassword').value;
-    const { data, error } = await sb.auth.signUp({
-      email, password,
-      options:{ emailRedirectTo: window.location.origin }
-    });
-    if(error) throw error;
-    alert('🎉 Account created! Please check your email to confirm your address.');
-    closeModal('signupModal');
-  }catch(err){
-    alert('❌ Sign up failed: ' + (err.message || err));
+  // --- Basic health check (shows 200 in console if reachable) ---
+  fetch(`${SUPABASE_URL}/auth/v1/health`, { headers: { apikey: SUPABASE_ANON_KEY } })
+    .then(r => console.log('Auth health:', r.status))
+    .catch(err => console.error('Auth health fetch failed:', err));
+
+  // ===== Modals =====
+  window.openModal = (id)=>{ document.getElementById(id).classList.add('active'); document.body.style.overflow='hidden' };
+  window.closeModal = (id)=>{ document.getElementById(id).classList.remove('active'); document.body.style.overflow='' };
+  document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{ if(e.target===m){ m.classList.remove('active'); document.body.style.overflow='' } }));
+
+  // ===== Auth Handlers =====
+  window.handleSignup = async (e) => {
+    e.preventDefault();
+    try {
+      const email = document.getElementById('signupEmail').value.trim();
+      const password = document.getElementById('signupPassword').value;
+      if (!email || !password) throw new Error('Missing email or password');
+      const { error } = await sb.auth.signUp({
+        email, password,
+        options: { emailRedirectTo: window.location.origin }
+      });
+      if (error) throw error;
+      alert('🎉 Account created! Check your email to confirm your address.');
+      closeModal('signupModal');
+    } catch (err) {
+      alert('❌ Sign up failed: ' + (err.message || err));
+    }
+  };
+
+  window.handleSignin = async (e) => {
+    e.preventDefault();
+    try {
+      const email = document.getElementById('signinEmail').value.trim();
+      const password = document.getElementById('signinPassword').value;
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      alert('✅ Signed in!');
+      closeModal('signinModal');
+      // location.href = '/dashboard'; // optional redirect
+    } catch (err) {
+      alert('❌ Sign in failed: ' + (err.message || err));
+    }
+  };
+
+  window.handleForgotPassword = async () => {
+    const email = prompt('Enter your account email:');
+    if (!email) return;
+    try {
+      const { error } = await sb.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/#password-updated'
+      });
+      if (error) throw error;
+      alert('📧 Reset link sent. Check your inbox.');
+    } catch (err) {
+      alert('❌ Could not send reset link: ' + (err.message || err));
+    }
+  };
+
+  // Keep console note if already logged in
+  sb.auth.getUser().then(({ data }) => { if (data?.user) console.log('Logged in as:', data.user.email); });
+
+  // ===== Receipt Generator =====
+  const $ = (id)=>document.getElementById(id);
+  const locales={ MUR:'en-MU', USD:'en-US', EUR:'fr-FR' };
+  const symbols={ MUR:'Rs', USD:'$', EUR:'€' };
+  const currencyFmt=(n,cur)=> cur==='MUR'
+    ? symbols[cur]+' '+Number(n||0).toLocaleString(locales[cur],{minimumFractionDigits:2,maximumFractionDigits:2})
+    : new Intl.NumberFormat(locales[cur],{style:'currency',currency:cur,minimumFractionDigits:2}).format(Number(n||0));
+  const todayStr=()=> new Date().toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'});
+  function genRef(){ const now=new Date(); const seed=Number(now.getFullYear().toString().slice(-2)+(now.getMonth()+1).toString().padStart(2,'0')+now.getDate().toString().padStart(2,'0')); let rnd=Math.floor(Math.random()*1e8); let x=(rnd^seed)>>>0; const a=(x%10000).toString().padStart(4,'0'); const b=(Math.floor(x/10000)%10000).toString().padStart(4,'0'); const sum=(a+b).split('').reduce((s,d)=>s+Number(d),0); const bChk=b.slice(0,3)+String(sum%10); return `${a}-${bChk}`; }
+  function updateFromForm(){
+    const cur=$('cur')?.value||'MUR';
+    const biz=$('biz')?.value||'Your Business';
+    const brn=$('brn')?.value||'—';
+    const vat=$('vat')?.value||'—';
+    const addr=$('addr')?.value||'—';
+    const phone=$('phone')?.value||'—';
+    const cust=$('cust')?.value||'—';
+    const custaddr=$('custaddr')?.value||'—';
+    const item=$('item')?.value||'—';
+    const qty=Math.max(1,Number($('qty')?.value||1));
+    const price=Number($('price')?.value||0);
+    const method=$('pay')?.value||'—';
+    const notes=$('notes')?.value||'—';
+    $('invoiceNo').textContent=genRef();
+    $('datePaid').textContent=todayStr();
+    $('bizName').textContent=biz; $('bizAddr').textContent=addr; $('bizPhone').textContent=phone;
+    $('bizBrn').textContent=brn; $('bizVat').textContent=vat; $('fromName').textContent=biz; $('fromAddr').textContent=addr;
+    $('billName').textContent=cust; $('billAddr').textContent=custaddr;
+    const amount=qty*price;
+    $('tdDesc').textContent=item; $('tdQty').textContent=qty; $('tdPrice').textContent=currencyFmt(price,cur); $('tdAmt').textContent=currencyFmt(amount,cur);
+    $('subt').textContent=currencyFmt(amount,cur); $('total').textContent=currencyFmt(amount,cur); $('paid').textContent=currencyFmt(amount,cur);
+    $('payMethod').textContent=method; $('notesOut').textContent=notes;
+    const params=new URLSearchParams({cur,biz,brn,vat,addr,phone,cust,custaddr,item,qty,price,method,notes}).toString();
+    const url=`${location.origin}${location.pathname}?${params}`;
+    if (window.QRCode && $('qr')) QRCode.toCanvas($('qr'), url, { width:80, margin:1, color:{ dark:'#0f172a', light:'#f8fafc' } });
+    return url;
   }
-}
-
-// Sign In
-async function handleSignin(e){
-  e.preventDefault();
-  try{
-    const email = document.getElementById('signinEmail').value.trim();
-    const password = document.getElementById('signinPassword').value;
-    const { data, error } = await sb.auth.signInWithPassword({ email, password });
-    if(error) throw error;
-    alert('✅ Signed in!');
-    closeModal('signinModal');
-    // window.location.href = '/dashboard'; // optional
-  }catch(err){
-    alert('❌ Sign in failed: ' + (err.message || err));
-  }
-}
-
-// Forgot Password
-async function handleForgotPassword(){
-  const email = prompt('Enter your account email:');
-  if(!email) return;
-  try{
-    const { data, error } = await sb.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin + '/#password-updated'
-    });
-    if(error) throw error;
-    alert('📧 Reset link sent. Check your inbox.');
-  }catch(err){
-    alert('❌ Could not send reset link: ' + (err.message || err));
-  }
-}
-
-// ===== Receipt Generator (unchanged) =====
-const $ = (id) => document.getElementById(id);
-const locales = { MUR: 'en-MU', USD: 'en-US', EUR: 'fr-FR' };
-const symbols = { MUR: 'Rs', USD: '$', EUR: '€' };
-const currencyFmt = (n, cur) => {
-  const num = Number(n || 0);
-  if (cur === 'MUR') return symbols[cur] + ' ' + num.toLocaleString(locales[cur], { minimumFractionDigits:2, maximumFractionDigits:2 });
-  return new Intl.NumberFormat(locales[cur], { style:'currency', currency:cur, minimumFractionDigits:2 }).format(num);
-};
-const todayStr = () => new Date().toLocaleDateString(undefined, { year:'numeric', month:'long', day:'numeric' });
-function genRef(){
-  const now=new Date();
-  const seed=Number(now.getFullYear().toString().slice(-2)+(now.getMonth()+1).toString().padStart(2,'0')+now.getDate().toString().padStart(2,'0'));
-  let rnd=Math.floor(Math.random()*1e8);
-  let x=(rnd ^ seed)>>>0;
-  const a=(x%10000).toString().padStart(4,'0');
-  const b=(Math.floor(x/10000)%10000).toString().padStart(4,'0');
-  const sum=(a+b).split('').reduce((s,d)=>s+Number(d),0);
-  const bChk=b.slice(0,3)+String(sum%10);
-  return `${a}-${bChk}`;
-}
-function updateFromForm(){
-  const cur=$('cur').value||'MUR';
-  const biz=$('biz').value||'Your Business';
-  const brn=$('brn').value||'—';
-  const vat=$('vat').value||'—';
-  const addr=$('addr').value||'—';
-  const phone=$('phone').value||'—';
-  const cust=$('cust').value||'—';
-  const custaddr=$('custaddr').value||'—';
-  const item=$('item').value||'—';
-  const qty=Math.max(1,Number($('qty').value||1));
-  const price=Number($('price').value||0);
-  const method=$('pay').value||'—';
-  const notes=$('notes').value||'—';
-
-  $('invoiceNo').textContent=genRef();
-  $('datePaid').textContent=todayStr();
-  $('bizName').textContent=biz; $('bizAddr').textContent=addr; $('bizPhone').textContent=phone;
-  $('bizBrn').textContent=brn; $('bizVat').textContent=vat; $('fromName').textContent=biz; $('fromAddr').textContent=addr;
-  $('billName').textContent=cust; $('billAddr').textContent=custaddr;
-
-  const amount=qty*price;
-  $('tdDesc').textContent=item; $('tdQty').textContent=qty;
-  $('tdPrice').textContent=currencyFmt(price,cur); $('tdAmt').textContent=currencyFmt(amount,cur);
-  $('subt').textContent=currencyFmt(amount,cur);
-  $('total').textContent=currencyFmt(amount,cur);
-  $('paid').textContent=currencyFmt(amount,cur);
-  $('payMethod').textContent=method; $('notesOut').textContent=notes;
-
-  const params=new URLSearchParams({cur,biz,brn,vat,addr,phone,cust,custaddr,item,qty,price,method,notes}).toString();
-  const url=`${location.origin}${location.pathname}?${params}`;
-  if(window.QRCode && $('qr')){
-    QRCode.toCanvas($('qr'), url, { width:80, margin:1, color:{ dark:'#0f172a', light:'#f8fafc' } });
-  }
-  return url;
-}
-function applyFromQuery(){
-  const q=new URLSearchParams(location.search); if(q.size===0) return;
-  const set=(id,key)=>{ if(q.has(key)) $(id).value=q.get(key); };
-  ['cur','biz','brn','vat','addr','phone','cust','custaddr','item','qty','price','method','notes']
-    .forEach(k=> set(k==='method'?'pay':k, k));
-}
-$('update').addEventListener('click', updateFromForm);
-$('printBtn').addEventListener('click', ()=>{ updateFromForm(); window.print(); });
-$('shareBtn').addEventListener('click', async ()=>{
-  const url=updateFromForm();
-  try{
-    await navigator.clipboard.writeText(url);
-    const btn=$('shareBtn'); const original=btn.textContent;
-    btn.textContent='✓ Copied!'; btn.style.background='#10b981'; btn.style.color='#fff';
-    setTimeout(()=>{ btn.textContent=original; btn.style.background=''; btn.style.color=''; }, 2000);
-  }catch(e){ alert('Share link: ' + url); }
-});
-['biz','brn','vat','addr','phone','cust','custaddr','item','qty','price','cur','pay','notes'].forEach(id=> $(id).addEventListener('input', updateFromForm));
-document.querySelectorAll('a[href^="#"]').forEach(a=> a.addEventListener('click', e=>{
-  const href=a.getAttribute('href'); if(href !== '#' && href.length>1){ e.preventDefault(); const t=document.querySelector(href); if(t) t.scrollIntoView({behavior:'smooth', block:'start'}); }
-}));
-applyFromQuery(); updateFromForm();
-console.log('Business Manager Pro - Ready! Supabase auth wired.');
-
-// Optional: keep user session label in console
-sb?.auth.getUser().then(({ data }) => { if(data?.user) console.log('Logged in as:', data.user.email); });
+  function applyFromQuery(){ const q=new URLSearchParams(location.search); if(q.size===0) return; const set=(id,key)=>{ if(q.has(key)&&$(id)) $(id).value=q.get(key); }; ['cur','biz','brn','vat','addr','phone','cust','custaddr','item','qty','price','notes'].forEach(k=> set(k,k)); set('pay','method'); }
+  document.getElementById('update')?.addEventListener('click', updateFromForm);
+  document.getElementById('printBtn')?.addEventListener('click', ()=>{ updateFromForm(); window.print(); });
+  document.getElementById('shareBtn')?.addEventListener('click', async ()=>{ const url=updateFromForm(); try{ await navigator.clipboard.writeText(url); const btn=$('shareBtn'); const original=btn.textContent; btn.textContent='✓ Copied!'; btn.style.background='#10b981'; btn.style.color='#fff'; setTimeout(()=>{ btn.textContent=original; btn.style.background=''; btn.style.color=''; },2000);}catch(e){ alert('Share link: '+url);} });
+  ['biz','brn','vat','addr','phone','cust','custaddr','item','qty','price','cur','pay','notes'].forEach(id=> $(id)?.addEventListener('input', updateFromForm));
+  document.querySelectorAll('a[href^="#"]').forEach(a=> a.addEventListener('click', e=>{ const href=a.getAttribute('href'); if(href!=='#' && href.length>1){ e.preventDefault(); const t=document.querySelector(href); if(t) t.scrollIntoView({behavior:'smooth', block:'start'}); } }));
+  applyFromQuery(); updateFromForm();
+  console.log('Business Manager Pro - Ready! Supabase auth wired.');
 </script>
 
 </body>
