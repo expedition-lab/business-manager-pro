@@ -747,7 +747,7 @@ textarea.form-input{font-family:inherit;resize:vertical}
     <div class="divider">OR</div>
     
     <p style="text-align:center;font-size:14px">
-      Don't have an account? <a href="#" onclick="closeModal('signinModal');openModal('signupModal');return false" style="color:var(--primary);font-weight:600">Sign Up Free</a>
+      Don't have an account? <a href="#!" onclick="closeModal('signinModal');openModal('signupModal');return false" style="color:var(--primary);font-weight:600">Sign Up Free</a>
     </p>
   </div>
 </div>
@@ -995,7 +995,17 @@ setTimeout(()=>{
   ['biz','brn','vat','addr','phone','cust','custaddr','item','qty','price','cur','pay','notes'].forEach(id=>{if($(id))$(id).addEventListener('input',updateFromForm)});
 },500);
 
-document.querySelectorAll('a[href^="#"]').forEach(anchor=>{anchor.addEventListener('click',function(e){const href=this.getAttribute('href');if(href!=='#'&&href.length>1){e.preventDefault();const target=document.querySelector(href);if(target)target.scrollIntoView({behavior:'smooth',block:'start'})}})});
+docum// Prevent ALL hash navigations; still smooth-scroll real anchors
+document.addEventListener('click', (e) => {
+  const a = e.target.closest('a[href^="#"]');
+  if (!a) return;
+  const href = a.getAttribute('href');
+  e.preventDefault();              // block default jump
+  if (!href || href === '#') return; // ignore plain "#"
+  const target = document.querySelector(href);
+  if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+ent.querySelectorAll('a[href^="#"]').forEach(anchor=>{anchor.addEventListener('click',function(e){const href=this.getAttribute('href');if(href!=='#'&&href.length>1){e.preventDefault();const target=document.querySelector(href);if(target)target.scrollIntoView({behavior:'smooth',block:'start'})}})});
 
 async function init(){
   const {data:{session}}=await supabase.auth.getSession();
