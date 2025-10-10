@@ -851,7 +851,10 @@ async function loadUserData(user){
 }
 
 function selectPlan(planName,price){
-  if(!currentUser){openModal('signupModal');return}
+  if(!currentUser){
+    openModal('signupModal');
+    return;
+  }
   selectedPlanData={name:planName,price:price};
   document.getElementById('selectedPlanInfo').style.display='block';
   document.getElementById('selectedPlanName').textContent=planName.charAt(0).toUpperCase()+planName.slice(1);
@@ -866,11 +869,28 @@ async function processPayment(method){
   try{
     const {error}=await supabase.from('subscriptions').insert([{user_id:currentUser.id,plan:selectedPlanData.name,amount:selectedPlanData.price,payment_method:method,status:'pending'}]);
     if(error)throw error;
-    if(method==='juice'){alert(`JUICE Payment:\n\nAmount: Rs ${selectedPlanData.price}\nReference: ${currentUser.id}\n\nIn production, redirects to JUICE.`)}
-    else if(method==='card'){alert(`Card Payment:\n\nAmount: Rs ${selectedPlanData.price}\n\nIn production, redirects to Stripe.`)}
-    else if(method==='bank'){alert(`Bank Transfer:\n\nAccount: Business Manager Pro\nAmount: Rs ${selectedPlanData.price}\nReference: ${currentUser.id}\n\nEmail proof to payments@bmp.mu`)}
-    closeModal('planModal');alert('✅ Payment initiated!');
-  }catch(error){errorDiv.textContent='❌ '+error.message;errorDiv.style.display='block'}
+    
+    // Update user plan to the selected plan
+    const {error:updateError}=await supabase.from('user_profiles').update({plan:selectedPlanData.name}).eq('user_id',currentUser.id);
+    if(updateError)throw updateError;
+    
+    if(method==='juice'){
+      alert(`✅ JUICE Payment Initiated!\n\nAmount: Rs ${selectedPlanData.price}\nPlan: ${selectedPlanData.name}\nReference: ${currentUser.id}\n\n🔗 In production, you would be redirected to JUICE payment gateway.\n\nFor now, your plan has been activated!`);
+    }else if(method==='card'){
+      alert(`✅ Card Payment Initiated!\n\nAmount: Rs ${selectedPlanData.price}\nPlan: ${selectedPlanData.name}\n\n💳 In production, you would be redirected to Stripe.\n\nFor now, your plan has been activated!`);
+    }else if(method==='bank'){
+      alert(`✅ Bank Transfer Details:\n\nAccount: Business Manager Pro\nBank: MCB Mauritius\nAmount: Rs ${selectedPlanData.price}\nReference: ${currentUser.id}\n\n📧 Email proof to: payments@bmp.mu\n\nYour plan has been activated!`);
+    }
+    
+    // Reload user data and update UI
+    await loadUserData(currentUser);
+    document.getElementById('planStatus').textContent=selectedPlanData.name.charAt(0).toUpperCase()+selectedPlanData.name.slice(1);
+    
+    closeModal('planModal');
+    alert('🎉 Success! Your '+selectedPlanData.name+' plan is now active!');
+  }catch(error){
+    errorDiv.textContent='❌ '+error.message;errorDiv.style.display='block';
+  }
 }
 
 function showDashboard(){
@@ -879,7 +899,7 @@ function showDashboard(){
   updateNav(true);
   if(userData){
     document.getElementById('userName').textContent=userData.full_name;
-    document.getElementById('planStatus').textContent=userData.plan||'Trial';
+    document.getElementById('planStatus').textContent=userData.plan.charAt(0).toUpperCase()+userData.plan.slice(1)||'Trial';
   }
 }
 
@@ -891,11 +911,29 @@ function showLanding(){
 function updateNav(loggedIn){
   const navBtns=document.getElementById('navBtns');
   if(loggedIn){
-    navBtns.innerHTML=`<span style="color:#e2e8f0">${userData?.company_name||'Dashboard'}</span><button class="btn" onclick="handleSignout()">Sign Out</button>`;
+    navBtns.innerHTML=`<a href="#" onclick="showDashboard();return false" style="color:#e2e8f0;text-decoration:none">${userData?.company_name||'Dashboard'}</a><button class="btn" onclick="handleSignout()">Sign Out</button>`;
   }else{
     navBtns.innerHTML='<button class="btn" onclick="openModal(\'signinModal\')">Sign In</button><button class="btn primary" onclick="openModal(\'signupModal\')">Sign Up Free</button>';
   }
 }
+
+// Fix Manage Plan button to go to pricing section
+document.addEventListener('DOMContentLoaded',function(){
+  const managePlanBtns=document.querySelectorAll('[onclick*="planModal"]');
+  managePlanBtns.forEach(btn=>{
+    btn.onclick=function(){
+      if(!selectedPlanData){
+        // No plan selected, go to pricing section
+        handleSignout();
+        setTimeout(()=>{
+          document.querySelector('#pricing').scrollIntoView({behavior:'smooth'});
+        },500);
+      }else{
+        openModal('planModal');
+      }
+    };
+  });
+});
 
 function openModal(id){document.getElementById(id).classList.add('active');document.body.style.overflow='hidden'}
 function closeModal(id){document.getElementById(id).classList.remove('active');document.body.style.overflow=''}
@@ -909,6 +947,7 @@ const todayStr=()=>new Date().toLocaleDateString(undefined,{year:'numeric',month
 function genRef(){const now=new Date();const seed=Number(now.getFullYear().toString().slice(-2)+(now.getMonth()+1).toString().padStart(2,'0')+now.getDate().toString().padStart(2,'0'));let rnd=Math.floor(Math.random()*1e8);let x=(rnd^seed)>>>0;const a=(x%10000).toString().padStart(4,'0');const b=(Math.floor(x/10000)%10000).toString().padStart(4,'0');const sum=(a+b).split('').reduce((s,d)=>s+Number(d),0);const bChk=b.slice(0,3)+String(sum%10);return `${a}-${bChk}`}
 
 function updateFromForm(){
+  if(!$('cur'))return; // Don't run if elements don't exist
   const cur=$('cur').value||'MUR';
   const biz=$('biz').value||'Your Business';
   const brn=$('brn').value||'—';
@@ -948,16 +987,20 @@ function updateFromForm(){
   return url;
 }
 
-$('update').addEventListener('click',updateFromForm);
-$('printBtn').addEventListener('click',()=>{updateFromForm();window.print()});
-$('shareBtn').addEventListener('click',async()=>{const url=updateFromForm();try{await navigator.clipboard.writeText(url);const btn=$('shareBtn');const ot=btn.textContent;btn.textContent='✓ Copied!';btn.style.background='#10b981';btn.style.color='#fff';setTimeout(()=>{btn.textContent=ot;btn.style.background='';btn.style.color=''},2000)}catch(e){alert('Share link: '+url)}});
-['biz','brn','vat','addr','phone','cust','custaddr','item','qty','price','cur','pay','notes'].forEach(id=>{$(id).addEventListener('input',updateFromForm)});
+// Set up receipt generator event listeners
+setTimeout(()=>{
+  if($('update'))$('update').addEventListener('click',updateFromForm);
+  if($('printBtn'))$('printBtn').addEventListener('click',()=>{updateFromForm();window.print()});
+  if($('shareBtn'))$('shareBtn').addEventListener('click',async()=>{const url=updateFromForm();try{await navigator.clipboard.writeText(url);const btn=$('shareBtn');const ot=btn.textContent;btn.textContent='✓ Copied!';btn.style.background='#10b981';btn.style.color='#fff';setTimeout(()=>{btn.textContent=ot;btn.style.background='';btn.style.color=''},2000)}catch(e){alert('Share link: '+url)}});
+  ['biz','brn','vat','addr','phone','cust','custaddr','item','qty','price','cur','pay','notes'].forEach(id=>{if($(id))$(id).addEventListener('input',updateFromForm)});
+},500);
+
 document.querySelectorAll('a[href^="#"]').forEach(anchor=>{anchor.addEventListener('click',function(e){const href=this.getAttribute('href');if(href!=='#'&&href.length>1){e.preventDefault();const target=document.querySelector(href);if(target)target.scrollIntoView({behavior:'smooth',block:'start'})}})});
 
 async function init(){
   const {data:{session}}=await supabase.auth.getSession();
   if(session){await loadUserData(session.user);showDashboard()}else{showLanding();updateNav(false)}
-  updateFromForm();
+  if($('cur'))updateFromForm();
 }
 
 supabase.auth.onAuthStateChange((event,session)=>{
@@ -967,7 +1010,7 @@ supabase.auth.onAuthStateChange((event,session)=>{
 
 init();
 console.log('✅ Business Manager Pro Ready!');
-</script>
+  </script>
 
 </body>
 </html>
