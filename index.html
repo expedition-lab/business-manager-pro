@@ -631,7 +631,7 @@ textarea.form-input{font-family:inherit;resize:vertical}
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
         <button class="btn primary" style="width:100%" onclick="openModal('receiptModal')">📄 Create Receipt</button>
         <button class="btn secondary" style="width:100%">📊 View Reports</button>
-        <button class="btn secondary" style="width:100%">⚙️ Settings</button>
+        <button class="btn secondary" style="width:100%" onclick="openModal('settingsModal')">⚙️ Settings</button>
       </div>
     </div>
   </div>
@@ -807,6 +807,71 @@ textarea.form-input{font-family:inherit;resize:vertical}
   </div>
 </div>
 
+<div id="settingsModal" class="modal">
+  <div class="modal-content" style="max-width:700px">
+    <button class="modal-close" onclick="closeModal('settingsModal')">&times;</button>
+    <h2 style="margin-bottom:8px">Business Settings</h2>
+    <p style="color:var(--muted);margin-bottom:24px">Update your business information</p>
+    
+    <div id="settingsError" class="error-msg" style="display:none"></div>
+    <div id="settingsSuccess" class="success-msg" style="display:none"></div>
+    
+    <form id="settingsForm" onsubmit="handleUpdateSettings(event)">
+      <div class="form-group">
+        <label class="form-label">Company Name</label>
+        <input type="text" id="settingsCompanyName" class="form-input" required>
+      </div>
+      
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div class="form-group">
+          <label class="form-label">BRN</label>
+          <input type="text" id="settingsBrn" class="form-input" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">VAT</label>
+          <input type="text" id="settingsVat" class="form-input">
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Address</label>
+        <textarea id="settingsAddress" class="form-input" rows="2" required></textarea>
+      </div>
+      
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div class="form-group">
+          <label class="form-label">Phone</label>
+          <input type="tel" id="settingsPhone" class="form-input" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Currency</label>
+          <select id="settingsCurrency" class="form-select" required>
+            <option value="MUR">MUR (Rs)</option>
+            <option value="USD">USD ($)</option>
+            <option value="EUR">EUR (€)</option>
+          </select>
+        </div>
+      </div>
+      
+      <div style="background:#f8fafc;padding:20px;border-radius:12px;margin-bottom:20px">
+        <h3 style="font-size:16px;margin-bottom:16px;font-weight:700">Payment Information</h3>
+        <div class="form-group">
+          <label class="form-label">JUICE Mobile Number (for receiving payments)</label>
+          <input type="tel" id="settingsJuiceNumber" class="form-input" placeholder="+230 5XXX XXXX">
+          <small style="color:var(--muted);font-size:13px">Customers will send payments to this number</small>
+        </div>
+        <div class="form-group">
+          <label class="form-label">PayPal Email (for receiving payments)</label>
+          <input type="email" id="settingsPaypalEmail" class="form-input" placeholder="you@business.com">
+          <small style="color:var(--muted);font-size:13px">Customers will send PayPal payments to this email</small>
+        </div>
+      </div>
+      
+      <button type="submit" id="settingsBtn" class="btn primary" style="width:100%;padding:16px">Save Settings</button>
+    </form>
+  </div>
+</div>
+
 <div id="receiptModal" class="modal">
   <div class="modal-content" style="max-width:800px">
     <button class="modal-close" onclick="closeModal('receiptModal')">&times;</button>
@@ -920,7 +985,70 @@ async function handleSignout(){
 async function loadUserData(user){
   currentUser=user;
   const {data,error}=await supabase.from('user_profiles').select('*').eq('user_id',user.id).single();
-  if(!error&&data)userData=data;
+  if(!error&&data){
+    userData=data;
+    // Populate settings form if it exists
+    if(document.getElementById('settingsCompanyName')){
+      document.getElementById('settingsCompanyName').value=data.company_name||'';
+      document.getElementById('settingsBrn').value=data.brn||'';
+      document.getElementById('settingsVat').value=data.vat||'';
+      document.getElementById('settingsAddress').value=data.address||'';
+      document.getElementById('settingsPhone').value=data.phone||'';
+      document.getElementById('settingsCurrency').value=data.currency||'MUR';
+      document.getElementById('settingsJuiceNumber').value=data.juice_number||'';
+      document.getElementById('settingsPaypalEmail').value=data.paypal_email||'';
+    }
+  }
+}
+
+async function handleUpdateSettings(e){
+  e.preventDefault();
+  if(!currentUser){
+    alert('Please log in first');
+    return;
+  }
+  
+  const btn=document.getElementById('settingsBtn');
+  const errorDiv=document.getElementById('settingsError');
+  const successDiv=document.getElementById('settingsSuccess');
+  btn.disabled=true;
+  btn.innerHTML='<span class="loading"></span> Saving...';
+  errorDiv.style.display='none';
+  successDiv.style.display='none';
+  
+  try{
+    const updates={
+      company_name:document.getElementById('settingsCompanyName').value,
+      brn:document.getElementById('settingsBrn').value,
+      vat:document.getElementById('settingsVat').value,
+      address:document.getElementById('settingsAddress').value,
+      phone:document.getElementById('settingsPhone').value,
+      currency:document.getElementById('settingsCurrency').value,
+      juice_number:document.getElementById('settingsJuiceNumber').value||null,
+      paypal_email:document.getElementById('settingsPaypalEmail').value||null
+    };
+    
+    const {error}=await supabase
+      .from('user_profiles')
+      .update(updates)
+      .eq('user_id',currentUser.id);
+    
+    if(error)throw error;
+    
+    await loadUserData(currentUser);
+    successDiv.textContent='✅ Settings saved successfully!';
+    successDiv.style.display='block';
+    
+    setTimeout(()=>{
+      closeModal('settingsModal');
+    },1500);
+  }catch(error){
+    errorDiv.textContent='❌ '+error.message;
+    errorDiv.style.display='block';
+  }finally{
+    btn.disabled=false;
+    btn.textContent='Save Settings';
+  }
 }
 
 function selectPlan(planName,price){
@@ -947,11 +1075,13 @@ async function processPayment(method){
     if(updateError)throw updateError;
     
     if(method==='juice'){
-      alert(`✅ JUICE Payment Initiated!\n\nAmount: Rs ${selectedPlanData.price}\nPlan: ${selectedPlanData.name}\nReference: ${currentUser.id}\n\n🔗 In production, you would be redirected to JUICE payment gateway.\n\nFor now, your plan has been activated!`);
+      const juiceNumber=userData?.juice_number||'+230 5XXX XXXX';
+      alert(`✅ JUICE Payment Initiated!\n\nAmount: Rs ${selectedPlanData.price}\nPlan: ${selectedPlanData.name}\n💳 Send payment to: ${juiceNumber}\nReference: ${currentUser.id}\n\n🔗 In production, you would be redirected to JUICE payment gateway.\n\nFor now, your plan has been activated!`);
     }else if(method==='card'){
       alert(`✅ Card Payment Initiated!\n\nAmount: Rs ${selectedPlanData.price}\nPlan: ${selectedPlanData.name}\n\n💳 In production, you would be redirected to Stripe.\n\nFor now, your plan has been activated!`);
     }else if(method==='bank'){
-      alert(`✅ Bank Transfer Details:\n\nAccount: Business Manager Pro\nBank: MCB Mauritius\nAmount: Rs ${selectedPlanData.price}\nReference: ${currentUser.id}\n\n📧 Email proof to: payments@bmp.mu\n\nYour plan has been activated!`);
+      const paypalEmail=userData?.paypal_email||'payments@bmp.mu';
+      alert(`✅ Payment Options:\n\nAmount: Rs ${selectedPlanData.price}\nPlan: ${selectedPlanData.name}\n\n🏦 Bank Transfer:\nAccount: Business Manager Pro\nBank: MCB Mauritius\nReference: ${currentUser.id}\n\n💰 PayPal:\nSend to: ${paypalEmail}\n\n📧 Email proof to: payments@bmp.mu\n\nYour plan has been activated!`);
     }
     
     await loadUserData(currentUser);
@@ -980,6 +1110,14 @@ async function handleCreateReceipt(e) {
   if (!currentUser) {
     currentUser = session.user;
     await loadUserData(session.user);
+  }
+  
+  // Check if business profile is complete
+  if(!userData||!userData.company_name||!userData.brn||!userData.address||!userData.phone){
+    alert('❌ No business profile found for this user.\n\n✨ Please fill in your business settings first.');
+    closeModal('receiptModal');
+    openModal('settingsModal');
+    return;
   }
   
   const btn = document.getElementById('createReceiptBtn');
