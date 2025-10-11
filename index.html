@@ -981,7 +981,22 @@ async function handleSignout(){
 async function loadUserData(user){
   currentUser=user;
   const {data,error}=await supabase.from('user_profiles').select('*').eq('user_id',user.id).single();
-  if(!error&&data){
+  if(error&&error.code==='PGRST116'){
+    // Profile doesn't exist, create a basic one
+    const {data:newProfile,error:createError}=await supabase.from('user_profiles').insert([{
+      user_id:user.id,
+      full_name:user.user_metadata?.full_name||user.email,
+      email:user.email,
+      plan:'trial',
+      trial_ends:new Date(Date.now()+3*24*60*60*1000).toISOString(),
+      currency:'MUR'
+    }]).select().single();
+    if(!createError&&newProfile){
+      userData=newProfile;
+      alert('👋 Welcome! Please fill in your business details in Settings.');
+      setTimeout(()=>openModal('settingsModal'),500);
+    }
+  }else if(!error&&data){
     userData=data;
     // Populate settings form if it exists
     if(document.getElementById('settingsCompanyName')){
@@ -1012,6 +1027,8 @@ async function handleUpdateSettings(e){
   
   try{
     const updates={
+      full_name:userData.full_name||currentUser.email,
+      email:currentUser.email,
       company_name:document.getElementById('settingsCompanyName').value,
       brn:document.getElementById('settingsBrn').value,
       vat:document.getElementById('settingsVat').value,
@@ -1107,16 +1124,25 @@ async function handleCreateReceipt(e) {
   
   // Check if business profile is complete
   const missing = [];
-  if(!userData) missing.push('profile data');
-  else {
-    if(!userData.company_name) missing.push('Company Name');
-    if(!userData.brn) missing.push('BRN');
-    if(!userData.address) missing.push('Address');
-    if(!userData.phone) missing.push('Phone');
+  if(!userData) {
+    alert('❌ No business profile found!\n\n✨ Creating your profile and opening Settings...');
+    await loadUserData(currentUser);
+    if(!userData){
+      alert('⚠️ Could not create profile. Please contact support.');
+      return;
+    }
+    closeModal('receiptModal');
+    openModal('settingsModal');
+    return;
   }
   
+  if(!userData.company_name) missing.push('Company Name');
+  if(!userData.brn) missing.push('BRN');
+  if(!userData.address) missing.push('Address');
+  if(!userData.phone) missing.push('Phone');
+  
   if(missing.length > 0){
-    alert('❌ Business profile incomplete!\n\n📝 Missing:\n• ' + missing.join('\n• ') + '\n\n✨ Fill these in Settings now.');
+    alert('❌ Business profile incomplete!\n\n📝 Please fill in:\n• ' + missing.join('\n• ') + '\n\n✨ Opening Settings now...');
     closeModal('receiptModal');
     openModal('settingsModal');
     return;
