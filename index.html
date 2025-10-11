@@ -777,9 +777,10 @@ textarea.form-input{font-family:inherit;resize:vertical}
       <div class="card" onclick="processPayment('juice')" style="cursor:pointer;margin-bottom:12px;padding:16px">
         <div style="display:flex;align-items:center;gap:12px">
           <div style="font-size:32px">💳</div>
-          <div>
+          <div style="flex:1">
             <div style="font-weight:600">JUICE Mobile Payment</div>
             <div style="font-size:13px;color:var(--muted)">Pay with mobile number</div>
+            <div id="juicePaymentInfo" style="font-size:13px;color:var(--primary);font-weight:600;margin-top:4px"></div>
           </div>
         </div>
       </div>
@@ -790,6 +791,17 @@ textarea.form-input{font-family:inherit;resize:vertical}
           <div>
             <div style="font-weight:600">Credit/Debit Card</div>
             <div style="font-size:13px;color:var(--muted)">Visa, Mastercard</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card" onclick="processPayment('paypal')" style="cursor:pointer;margin-bottom:12px;padding:16px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="font-size:32px">💰</div>
+          <div style="flex:1">
+            <div style="font-weight:600">PayPal</div>
+            <div style="font-size:13px;color:var(--muted)">Send money via PayPal</div>
+            <div id="paypalPaymentInfo" style="font-size:13px;color:var(--primary);font-weight:600;margin-top:4px"></div>
           </div>
         </div>
       </div>
@@ -1061,12 +1073,48 @@ function selectPlan(planName,price){
   document.getElementById('selectedPlanName').textContent=planName.charAt(0).toUpperCase()+planName.slice(1);
   document.getElementById('selectedPlanPrice').textContent='Rs '+price.toLocaleString()+'/month';
   document.getElementById('planModalSubtitle').textContent='You\'re upgrading to '+planName;
+  
+  // Show payment info if available
+  const juiceInfo=document.getElementById('juicePaymentInfo');
+  const paypalInfo=document.getElementById('paypalPaymentInfo');
+  if(juiceInfo){
+    if(userData&&userData.juice_number){
+      juiceInfo.textContent='💳 Send to: '+userData.juice_number;
+      juiceInfo.style.display='block';
+    }else{
+      juiceInfo.textContent='⚠️ Add your JUICE number in Settings';
+      juiceInfo.style.display='block';
+    }
+  }
+  if(paypalInfo){
+    if(userData&&userData.paypal_email){
+      paypalInfo.textContent='💰 Send to: '+userData.paypal_email;
+      paypalInfo.style.display='block';
+    }else{
+      paypalInfo.textContent='⚠️ Add your PayPal email in Settings';
+      paypalInfo.style.display='block';
+    }
+  }
+  
   openModal('planModal');
 }
 
 async function processPayment(method){
   if(!selectedPlanData||!currentUser)return;
   const errorDiv=document.getElementById('planError');errorDiv.style.display='none';
+  
+  // Check if payment info is configured
+  if(method==='juice'&&(!userData||!userData.juice_number)){
+    errorDiv.textContent='⚠️ Please add your JUICE number in Settings first';
+    errorDiv.style.display='block';
+    return;
+  }
+  if(method==='paypal'&&(!userData||!userData.paypal_email)){
+    errorDiv.textContent='⚠️ Please add your PayPal email in Settings first';
+    errorDiv.style.display='block';
+    return;
+  }
+  
   try{
     const {error}=await supabase.from('subscriptions').insert([{user_id:currentUser.id,plan:selectedPlanData.name,amount:selectedPlanData.price,payment_method:method,status:'pending'}]);
     if(error)throw error;
@@ -1075,20 +1123,21 @@ async function processPayment(method){
     if(updateError)throw updateError;
     
     if(method==='juice'){
-      const juiceNumber=userData?.juice_number||'+230 5XXX XXXX';
-      alert(`✅ JUICE Payment Initiated!\n\nAmount: Rs ${selectedPlanData.price}\nPlan: ${selectedPlanData.name}\n💳 Send payment to: ${juiceNumber}\nReference: ${currentUser.id}\n\n🔗 In production, you would be redirected to JUICE payment gateway.\n\nFor now, your plan has been activated!`);
+      const juiceNumber=userData.juice_number;
+      alert(`✅ JUICE Payment Instructions\n\n📱 Open your JUICE app\n💳 Send: Rs ${selectedPlanData.price}\n📞 To number: ${juiceNumber}\n📝 Reference: ${selectedPlanData.name.toUpperCase()}-${currentUser.id.slice(0,8)}\n\n⏰ Your plan will be activated once payment is confirmed.\n\nThank you for your business!`);
+    }else if(method==='paypal'){
+      const paypalEmail=userData.paypal_email;
+      alert(`✅ PayPal Payment Instructions\n\n💰 Go to PayPal.com or PayPal app\n💵 Send: Rs ${selectedPlanData.price}\n📧 To email: ${paypalEmail}\n📝 Note: ${selectedPlanData.name.toUpperCase()}-${currentUser.id.slice(0,8)}\n\n⏰ Your plan will be activated once payment is confirmed.\n\nThank you for your business!`);
     }else if(method==='card'){
-      alert(`✅ Card Payment Initiated!\n\nAmount: Rs ${selectedPlanData.price}\nPlan: ${selectedPlanData.name}\n\n💳 In production, you would be redirected to Stripe.\n\nFor now, your plan has been activated!`);
+      alert(`✅ Card Payment\n\n💳 Amount: Rs ${selectedPlanData.price}\n📦 Plan: ${selectedPlanData.name}\n\n🔗 In production, you would be redirected to Stripe payment gateway.\n\nFor demo purposes, your plan has been activated!`);
     }else if(method==='bank'){
-      const paypalEmail=userData?.paypal_email||'payments@bmp.mu';
-      alert(`✅ Payment Options:\n\nAmount: Rs ${selectedPlanData.price}\nPlan: ${selectedPlanData.name}\n\n🏦 Bank Transfer:\nAccount: Business Manager Pro\nBank: MCB Mauritius\nReference: ${currentUser.id}\n\n💰 PayPal:\nSend to: ${paypalEmail}\n\n📧 Email proof to: payments@bmp.mu\n\nYour plan has been activated!`);
+      alert(`✅ Bank Transfer Instructions\n\n🏦 Bank: MCB Mauritius\n👤 Account Name: Business Manager Pro\n💵 Amount: Rs ${selectedPlanData.price}\n📝 Reference: ${selectedPlanData.name.toUpperCase()}-${currentUser.id.slice(0,8)}\n\n📧 Email proof to: payments@bmp.mu\n\n⏰ Your plan will be activated once payment is confirmed.\n\nThank you for your business!`);
     }
     
     await loadUserData(currentUser);
     document.getElementById('planStatus').textContent=selectedPlanData.name.charAt(0).toUpperCase()+selectedPlanData.name.slice(1);
     
     closeModal('planModal');
-    alert('🎉 Success! Your '+selectedPlanData.name+' plan is now active!');
   }catch(error){
     errorDiv.textContent='❌ '+error.message;errorDiv.style.display='block';
   }
