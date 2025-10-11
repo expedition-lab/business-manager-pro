@@ -6,7 +6,7 @@
 <title>Business Manager Pro – Smart E-Receipts for Modern Businesses</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <style>
 :root{--ink:#0f172a;--muted:#475569;--bg:#f8fafc;--primary:#2563eb;--success:#10b981}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -966,9 +966,20 @@ async function processPayment(method){
 
 async function handleCreateReceipt(e) {
   e.preventDefault();
-  if (!currentUser || !userData) {
+  
+  // Check if user is logged in
+  const {data:{session}} = await supabase.auth.getSession();
+  if (!session) {
     alert('Please log in to create receipts');
+    closeModal('receiptModal');
+    openModal('signinModal');
     return;
+  }
+  
+  // Update currentUser if needed
+  if (!currentUser) {
+    currentUser = session.user;
+    await loadUserData(session.user);
   }
   
   const btn = document.getElementById('createReceiptBtn');
