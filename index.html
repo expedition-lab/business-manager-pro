@@ -779,8 +779,7 @@ textarea.form-input{font-family:inherit;resize:vertical}
           <div style="font-size:32px">💳</div>
           <div style="flex:1">
             <div style="font-weight:600">JUICE Mobile Payment</div>
-            <div style="font-size:13px;color:var(--muted)">Pay with mobile number</div>
-            <div id="juicePaymentInfo" style="font-size:13px;color:var(--primary);font-weight:600;margin-top:4px"></div>
+            <div style="font-size:13px;color:var(--muted)">Pay via JUICE mobile money</div>
           </div>
         </div>
       </div>
@@ -801,7 +800,6 @@ textarea.form-input{font-family:inherit;resize:vertical}
           <div style="flex:1">
             <div style="font-weight:600">PayPal</div>
             <div style="font-size:13px;color:var(--muted)">Send money via PayPal</div>
-            <div id="paypalPaymentInfo" style="font-size:13px;color:var(--primary);font-weight:600;margin-top:4px"></div>
           </div>
         </div>
       </div>
@@ -862,20 +860,6 @@ textarea.form-input{font-family:inherit;resize:vertical}
             <option value="USD">USD ($)</option>
             <option value="EUR">EUR (€)</option>
           </select>
-        </div>
-      </div>
-      
-      <div style="background:#f8fafc;padding:20px;border-radius:12px;margin-bottom:20px">
-        <h3 style="font-size:16px;margin-bottom:16px;font-weight:700">Payment Information</h3>
-        <div class="form-group">
-          <label class="form-label">JUICE Mobile Number (for receiving payments)</label>
-          <input type="tel" id="settingsJuiceNumber" class="form-input" placeholder="+230 5XXX XXXX">
-          <small style="color:var(--muted);font-size:13px">Customers will send payments to this number</small>
-        </div>
-        <div class="form-group">
-          <label class="form-label">PayPal Email (for receiving payments)</label>
-          <input type="email" id="settingsPaypalEmail" class="form-input" placeholder="you@business.com">
-          <small style="color:var(--muted);font-size:13px">Customers will send PayPal payments to this email</small>
         </div>
       </div>
       
@@ -1007,8 +991,6 @@ async function loadUserData(user){
       document.getElementById('settingsAddress').value=data.address||'';
       document.getElementById('settingsPhone').value=data.phone||'';
       document.getElementById('settingsCurrency').value=data.currency||'MUR';
-      document.getElementById('settingsJuiceNumber').value=data.juice_number||'';
-      document.getElementById('settingsPaypalEmail').value=data.paypal_email||'';
     }
   }
 }
@@ -1035,9 +1017,7 @@ async function handleUpdateSettings(e){
       vat:document.getElementById('settingsVat').value,
       address:document.getElementById('settingsAddress').value,
       phone:document.getElementById('settingsPhone').value,
-      currency:document.getElementById('settingsCurrency').value,
-      juice_number:document.getElementById('settingsJuiceNumber').value||null,
-      paypal_email:document.getElementById('settingsPaypalEmail').value||null
+      currency:document.getElementById('settingsCurrency').value
     };
     
     const {error}=await supabase
@@ -1074,46 +1054,12 @@ function selectPlan(planName,price){
   document.getElementById('selectedPlanPrice').textContent='Rs '+price.toLocaleString()+'/month';
   document.getElementById('planModalSubtitle').textContent='You\'re upgrading to '+planName;
   
-  // Show payment info if available
-  const juiceInfo=document.getElementById('juicePaymentInfo');
-  const paypalInfo=document.getElementById('paypalPaymentInfo');
-  if(juiceInfo){
-    if(userData&&userData.juice_number){
-      juiceInfo.textContent='💳 Send to: '+userData.juice_number;
-      juiceInfo.style.display='block';
-    }else{
-      juiceInfo.textContent='⚠️ Add your JUICE number in Settings';
-      juiceInfo.style.display='block';
-    }
-  }
-  if(paypalInfo){
-    if(userData&&userData.paypal_email){
-      paypalInfo.textContent='💰 Send to: '+userData.paypal_email;
-      paypalInfo.style.display='block';
-    }else{
-      paypalInfo.textContent='⚠️ Add your PayPal email in Settings';
-      paypalInfo.style.display='block';
-    }
-  }
-  
   openModal('planModal');
 }
 
 async function processPayment(method){
   if(!selectedPlanData||!currentUser)return;
   const errorDiv=document.getElementById('planError');errorDiv.style.display='none';
-  
-  // Check if payment info is configured
-  if(method==='juice'&&(!userData||!userData.juice_number)){
-    errorDiv.textContent='⚠️ Please add your JUICE number in Settings first';
-    errorDiv.style.display='block';
-    return;
-  }
-  if(method==='paypal'&&(!userData||!userData.paypal_email)){
-    errorDiv.textContent='⚠️ Please add your PayPal email in Settings first';
-    errorDiv.style.display='block';
-    return;
-  }
   
   try{
     const {error}=await supabase.from('subscriptions').insert([{user_id:currentUser.id,plan:selectedPlanData.name,amount:selectedPlanData.price,payment_method:method,status:'pending'}]);
@@ -1123,15 +1069,13 @@ async function processPayment(method){
     if(updateError)throw updateError;
     
     if(method==='juice'){
-      const juiceNumber=userData.juice_number;
-      alert(`✅ JUICE Payment Instructions\n\n📱 Open your JUICE app\n💳 Send: Rs ${selectedPlanData.price}\n📞 To number: ${juiceNumber}\n📝 Reference: ${selectedPlanData.name.toUpperCase()}-${currentUser.id.slice(0,8)}\n\n⏰ Your plan will be activated once payment is confirmed.\n\nThank you for your business!`);
+      alert(`✅ JUICE Payment Instructions\n\n📱 Open your JUICE app\n💳 Send: Rs ${selectedPlanData.price}\n📞 To number: +230 54960101\n📝 Reference: ${selectedPlanData.name.toUpperCase()}-${currentUser.id.slice(0,8)}\n\n⏰ Your plan will be activated once payment is confirmed.\n\nThank you for your business!`);
     }else if(method==='paypal'){
-      const paypalEmail=userData.paypal_email;
-      alert(`✅ PayPal Payment Instructions\n\n💰 Go to PayPal.com or PayPal app\n💵 Send: Rs ${selectedPlanData.price}\n📧 To email: ${paypalEmail}\n📝 Note: ${selectedPlanData.name.toUpperCase()}-${currentUser.id.slice(0,8)}\n\n⏰ Your plan will be activated once payment is confirmed.\n\nThank you for your business!`);
+      alert(`✅ PayPal Payment Instructions\n\n💰 Go to PayPal.com or PayPal app\n💵 Send: Rs ${selectedPlanData.price}\n📧 To email: peeroosuhail047@gmail.com\n📝 Note: ${selectedPlanData.name.toUpperCase()}-${currentUser.id.slice(0,8)}\n\n⏰ Your plan will be activated once payment is confirmed.\n\nThank you for your business!`);
     }else if(method==='card'){
       alert(`✅ Card Payment\n\n💳 Amount: Rs ${selectedPlanData.price}\n📦 Plan: ${selectedPlanData.name}\n\n🔗 In production, you would be redirected to Stripe payment gateway.\n\nFor demo purposes, your plan has been activated!`);
     }else if(method==='bank'){
-      alert(`✅ Bank Transfer Instructions\n\n🏦 Bank: MCB Mauritius\n👤 Account Name: Business Manager Pro\n💵 Amount: Rs ${selectedPlanData.price}\n📝 Reference: ${selectedPlanData.name.toUpperCase()}-${currentUser.id.slice(0,8)}\n\n📧 Email proof to: payments@bmp.mu\n\n⏰ Your plan will be activated once payment is confirmed.\n\nThank you for your business!`);
+      alert(`✅ Bank Transfer Instructions\n\n🏦 Bank: MCB Mauritius\n👤 Account Name: Business Manager Pro\n💵 Amount: Rs ${selectedPlanData.price}\n📝 Reference: ${selectedPlanData.name.toUpperCase()}-${currentUser.id.slice(0,8)}\n\n📧 Email proof to: peeroosuhail047@gmail.com\n\n⏰ Your plan will be activated once payment is confirmed.\n\nThank you for your business!`);
     }
     
     await loadUserData(currentUser);
