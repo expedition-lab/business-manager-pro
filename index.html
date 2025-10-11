@@ -1162,8 +1162,17 @@ async function handleCreateReceipt(e) {
   }
   
   // Check if business profile is complete
-  if(!userData||!userData.company_name||!userData.brn||!userData.address||!userData.phone){
-    alert('❌ No business profile found for this user.\n\n✨ Please fill in your business settings first.');
+  const missing = [];
+  if(!userData) missing.push('profile data');
+  else {
+    if(!userData.company_name) missing.push('Company Name');
+    if(!userData.brn) missing.push('BRN');
+    if(!userData.address) missing.push('Address');
+    if(!userData.phone) missing.push('Phone');
+  }
+  
+  if(missing.length > 0){
+    alert('❌ Business profile incomplete!\n\n📝 Missing:\n• ' + missing.join('\n• ') + '\n\n✨ Fill these in Settings now.');
     closeModal('receiptModal');
     openModal('settingsModal');
     return;
