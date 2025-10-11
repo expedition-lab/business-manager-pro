@@ -890,7 +890,15 @@ async function handleSignup(e){
     const {error:pe}=await supabase.from('user_profiles').insert([{user_id:ad.user.id,full_name:fd.full_name,phone:fd.phone,company_name:fd.company_name,brn:fd.brn,vat:fd.vat,address:fd.address,currency:fd.currency,timezone:fd.timezone,plan:'trial',trial_ends:new Date(Date.now()+3*24*60*60*1000).toISOString()}]);
     if(pe)throw pe;
     successDiv.textContent='✅ Account created! Logging you in...';successDiv.style.display='block';
-    setTimeout(async()=>{await loadUserData(ad.user);closeModal('signupModal');showDashboard()},1500);
+    setTimeout(async()=>{
+  await loadUserData(ad.user);
+  closeModal('signupModal');
+  showDashboard();
+  setTimeout(()=>{
+    alert('🎉 Welcome! Your 3-day trial has started.\n\n✨ Choose a plan to continue after your trial ends.');
+    openModal('planModal');
+  },800);
+},1500);
   }catch(error){errorDiv.textContent='❌ '+error.message;errorDiv.style.display='block';btn.disabled=false;btn.textContent='Create account'}
 }
 
