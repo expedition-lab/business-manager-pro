@@ -6,7 +6,7 @@
 <title>Business Manager Pro – Smart E-Receipts for Modern Businesses</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js"></script>
 <style>
 :root{--ink:#0f172a;--muted:#475569;--bg:#f8fafc;--primary:#2563eb;--success:#10b981}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -603,7 +603,7 @@ textarea.form-input{font-family:inherit;resize:vertical}
         <p style="color:var(--muted)">Welcome back, <span id="userName">User</span></p>
       </div>
       <div style="display:flex;gap:12px">
-        <button class="btn" onclick="openModal('planModal')">💳 Manage Plan</button>
+        <button class="btn" onclick="handleManagePlan()">💳 Manage Plan</button>
         <button class="btn secondary" onclick="handleSignout()">Sign Out</button>
       </div>
     </div>
@@ -891,14 +891,14 @@ async function handleSignup(e){
     if(pe)throw pe;
     successDiv.textContent='✅ Account created! Logging you in...';successDiv.style.display='block';
     setTimeout(async()=>{
-  await loadUserData(ad.user);
-  closeModal('signupModal');
-  showDashboard();
-  setTimeout(()=>{
-    alert('🎉 Welcome! Your 3-day trial has started.\n\n✨ Choose a plan to continue after your trial ends.');
-    openModal('planModal');
-  },800);
-},1500);
+      await loadUserData(ad.user);
+      closeModal('signupModal');
+      showDashboard();
+      setTimeout(()=>{
+        alert('🎉 Welcome! Your 3-day trial has started.\n\n✨ Choose a plan to continue after your trial ends.');
+        openModal('planModal');
+      },800);
+    },1500);
   }catch(error){errorDiv.textContent='❌ '+error.message;errorDiv.style.display='block';btn.disabled=false;btn.textContent='Create account'}
 }
 
@@ -943,7 +943,6 @@ async function processPayment(method){
     const {error}=await supabase.from('subscriptions').insert([{user_id:currentUser.id,plan:selectedPlanData.name,amount:selectedPlanData.price,payment_method:method,status:'pending'}]);
     if(error)throw error;
     
-    // Update user plan to the selected plan
     const {error:updateError}=await supabase.from('user_profiles').update({plan:selectedPlanData.name}).eq('user_id',currentUser.id);
     if(updateError)throw updateError;
     
@@ -955,7 +954,6 @@ async function processPayment(method){
       alert(`✅ Bank Transfer Details:\n\nAccount: Business Manager Pro\nBank: MCB Mauritius\nAmount: Rs ${selectedPlanData.price}\nReference: ${currentUser.id}\n\n📧 Email proof to: payments@bmp.mu\n\nYour plan has been activated!`);
     }
     
-    // Reload user data and update UI
     await loadUserData(currentUser);
     document.getElementById('planStatus').textContent=selectedPlanData.name.charAt(0).toUpperCase()+selectedPlanData.name.slice(1);
     
@@ -996,7 +994,6 @@ async function handleCreateReceipt(e) {
     
     receiptData.total_amount = receiptData.quantity * receiptData.unit_price;
     
-    // Save to database
     const { data, error } = await supabase
       .from('receipts')
       .insert([receiptData])
@@ -1004,12 +1001,10 @@ async function handleCreateReceipt(e) {
     
     if (error) throw error;
     
-    // Success
     alert('✅ Receipt created successfully! Reference: ' + receiptData.reference_number);
     closeModal('receiptModal');
     document.getElementById('receiptForm').reset();
     
-    // Refresh dashboard stats
     await loadUserData(currentUser);
     
   } catch (error) {
@@ -1045,29 +1040,26 @@ function updateNav(loggedIn){
   }
 }
 
-// Fix Manage Plan button to go to pricing section
-document.addEventListener('DOMContentLoaded',function(){
-  const managePlanBtns=document.querySelectorAll('[onclick*="planModal"]');
-  managePlanBtns.forEach(btn=>{
-    btn.onclick=function(){
-      if(!selectedPlanData){
-        // No plan selected, go to pricing section
-        handleSignout();
-        setTimeout(()=>{
-          document.querySelector('#pricing').scrollIntoView({behavior:'smooth'});
-        },500);
-      }else{
-        openModal('planModal');
-      }
-    };
-  });
-});
+function handleManagePlan(){
+  if(!currentUser){
+    openModal('signinModal');
+    return;
+  }
+  if(!selectedPlanData){
+    document.getElementById('landing').style.display='block';
+    document.getElementById('dashboard').classList.remove('active');
+    setTimeout(()=>{
+      document.querySelector('#pricing').scrollIntoView({behavior:'smooth'});
+    },300);
+  }else{
+    openModal('planModal');
+  }
+}
 
 function openModal(id){document.getElementById(id).classList.add('active');document.body.style.overflow='hidden'}
 function closeModal(id){document.getElementById(id).classList.remove('active');document.body.style.overflow=''}
 document.querySelectorAll('.modal').forEach(modal=>{modal.addEventListener('click',e=>{if(e.target===modal){modal.classList.remove('active');document.body.style.overflow=''}})});
 
-// Receipt Generator
 const $=id=>document.getElementById(id);
 const symbols={MUR:'Rs',USD:'$',EUR:'€'};
 const currencyFmt=(n,cur)=>{const num=Number(n||0);if(cur==='MUR')return symbols[cur]+' '+num.toLocaleString('en-MU',{minimumFractionDigits:2,maximumFractionDigits:2});return new Intl.NumberFormat('en',{style:'currency',currency:cur,minimumFractionDigits:2}).format(num)};
@@ -1075,7 +1067,7 @@ const todayStr=()=>new Date().toLocaleDateString(undefined,{year:'numeric',month
 function genRef(){const now=new Date();const seed=Number(now.getFullYear().toString().slice(-2)+(now.getMonth()+1).toString().padStart(2,'0')+now.getDate().toString().padStart(2,'0'));let rnd=Math.floor(Math.random()*1e8);let x=(rnd^seed)>>>0;const a=(x%10000).toString().padStart(4,'0');const b=(Math.floor(x/10000)%10000).toString().padStart(4,'0');const sum=(a+b).split('').reduce((s,d)=>s+Number(d),0);const bChk=b.slice(0,3)+String(sum%10);return `${a}-${bChk}`}
 
 function updateFromForm(){
-  if(!$('cur'))return; // Don't run if elements don't exist
+  if(!$('cur'))return;
   const cur=$('cur').value||'MUR';
   const biz=$('biz').value||'Your Business';
   const brn=$('brn').value||'—';
@@ -1115,7 +1107,6 @@ function updateFromForm(){
   return url;
 }
 
-// Set up receipt generator event listeners
 setTimeout(()=>{
   if($('update'))$('update').addEventListener('click',updateFromForm);
   if($('printBtn'))$('printBtn').addEventListener('click',()=>{updateFromForm();window.print()});
@@ -1123,13 +1114,12 @@ setTimeout(()=>{
   ['biz','brn','vat','addr','phone','cust','custaddr','item','qty','price','cur','pay','notes'].forEach(id=>{if($(id))$(id).addEventListener('input',updateFromForm)});
 },500);
 
-// Prevent ALL hash navigations; still smooth-scroll real anchors
 document.addEventListener('click', (e) => {
   const a = e.target.closest('a[href^="#"]');
   if (!a) return;
   const href = a.getAttribute('href');
-  e.preventDefault();              // block default jump
-  if (!href || href === '#') return; // ignore plain "#"
+  e.preventDefault();
+  if (!href || href === '#') return;
   const target = document.querySelector(href);
   if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
@@ -1147,7 +1137,7 @@ supabase.auth.onAuthStateChange((event,session)=>{
 
 init();
 console.log('✅ Business Manager Pro Ready!');
-  </script>
+</script>
 
 </body>
 </html>
