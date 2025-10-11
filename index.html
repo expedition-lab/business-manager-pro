@@ -948,16 +948,34 @@ async function handleSignup(e){
     const fd={full_name:document.getElementById('fullName').value,email:document.getElementById('email').value,phone:document.getElementById('phone').value,password:document.getElementById('password').value,company_name:document.getElementById('companyName').value,brn:document.getElementById('brn').value,vat:document.getElementById('vat').value,address:document.getElementById('address').value,currency:document.getElementById('currency').value,timezone:document.getElementById('timezone').value};
     const {data:ad,error:ae}=await supabase.auth.signUp({email:fd.email,password:fd.password,options:{data:{full_name:fd.full_name,company_name:fd.company_name}}});
     if(ae)throw ae;
-    const {error:pe}=await supabase.from('user_profiles').insert([{user_id:ad.user.id,full_name:fd.full_name,phone:fd.phone,company_name:fd.company_name,brn:fd.brn,vat:fd.vat,address:fd.address,currency:fd.currency,timezone:fd.timezone,plan:'trial',trial_ends:new Date(Date.now()+3*24*60*60*1000).toISOString()}]);
+    
+    // Make sure profile is created with ALL fields
+    const profileData={
+      user_id:ad.user.id,
+      full_name:fd.full_name,
+      email:fd.email,
+      phone:fd.phone,
+      company_name:fd.company_name,
+      brn:fd.brn,
+      vat:fd.vat,
+      address:fd.address,
+      currency:fd.currency,
+      timezone:fd.timezone,
+      plan:'trial',
+      trial_ends:new Date(Date.now()+3*24*60*60*1000).toISOString(),
+      created_at:new Date().toISOString()
+    };
+    
+    const {error:pe}=await supabase.from('user_profiles').insert([profileData]);
     if(pe)throw pe;
+    
     successDiv.textContent='✅ Account created! Logging you in...';successDiv.style.display='block';
     setTimeout(async()=>{
       await loadUserData(ad.user);
       closeModal('signupModal');
       showDashboard();
       setTimeout(()=>{
-        alert('🎉 Welcome! Your 3-day trial has started.\n\n✨ Choose a plan to continue after your trial ends.');
-        openModal('planModal');
+        alert('🎉 Welcome! Your 3-day trial has started.\n\n✨ You can now create receipts!');
       },800);
     },1500);
   }catch(error){errorDiv.textContent='❌ '+error.message;errorDiv.style.display='block';btn.disabled=false;btn.textContent='Create account'}
@@ -982,22 +1000,34 @@ async function loadUserData(user){
   currentUser=user;
   const {data,error}=await supabase.from('user_profiles').select('*').eq('user_id',user.id).single();
   if(error&&error.code==='PGRST116'){
-    // Profile doesn't exist, create a basic one
+    // Profile doesn't exist - try to create it
+    console.log('Profile not found, creating...');
     const {data:newProfile,error:createError}=await supabase.from('user_profiles').insert([{
       user_id:user.id,
-      full_name:user.user_metadata?.full_name||user.email,
+      full_name:user.user_metadata?.full_name||user.email?.split('@')[0]||'User',
       email:user.email,
       plan:'trial',
       trial_ends:new Date(Date.now()+3*24*60*60*1000).toISOString(),
-      currency:'MUR'
+      currency:'MUR',
+      created_at:new Date().toISOString()
     }]).select().single();
+    
     if(!createError&&newProfile){
       userData=newProfile;
-      alert('👋 Welcome! Please fill in your business details in Settings.');
-      setTimeout(()=>openModal('settingsModal'),500);
+      console.log('Profile created successfully');
+      alert('👋 Welcome! Please complete your business profile in Settings to create receipts.');
+      setTimeout(()=>{
+        if(document.getElementById('dashboard').classList.contains('active')){
+          openModal('settingsModal');
+        }
+      },1000);
+    }else{
+      console.error('Failed to create profile:',createError);
+      alert('⚠️ Profile creation failed. Please contact support.');
     }
   }else if(!error&&data){
     userData=data;
+    console.log('Profile loaded:',data.company_name||'(no company name)');
     // Populate settings form if it exists
     if(document.getElementById('settingsCompanyName')){
       document.getElementById('settingsCompanyName').value=data.company_name||'';
@@ -1007,6 +1037,8 @@ async function loadUserData(user){
       document.getElementById('settingsPhone').value=data.phone||'';
       document.getElementById('settingsCurrency').value=data.currency||'MUR';
     }
+  }else{
+    console.error('Error loading profile:',error);
   }
 }
 
