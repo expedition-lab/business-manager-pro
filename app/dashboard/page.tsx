@@ -1,16 +1,17 @@
-// app/dashboard/page.tsx
-import { cookies } from "next/headers";
-import { createClient } from "@/utils/supabase/server";
+"use client";
+import { useEffect } from "react";
+import { ensureUserProfile } from "@/lib/ensureUserProfile";
 
-export default async function Dashboard() {
-  const sb = createClient(cookies());
-  const { data: { user } } = await sb.auth.getUser();
-  if (!user) return <p>Not signed in</p>;
+export default function DashboardPage() {
+  useEffect(() => {
+    (async () => {
+      try {
+        await ensureUserProfile({}); // minimal payload; fills blanks safely
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+  }, []);
 
-  return (
-    <main style={{ maxWidth: 880, margin: "40px auto", padding: 16 }}>
-      <h1>Welcome back, {user.email}</h1>
-      <p>You’re now logged in.</p>
-    </main>
-  );
+  return <div>Dashboard…</div>;
 }
