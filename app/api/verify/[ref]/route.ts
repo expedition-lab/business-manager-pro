@@ -1,18 +1,24 @@
-// app/api/receipts/verify/[ref]/route.ts
-export const runtime = "nodejs";
+// app/api/verify/[ref]/route.ts
+export const runtime = "nodejs"; // server-only (touches DB)
 
 import { NextResponse } from "next/server";
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/utils/supabase/server"; // make sure this is the *server* client
 
-type Params = { ref: string };
+export async function GET(
+  _req: Request,
+  { params }: { params: { ref: string } }
+) {
+  const ref = decodeURIComponent(params.ref).trim();
+  if (!ref) {
+    return NextResponse.json({ valid: false, error: "Missing ref" }, { status: 400 });
+  }
 
-export async function GET(_req: Request, { params }: { params: Params }) {
-  const ref = decodeURIComponent(params.ref).trim(); // guard whitespace
   const sb = createClient();
 
+  // Keep selection minimal—no PII
   const { data, error } = await sb
     .from("receipts")
-    .select("id, ref, total, currency, business_name, created_at, status")
+    .select("id, ref, total, currency, business_name, created_at") // removed `status`
     .eq("ref", ref)
     .limit(1)
     .maybeSingle();
@@ -21,12 +27,12 @@ export async function GET(_req: Request, { params }: { params: Params }) {
     return NextResponse.json({ valid: false, error: error.message }, { status: 400 });
   }
   if (!data) {
-    // You can also return 200 with {valid:false} if you prefer not to leak 404
+    // or return 200 with {valid:false} if you prefer not to leak 404
     return NextResponse.json({ valid: false }, { status: 404 });
   }
 
-  // Optional: prevent long caching of verification results
-  return NextResponse.json({ valid: true, receipt: data }, {
-    headers: { "Cache-Control": "no-store" }
-  });
+  return NextResponse.json(
+    { valid: true, receipt: data },
+    { headers: { "Cache-Control": "no-store" } }
+  );
 }
