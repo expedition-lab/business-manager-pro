@@ -37,7 +37,7 @@ function isHttpUrl(v: string | null) {
   }
 }
 
-function noStore(json: any, init?: number | ResponseInit) {
+function noStore(json: any, init?: ResponseInit) {
   const res = NextResponse.json(json, init);
   res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
   return res;
@@ -51,7 +51,7 @@ export async function GET() {
   if (!user) return noStore({ error: "Not authenticated" }, { status: 401 });
 
   const { data, error } = await sb
-    .from("business_profiles")
+    .from("user_profiles")
     .select("*")
     .eq("user_id", user.id)
     .single();
@@ -85,23 +85,32 @@ export async function POST(req: NextRequest) {
   // normalize & validate
   const email = clip(sOrNull(body.email) ?? user.email ?? null, MAX.email);
   const full_name = clip(sOrNull(body.full_name), MAX.name);
-  const business_name = clip(sOrNull(body.business_name), MAX.name);
+  const company_name = clip(sOrNull(body.company_name || body.business_name), MAX.name);
   const brn = clip(sOrNull(body.brn), MAX.brn);
   const vat = clip(sOrNull(body.vat), MAX.vat);
   const phone = clip(sOrNull(body.phone), MAX.phone);
   const address = clip(sOrNull(body.address), MAX.address);
-  const logo_url = clip(sOrNull(body.logo_url), MAX.url);
 
   if (!isEmail(email)) return noStore({ error: "Please enter a valid email address." }, { status: 400 });
-  if (logo_url && !isHttpUrl(logo_url)) return noStore({ error: "Logo URL must be http(s)." }, { status: 400 });
 
-  const payload = { email, full_name, business_name, brn, vat, phone, address, logo_url };
+  const payload = { 
+    user_id: user.id,
+    email, 
+    full_name, 
+    company_name, 
+    brn, 
+    vat, 
+    phone, 
+    address,
+    currency: body.currency || "MUR",
+    plan: body.plan || "trial"
+  };
 
   try {
     // check if a row already exists (to choose 201 vs 200 and avoid no-op writes)
     const { data: existing } = await sb
-      .from("business_profiles")
-      .select("email, full_name, business_name, brn, vat, phone, address, logo_url")
+      .from("user_profiles")
+      .select("*")
       .eq("user_id", user.id)
       .single();
 
@@ -109,18 +118,17 @@ export async function POST(req: NextRequest) {
       existing &&
       existing.email === payload.email &&
       existing.full_name === payload.full_name &&
-      existing.business_name === payload.business_name &&
+      existing.company_name === payload.company_name &&
       existing.brn === payload.brn &&
       existing.vat === payload.vat &&
       existing.phone === payload.phone &&
-      existing.address === payload.address &&
-      existing.logo_url === payload.logo_url;
+      existing.address === payload.address;
 
     if (isNoop) return noStore({ profile: existing, unchanged: true }, { status: 200 });
 
     const { data, error } = await sb
-      .from("business_profiles")
-      .upsert(payload, { onConflict: "user_id" }) // user_id DEFAULT auth.uid()
+      .from("user_profiles")
+      .upsert(payload, { onConflict: "user_id" })
       .select()
       .single();
 
