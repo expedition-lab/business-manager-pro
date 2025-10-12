@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
-import { requirePlan } from "@/app/api/lib/requirePlan";
+import { checkPlanAndQuota } from "@/app/api/lib/requirePlan";
 
 export async function POST(
   req: Request,
@@ -10,7 +10,22 @@ export async function POST(
   const { data: { user } } = await sb.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  await requirePlan(user.id, "business"); // gate emailing for Business+
+  // Check plan - emailing reserved for Business plan
+  const planCheck = await checkPlanAndQuota();
+  if (!planCheck.ok) {
+    return NextResponse.json(
+      { error: planCheck.reason || "Plan check failed" },
+      { status: 402 }
+    );
+  }
+  
+  // Additional check: must be Business plan for email feature
+  if (planCheck.plan?.plan !== "business") {
+    return NextResponse.json(
+      { error: "Email feature is only available on the Business plan. Please upgrade." },
+      { status: 402 }
+    );
+  }
 
   const { data: receipt, error } = await sb
     .from("receipts")
@@ -24,5 +39,5 @@ export async function POST(
   // TODO: send email using your provider and a PDF attachment if needed
   // await sendReceiptEmail({ to, receipt });
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, message: "Email feature coming soon!" });
 }
