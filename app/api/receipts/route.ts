@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
 
   // 2) load the user's business profile - BULLETPROOF VERSION
   const { data: profiles } = await sb
-    .from("business_profiles")
+    .from("user_profiles")
     .select("*")
     .eq("user_id", uid);
 
@@ -101,7 +101,8 @@ export async function POST(req: NextRequest) {
     payment_status: body.payment_status ?? "PAID",
 
     // Use ACTUAL profile data or clear fallbacks
-    business_name: bp?.business_name || bp?.full_name || "⚠️ UPDATE PROFILE IN SETTINGS",
+    // user_profiles uses company_name, not business_name
+    business_name: bp?.company_name || bp?.full_name || "⚠️ UPDATE PROFILE IN SETTINGS",
     brn: bp?.brn || "N/A",
     vat_number: null,
     business_address: bp?.address || "No address set",
