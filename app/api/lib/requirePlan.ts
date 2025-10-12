@@ -1,4 +1,4 @@
-// app/api/_lib/requirePlan.ts
+// app/api/lib/requirePlan.ts
 import { createClient } from "@/utils/supabase/server";
 
 export type PlanRow = {
@@ -19,7 +19,7 @@ export type PlanCheck = {
 export async function checkPlanAndQuota(): Promise<PlanCheck> {
   const sb = createClient();
 
-  // who’s calling?
+  // who's calling?
   const { data: gu } = await sb.auth.getUser();
   const uid = gu?.user?.id;
   if (!uid) return { ok: false, reason: "Not authenticated" };
@@ -81,3 +81,6 @@ export async function checkPlanAndQuota(): Promise<PlanCheck> {
 
   return { ok: true, plan: effective, remaining };
 }
+
+// ADDED: Export requirePlan as an alias for backwards compatibility
+export const requirePlan = checkPlanAndQuota;
