@@ -86,19 +86,39 @@ export async function POST(req: NextRequest) {
   console.log("🔍 User ID:", uid);
   console.log("🔍 Business Profile Found:", bp);
 
+  // Helper function to ensure valid date
+  function getValidDate(dateInput: any): string {
+    // If date is null, undefined, empty string, or invalid
+    if (!dateInput || dateInput === "") {
+      return new Date().toISOString();
+    }
+    
+    // Try to parse the date
+    try {
+      const parsedDate = new Date(dateInput);
+      // Check if date is valid
+      if (isNaN(parsedDate.getTime())) {
+        return new Date().toISOString();
+      }
+      return parsedDate.toISOString();
+    } catch {
+      return new Date().toISOString();
+    }
+  }
+
   // 3) insert receipt with snapshot of seller fields
   const payload = {
     user_id: uid,
-    reference_number: body.reference_number,
-    date: body.date ?? new Date().toISOString(),
-    client_name: body.client_name ?? null,
-    client_email: body.client_email ?? null,
-    client_phone: body.client_phone ?? null,
+    reference_number: body.reference_number || `REF-${Date.now()}`,
+    date: getValidDate(body.date), // FIXED: Always ensures valid date
+    client_name: body.client_name || null,
+    client_email: body.client_email || null,
+    client_phone: body.client_phone || null,
     items: body.items ?? [],
     subtotal: Number(body.subtotal ?? 0),
     tax: Number(body.tax ?? 0),
     total: Number(body.total ?? 0),
-    payment_status: body.payment_status ?? "PAID",
+    payment_status: body.payment_status || "PAID",
 
     // Use ACTUAL profile data or clear fallbacks
     // user_profiles uses company_name, not business_name
