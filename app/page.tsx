@@ -122,10 +122,8 @@ textarea.form-input{font-family:inherit}
 @media print{body *{visibility:hidden}#printable,#printable *{visibility:visible}#printable{position:absolute;left:0;top:0;width:100%}}
 `;
 
-// --- 2) Your whole BODY markup (everything between <body> ... </body>) ---
-const BODY = `
-<nav class="nav">
-  <div class="wrap">
+// --- 2) Complete BODY markup ---
+const BODY = `  <div class="wrap">
     <a href="#home" class="brand">
       <div class="brand-logo">B</div>
       <span>Business Manager Pro</span>
@@ -134,16 +132,1265 @@ const BODY = `
     <a href="#pricing">Pricing</a>
     <a href="#generator">Try Demo</a>
     <a href="#faq">FAQ</a>
-    <div style="margin-left:auto;display:flex;gap:10px;flex-wrap:wrap">
-      <a class="btn" href="#" onclick="openModal('signinModal');return false">Sign In</a>
-      <a class="btn primary" href="#" onclick="openModal('signupModal');return false">Sign Up Free</a>
+    <div style="margin-left:auto;display:flex;gap:10px" id="navBtns">
+      <button class="btn" onclick="openModal('signinModal')">Sign In</button>
+      <button class="btn primary" onclick="openModal('signupModal')">Sign Up Free</button>
     </div>
   </div>
 </nav>
 
-<!-- ======= the rest of your HTML from your message stays UNCHANGED ======= -->
-<!-- I kept everything identical: hero, features, pricing, generator, testimonials, faq, cta, footer, modals -->
-${/* For brevity, paste ALL the sections exactly as you sent them, unchanged */""}
+<!-- LANDING PAGE -->
+<div id="landing">
+<section class="hero" id="home">
+  <div class="wrap">
+    <div>
+      <span class="badge">
+        <span class="pulse-dot"></span> 
+        VAT · BRN · PDF · QR Code
+      </span>
+      <h1 style="font-size:clamp(32px,5vw,58px);line-height:1.1;margin:0.5em 0 0.3em 0;font-weight:900">
+        Smart E-Receipts for Modern Businesses
+      </h1>
+      <p style="font-size:18px;max-width:560px;opacity:0.95;margin-bottom:24px">
+        Create and send professional e-receipts in seconds. Track revenue, export to Excel. Join 800+ Mauritian businesses using our MRA-compliant platform.
+      </p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <button class="btn primary" onclick="openModal('signupModal')" style="font-size:16px;padding:16px 32px">
+          Start Free Trial (3 Days) →
+        </button>
+        <a class="btn ghost" href="#generator">See Live Demo</a>
+      </div>
+      <p style="font-size:14px;opacity:0.85;margin-top:12px">
+        ✓ No credit card required · ✓ Cancel anytime · ✓ Setup in 2 minutes
+      </p>
+      <div class="trust">
+        <div class="pill">🔒 Bank-grade security</div>
+        <div class="pill">☁️ Daily backups</div>
+        <div class="pill">✓ MRA compliant</div>
+        <div class="pill">💳 JUICE payments</div>
+      </div>
+      <div class="kpi">
+        <div class="glass"><div>&lt; 30s</div><small>Create receipt</small></div>
+        <div class="glass"><div>Rs 599</div><small>Starting price</small></div>
+        <div class="glass"><div>800+</div><small>Businesses trust us</small></div>
+      </div>
+    </div>
+    
+    <div>
+      <div class="card" style="box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+        <h3 style="margin-bottom:8px">Real Receipt Preview</h3>
+        <p style="color:#64748b;font-size:14px;margin-bottom:20px">
+          Professional receipts your customers will love
+        </p>
+        <div class="receipt-preview">
+          <div style="display:flex;justify-content:space-between;padding-bottom:16px;border-bottom:2px solid #e5e7eb">
+            <div>
+              <div style="font-weight:800;font-size:18px;color:#2563eb">Your Company Ltd</div>
+              <div style="font-size:12px;color:#64748b;margin-top:4px">Port Louis, Mauritius</div>
+              <div style="font-size:12px;color:#64748b">BRN: C12345678</div>
+            </div>
+            <span style="background:#dcfce7;color:#166534;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid #86efac">PAID</span>
+          </div>
+          <div style="padding:20px 0">
+            <div style="display:flex;justify-content:space-between;padding:8px 0;color:#64748b;font-size:12px;margin-bottom:8px">
+              <span>Receipt #R-2025-0142</span>
+              <span>09 Oct 2025</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:14px">
+              <span>Professional Services</span>
+              <span>Rs 2,500</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:14px">
+              <span>VAT (15%)</span>
+              <span>Rs 375</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:12px 0;font-weight:700;font-size:16px;border-top:1px solid #e5e7eb">
+              <span>Total</span>
+              <span>Rs 2,875</span>
+            </div>
+          </div>
+          <div style="padding-top:16px;border-top:1px solid #e5e7eb;font-size:12px;color:#64748b">
+            <div style="margin-bottom:8px">Payment via JUICE</div>
+            <div>🔗 Verify at: verify.bmp.mu/R2025-0142</div>
+          </div>
+        </div>
+        <div class="grid2" style="margin-top:20px">
+          <a href="#generator" class="btn primary">📄 Try Generator</a>
+          <a href="#pricing" class="btn">💰 See Pricing</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="features">
+  <div class="wrap">
+    <h2>Everything you need to succeed</h2>
+    <p style="color:var(--muted);font-size:18px;margin-bottom:40px">Professional tools that don't break the bank</p>
+    <div class="grid3">
+      <div class="card">
+        <div style="font-size:32px;margin-bottom:12px">📄</div>
+        <h3 style="font-size:20px;margin-bottom:12px">Professional Receipts</h3>
+        <p style="color:var(--muted)">Add your logo, customize colors, include all required details. Look professional even as a small business.</p>
+      </div>
+      <div class="card">
+        <div style="font-size:32px;margin-bottom:12px">✓</div>
+        <h3 style="font-size:20px;margin-bottom:12px">MRA Compliant</h3>
+        <p style="color:var(--muted)">Automatic VAT calculation (15%), BRN fields, verification URLs. Stay compliant without accounting headaches.</p>
+      </div>
+      <div class="card">
+        <div style="font-size:32px;margin-bottom:12px">⚡</div>
+        <h3 style="font-size:20px;margin-bottom:12px">Lightning Fast</h3>
+        <p style="color:var(--muted)">Create receipts in under 30 seconds. No complicated forms. Works on any device, even slow connections.</p>
+      </div>
+      <div class="card">
+        <div style="font-size:32px;margin-bottom:12px">💳</div>
+        <h3 style="font-size:20px;margin-bottom:12px">JUICE Integration</h3>
+        <p style="color:var(--muted)">Accept payments via JUICE, cards, or bank transfer. Perfect for Mauritian businesses serving local customers.</p>
+      </div>
+      <div class="card">
+        <div style="font-size:32px;margin-bottom:12px">📊</div>
+        <h3 style="font-size:20px;margin-bottom:12px">Simple Dashboard</h3>
+        <p style="color:var(--muted)">Track revenue, see outstanding payments, export for your accountant. Everything you need, nothing you don't.</p>
+      </div>
+      <div class="card">
+        <div style="font-size:32px;margin-bottom:12px">🔒</div>
+        <h3 style="font-size:20px;margin-bottom:12px">Secure & Backed Up</h3>
+        <p style="color:var(--muted)">Bank-grade encryption, daily backups, secure servers. Your data is safe and always accessible.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="pricing" style="background:#f8fafc">
+  <div class="wrap">
+    <h2>Pricing built for every business</h2>
+    <p style="color:var(--muted);font-size:18px;margin-bottom:16px">Choose the plan that fits your needs. All plans include 3-day free trial.</p>
+    <p style="color:var(--success);font-size:16px;font-weight:700;margin-bottom:40px">💰 Pay annually and save 2 months free on all plans!</p>
+    
+    <div class="grid4">
+      <div class="card pricing-card">
+        <h3>Free Trial</h3>
+        <div class="price">Rs 0<span style="font-size:18px;font-weight:400;color:var(--muted)">/3 days</span></div>
+        <p style="color:var(--muted);margin-bottom:20px">Try before you buy</p>
+        <ul>
+          <li>3 days full access</li>
+          <li>50 test receipts</li>
+          <li>All features unlocked</li>
+          <li>PDF & share links</li>
+          <li>Email support</li>
+          <li>No credit card needed</li>
+        </ul>
+        <button class="btn" onclick="openModal('signupModal')" style="width:100%;margin-top:20px">Start Free Trial</button>
+      </div>
+      
+      <div class="card pricing-card" style="border:2px solid #10b981;box-shadow:0 15px 50px rgba(16,185,129,0.2)">
+        <div class="badge" style="margin-bottom:12px;border-color:#10b981;background:#d1fae5;color:#065f46">💚 Best Value</div>
+        <h3>Starter</h3>
+        <div class="price">Rs 599<span style="font-size:18px;font-weight:400;color:var(--muted)">/month</span></div>
+        <div style="font-size:14px;color:var(--muted);margin-top:4px">Rs 5,990/year (save Rs 1,198)</div>
+        <p style="color:var(--muted);margin-bottom:20px">Perfect for small businesses</p>
+        <ul>
+          <li><strong>200 receipts/month</strong></li>
+          <li>Custom logo & branding</li>
+          <li>MUR, USD, EUR support</li>
+          <li>PDF download & share</li>
+          <li>CSV & Excel exports</li>
+          <li>Email support (24h)</li>
+          <li>QR verification codes</li>
+          <li>Revenue tracking</li>
+        </ul>
+        <button class="btn primary" onclick="selectPlan('starter', 599)" style="width:100%;margin-top:20px">Choose Starter</button>
+      </div>
+      
+      <div class="card pricing-card featured">
+        <div class="badge" style="margin-bottom:12px;border-color:#2563eb;background:#dbeafe;color:#1e40af">⭐ Most Popular</div>
+        <h3>Business</h3>
+        <div class="price">Rs 1,199<span style="font-size:18px;font-weight:400;color:var(--muted)">/month</span></div>
+        <div style="font-size:14px;color:var(--muted);margin-top:4px">Rs 11,990/year (save Rs 2,398)</div>
+        <p style="color:var(--muted);margin-bottom:20px">For growing teams</p>
+        <ul>
+          <li><strong>1,000 receipts/month</strong></li>
+          <li>Everything in Starter, plus:</li>
+          <li>5 team members</li>
+          <li>Priority support (&lt;8h)</li>
+          <li>Advanced analytics dashboard</li>
+          <li>Custom receipt templates</li>
+          <li>Payment tracking & reminders</li>
+          <li>Multi-currency invoicing</li>
+          <li>Department-level reports</li>
+        </ul>
+        <button class="btn primary" onclick="selectPlan('business', 1199)" style="width:100%;margin-top:20px">Choose Business</button>
+      </div>
+      
+      <div class="card pricing-card">
+        <h3>Professional</h3>
+        <div class="price">Rs 1,899<span style="font-size:18px;font-weight:400;color:var(--muted)">/month</span></div>
+        <div style="font-size:14px;color:var(--muted);margin-top:4px">Rs 18,990/year (save Rs 3,798)</div>
+        <p style="color:var(--muted);margin-bottom:20px">For established businesses</p>
+        <ul>
+          <li><strong>Unlimited receipts</strong></li>
+          <li>Everything in Business, plus:</li>
+          <li>15 team members</li>
+          <li>Priority support (&lt;2h)</li>
+          <li>API access</li>
+          <li>Custom integrations</li>
+          <li>Dedicated account manager</li>
+          <li>White-label branding</li>
+          <li>Advanced security features</li>
+          <li>Custom approval workflows</li>
+        </ul>
+        <button class="btn" onclick="selectPlan('professional', 1899)" style="width:100%;margin-top:20px">Choose Professional</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <h2>Common Questions</h2>
+    <p style="color:var(--muted);font-size:18px;margin-bottom:40px">Everything you need to know</p>
+    
+    <div style="max-width:800px;margin:0 auto">
+      <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:12px;overflow:hidden">
+        <div style="padding:20px 24px;cursor:pointer;font-weight:600;display:flex;justify-content:space-between;align-items:center;background:#fff" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.faq-icon').classList.toggle('open')">
+          <span>Is this really affordable for small businesses?</span>
+          <span class="faq-icon" style="transition:transform 0.3s">▼</span>
+        </div>
+        <div class="faq-answer" style="padding:0 24px;max-height:0;overflow:hidden;transition:all 0.3s;color:var(--muted)">
+          Yes! Starting at just Rs 599/month, our Starter plan costs less than Rs 20 per day. That's about the price of a coffee! Most businesses save more in time and improved cash flow than they spend on the subscription.
+        </div>
+      </div>
+      
+      <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:12px;overflow:hidden">
+        <div style="padding:20px 24px;cursor:pointer;font-weight:600;display:flex;justify-content:space-between;align-items:center;background:#fff" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.faq-icon').classList.toggle('open')">
+          <span>Can I pay with JUICE?</span>
+          <span class="faq-icon" style="transition:transform 0.3s">▼</span>
+        </div>
+        <div class="faq-answer" style="padding:0 24px;max-height:0;overflow:hidden;transition:all 0.3s;color:var(--muted)">
+          Absolutely! We support JUICE payments (Mauritius mobile payments), bank transfers, credit/debit cards via Stripe, and PayPal. Choose whatever works best for you.
+        </div>
+      </div>
+      
+      <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:12px;overflow:hidden">
+        <div style="padding:20px 24px;cursor:pointer;font-weight:600;display:flex;justify-content:space-between;align-items:center;background:#fff" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.faq-icon').classList.toggle('open')">
+          <span>Is it MRA compliant?</span>
+          <span class="faq-icon" style="transition:transform 0.3s">▼</span>
+        </div>
+        <div class="faq-answer" style="padding:0 24px;max-height:0;overflow:hidden;transition:all 0.3s;color:var(--muted)">
+          Yes. Our receipts include all MRA-required fields: BRN, VAT registration, accurate 15% VAT calculations, unique references, and verification mechanisms. Built specifically for Mauritian regulations.
+        </div>
+      </div>
+      
+      <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:12px;overflow:hidden">
+        <div style="padding:20px 24px;cursor:pointer;font-weight:600;display:flex;justify-content:space-between;align-items:center;background:#fff" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.faq-icon').classList.toggle('open')">
+          <span>How does the 3-day free trial work?</span>
+          <span class="faq-icon" style="transition:transform 0.3s">▼</span>
+        </div>
+        <div class="faq-answer" style="padding:0 24px;max-height:0;overflow:hidden;transition:all 0.3s;color:var(--muted)">
+          Sign up free - no credit card required. Get 3 days full access to test everything. After trial, choose any plan or stay free (with limits). No automatic charges, ever.
+        </div>
+      </div>
+      
+      <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:12px;overflow:hidden">
+        <div style="padding:20px 24px;cursor:pointer;font-weight:600;display:flex;justify-content:space-between;align-items:center;background:#fff" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.faq-icon').classList.toggle('open')">
+          <span>What if I need to cancel?</span>
+          <span class="faq-icon" style="transition:transform 0.3s">▼</span>
+        </div>
+        <div class="faq-answer" style="padding:0 24px;max-height:0;overflow:hidden;transition:all 0.3s;color:var(--muted)">
+          Cancel anytime with one click. No questions asked. Export all your data (CSV/Excel) before you go. We keep your data for 90 days in case you change your mind. Full refund within 30 days if not satisfied.
+        </div>
+      </div>
+      
+      <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:12px;overflow:hidden">
+        <div style="padding:20px 24px;cursor:pointer;font-weight:600;display:flex;justify-content:space-between;align-items:center;background:#fff" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.faq-icon').classList.toggle('open')">
+          <span>Can I upgrade or downgrade anytime?</span>
+          <span class="faq-icon" style="transition:transform 0.3s">▼</span>
+        </div>
+        <div class="faq-answer" style="padding:0 24px;max-height:0;overflow:hidden;transition:all 0.3s;color:var(--muted)">
+          Yes! Change plans anytime. Upgrades are immediate. Downgrades take effect at next billing cycle. Pro-rated credits applied automatically.
+        </div>
+      </div>
+      
+      <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:12px;overflow:hidden">
+        <div style="padding:20px 24px;cursor:pointer;font-weight:600;display:flex;justify-content:space-between;align-items:center;background:#fff" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.faq-icon').classList.toggle('open')">
+          <span>Is my data secure?</span>
+          <span class="faq-icon" style="transition:transform 0.3s">▼</span>
+        </div>
+        <div class="faq-answer" style="padding:0 24px;max-height:0;overflow:hidden;transition:all 0.3s;color:var(--muted)">
+          Yes. Bank-grade 256-bit encryption, daily backups, secure Mauritian servers. We never share your data. Compliant with international data protection standards.
+        </div>
+      </div>
+      
+      <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:12px;overflow:hidden">
+        <div style="padding:20px 24px;cursor:pointer;font-weight:600;display:flex;justify-content:space-between;align-items:center;background:#fff" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.faq-icon').classList.toggle('open')">
+          <span>Do you offer training or support?</span>
+          <span class="faq-icon" style="transition:transform 0.3s">▼</span>
+        </div>
+        <div class="faq-answer" style="padding:0 24px;max-height:0;overflow:hidden;transition:all 0.3s;color:var(--muted)">
+          Yes! Email support for all users. Video tutorials and guides included. Priority support on paid plans. We're here to help Mauritian businesses succeed.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="generator">
+  <div class="wrap">
+    <h2>Try the Receipt Generator</h2>
+    <p style="color:var(--muted);font-size:18px;margin-bottom:40px">Test it yourself - create a professional receipt right now. No signup required for the demo.</p>
+    
+    <div class="generator-container">
+      <div>
+        <div class="card">
+          <h3>Receipt Details</h3>
+          <p style="color:var(--muted);font-size:14px;margin-bottom:24px">Fill in your information</p>
+          
+          <div style="margin-bottom:20px">
+            <h4 style="font-size:15px;font-weight:700;margin-bottom:12px">Business Info</h4>
+            <div class="form-group">
+              <label class="form-label">Business Name</label>
+              <input id="biz" class="form-input" value="Your Business Name">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div class="form-group">
+                <label class="form-label">BRN</label>
+                <input id="brn" class="form-input" value="C12345678">
+              </div>
+              <div class="form-group">
+                <label class="form-label">VAT</label>
+                <input id="vat" class="form-input" value="VAT123456">
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div class="form-group">
+                <label class="form-label">Address</label>
+                <input id="addr" class="form-input" value="Port Louis">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Phone</label>
+                <input id="phone" class="form-input" value="+230 5XXX XXXX">
+              </div>
+            </div>
+          </div>
+          
+          <div style="margin-bottom:20px">
+            <h4 style="font-size:15px;font-weight:700;margin-bottom:12px">Customer</h4>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div class="form-group">
+                <label class="form-label">Name</label>
+                <input id="cust" class="form-input" value="Customer Name">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Address</label>
+                <input id="custaddr" class="form-input" value="Curepipe">
+              </div>
+            </div>
+          </div>
+          
+          <div style="margin-bottom:20px">
+            <h4 style="font-size:15px;font-weight:700;margin-bottom:12px">Item Details</h4>
+            <div class="form-group">
+              <label class="form-label">Description</label>
+              <input id="item" class="form-input" value="Professional Services">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+              <div class="form-group">
+                <label class="form-label">Qty</label>
+                <input id="qty" type="number" min="1" value="1" class="form-input">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Price</label>
+                <input id="price" type="number" min="0" step="0.01" value="2500" class="form-input">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Currency</label>
+                <select id="cur" class="form-select">
+                  <option value="MUR" selected>MUR (Rs)</option>
+                  <option value="USD">USD ($)</option>
+                  <option value="EUR">EUR (€)</option>
+                </select>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div class="form-group">
+                <label class="form-label">Payment</label>
+                <select id="pay" class="form-select">
+                  <option>Cash</option>
+                  <option selected>JUICE</option>
+                  <option>Card</option>
+                  <option>Bank Transfer</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Notes</label>
+                <input id="notes" class="form-input" placeholder="Optional">
+              </div>
+            </div>
+          </div>
+          
+          <button type="button" id="update" class="btn primary" style="width:100%;font-size:16px">🔄 Update Preview</button>
+          
+          <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:16px;margin-top:20px">
+            <h3 style="font-size:14px;font-weight:700;color:#1e40af;margin-bottom:8px">✨ This is just a demo</h3>
+            <ul style="list-style:none;padding:0;margin:0">
+              <li style="font-size:13px;color:#1e40af;padding:4px 0;padding-left:20px;position:relative">
+                <span style="position:absolute;left:0;color:#2563eb;font-weight:700">✓</span>Real-time preview updates
+              </li>
+              <li style="font-size:13px;color:#1e40af;padding:4px 0;padding-left:20px;position:relative">
+                <span style="position:absolute;left:0;color:#2563eb;font-weight:700">✓</span>No data stored
+              </li>
+              <li style="font-size:13px;color:#1e40af;padding:4px 0;padding-left:20px;position:relative">
+                <span style="position:absolute;left:0;color:#2563eb;font-weight:700">✓</span>Sign up to save receipts
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+      <div>
+        <div class="receipt-container" id="printable">
+          <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:24px;padding-bottom:20px;border-bottom:2px solid #e5e7eb">
+            <div>
+              <h2 style="font-size:32px;font-weight:800;margin-bottom:8px">Receipt</h2>
+              <div style="font-size:13px;color:#64748b">Ref: <strong id="invoiceNo">—</strong></div>
+              <div style="font-size:13px;color:#64748b">Date: <strong id="datePaid">—</strong></div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:16px;font-weight:700" id="bizName">Your Business</div>
+              <div style="font-size:13px;color:#64748b" id="bizAddr">—</div>
+              <div style="font-size:13px;color:#64748b" id="bizPhone">—</div>
+              <div style="font-size:13px;color:#64748b">BRN: <span id="bizBrn">—</span> • VAT: <span id="bizVat">—</span></div>
+            </div>
+          </div>
+          
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-bottom:24px">
+            <div>
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b;margin-bottom:8px">From</div>
+              <div style="font-weight:600" id="fromName">—</div>
+              <div style="font-size:13px;color:#64748b" id="fromAddr">—</div>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b;margin-bottom:8px">Bill To</div>
+              <div style="font-weight:600" id="billName">—</div>
+              <div style="font-size:13px;color:#64748b" id="billAddr">—</div>
+            </div>
+          </div>
+          
+          <div style="border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;margin-bottom:24px">
+            <table style="width:100%;border-collapse:collapse">
+              <thead>
+                <tr style="background:#f8fafc">
+                  <th style="padding:12px 16px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b">Description</th>
+                  <th style="padding:12px 16px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b">Qty</th>
+                  <th style="padding:12px 16px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b">Price</th>
+                  <th style="padding:12px 16px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="padding:16px;border-top:1px solid #f1f5f9" id="tdDesc">—</td>
+                  <td style="padding:16px;text-align:right;border-top:1px solid #f1f5f9" id="tdQty">1</td>
+                  <td style="padding:16px;text-align:right;border-top:1px solid #f1f5f9" id="tdPrice">—</td>
+                  <td style="padding:16px;text-align:right;border-top:1px solid #f1f5f9" id="tdAmt">—</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <div style="display:grid;grid-template-columns:1fr auto;gap:24px">
+            <div style="font-size:14px;color:#64748b">
+              <div style="margin-bottom:8px">Payment: <strong id="payMethod" style="color:var(--ink)">—</strong></div>
+              <div>Notes: <strong id="notesOut" style="color:var(--ink)">—</strong></div>
+            </div>
+            <div style="border:1px solid #e5e7eb;border-radius:12px;padding:20px;min-width:250px">
+              <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:14px">
+                <span style="color:#64748b">Subtotal</span>
+                <span style="font-weight:600" id="subt">—</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:12px 0;font-size:18px;border-top:2px solid #e5e7eb;margin-top:8px">
+                <span style="font-weight:700">Total</span>
+                <span style="font-weight:700" id="total">—</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:14px">
+                <span style="color:#64748b">Paid</span>
+                <span style="font-weight:600;color:#10b981" id="paid">—</span>
+              </div>
+            </div>
+          </div>
+          
+          <div style="margin-top:32px;padding-top:24px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center">
+            <div style="font-size:13px;color:#64748b">Thank you for your business.</div>
+            <div style="display:flex;align-items:center;gap:12px">
+              <canvas id="qr" width="80" height="80" style="border-radius:8px;background:#f8fafc"></canvas>
+              <div style="font-size:12px;color:#64748b">Scan to verify</div>
+            </div>
+          </div>
+        </div>
+        
+        <div style="display:flex;gap:12px;margin-top:20px">
+          <button id="printBtn" class="btn secondary" style="flex:1">📄 Download PDF</button>
+          <button id="shareBtn" class="btn secondary" style="flex:1">🔗 Copy Link</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- DASHBOARD (after login) -->
+<div id="dashboard">
+  <div class="wrap" style="margin-top:40px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:32px">
+      <div>
+        <h2 style="font-size:32px;font-weight:800">Dashboard</h2>
+        <p style="color:var(--muted)">Welcome back, <span id="userName">User</span></p>
+      </div>
+      <div style="display:flex;gap:12px">
+        <button class="btn" onclick="handleManagePlan()">💳 Manage Plan</button>
+        <button class="btn secondary" onclick="handleSignout()">Sign Out</button>
+      </div>
+    </div>
+    
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:32px">
+      <div class="card" style="text-align:center">
+        <div style="font-size:48px;margin-bottom:12px">📄</div>
+        <div style="font-size:32px;font-weight:800;color:var(--primary)">0</div>
+        <div style="color:var(--muted)">Receipts Created</div>
+      </div>
+      <div class="card" style="text-align:center">
+        <div style="font-size:48px;margin-bottom:12px">💰</div>
+        <div style="font-size:32px;font-weight:800;color:var(--success)">Rs 0</div>
+        <div style="color:var(--muted)">Total Revenue</div>
+      </div>
+      <div class="card" style="text-align:center">
+        <div style="font-size:48px;margin-bottom:12px">⏰</div>
+        <div style="font-size:24px;font-weight:800;color:var(--muted)" id="planStatus">Trial</div>
+        <div style="color:var(--muted)">Current Plan</div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <h3 style="margin-bottom:20px">Quick Actions</h3>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+        <button class="btn primary" style="width:100%" onclick="openModal('receiptModal')">📄 Create Receipt</button>
+        <button class="btn secondary" style="width:100%">📊 View Reports</button>
+        <button class="btn secondary" style="width:100%" onclick="openModal('settingsModal')">⚙️ Settings</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div id="signupModal" class="modal">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal('signupModal')">&times;</button>
+    <h2 style="margin-bottom:8px">Start Your Free Trial</h2>
+    <p style="color:var(--muted);margin-bottom:24px">Tell us about you and your company</p>
+    
+    <div id="signupError" class="error-msg" style="display:none"></div>
+    <div id="signupSuccess" class="success-msg" style="display:none"></div>
+    
+    <form id="signupForm" onsubmit="handleSignup(event)">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-bottom:24px">
+        <div>
+          <h3 style="font-size:18px;margin-bottom:20px">Owner details</h3>
+          <div class="form-group">
+            <label class="form-label">Full name</label>
+            <input type="text" id="fullName" class="form-input" placeholder="Jane Doe" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" id="email" class="form-input" placeholder="you@company.com" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone</label>
+            <input type="tel" id="phone" class="form-input" placeholder="+230 5xxx xxxx" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" id="password" class="form-input" placeholder="Min 8 characters" required minlength="8">
+          </div>
+        </div>
+        
+        <div>
+          <h3 style="font-size:18px;margin-bottom:20px">Company details</h3>
+          <div class="form-group">
+            <label class="form-label">Legal name</label>
+            <input type="text" id="companyName" class="form-input" placeholder="Your Company Ltd" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">BRN</label>
+            <input type="text" id="brn" class="form-input" placeholder="Cxxxxxxxx" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">VAT</label>
+            <input type="text" id="vat" class="form-input" placeholder="VAT xxxxxx">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Address</label>
+            <textarea id="address" class="form-input" rows="3" placeholder="Street, City, Country" required></textarea>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="form-group">
+              <label class="form-label">Currency</label>
+              <select id="currency" class="form-select" required>
+                <option value="MUR">MUR (Rs)</option>
+                <option value="USD">USD ($)</option>
+                <option value="EUR">EUR (€)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Timezone</label>
+              <select id="timezone" class="form-select" required>
+                <option value="Indian/Mauritius">Indian/Mauritius</option>
+                <option value="Africa/Nairobi">Africa/Nairobi</option>
+                <option value="Europe/Paris">Europe/Paris</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div style="display:flex;align-items:start;gap:12px;margin-bottom:16px">
+        <input type="checkbox" id="terms" required style="margin-top:4px">
+        <label for="terms" style="font-size:14px">I agree to the Terms and Privacy Policy</label>
+      </div>
+      
+      <button type="submit" id="signupBtn" class="btn primary" style="padding:14px 32px;font-size:16px">Create account</button>
+    </form>
+    
+    <div class="divider">OR</div>
+    
+    <p style="text-align:center;font-size:14px">
+      Already have an account? <a href="#" onclick="closeModal('signupModal');openModal('signinModal');return false" style="color:var(--primary);font-weight:600">Sign In</a>
+    </p>
+  </div>
+</div>
+
+<div id="signinModal" class="modal">
+  <div class="modal-content" style="max-width:500px">
+    <button class="modal-close" onclick="closeModal('signinModal')">&times;</button>
+    <h2 style="margin-bottom:8px">Welcome Back</h2>
+    <p style="color:var(--muted);margin-bottom:24px">Sign in to your account</p>
+    
+    <div id="signinError" class="error-msg" style="display:none"></div>
+    
+    <form id="signinForm" onsubmit="handleSignin(event)">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" id="signinEmail" class="form-input" placeholder="you@example.com" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" id="signinPassword" class="form-input" placeholder="Enter password" required>
+      </div>
+      <button type="submit" id="signinBtn" class="btn primary" style="width:100%;padding:16px;font-size:16px">Sign In</button>
+    </form>
+    
+    <div class="divider">OR</div>
+    
+    <p style="text-align:center;font-size:14px">
+      Don't have an account? <a href="#!" onclick="closeModal('signinModal');openModal('signupModal');return false" style="color:var(--primary);font-weight:600">Sign Up Free</a>
+    </p>
+  </div>
+</div>
+
+<div id="planModal" class="modal">
+  <div class="modal-content" style="max-width:600px">
+    <button class="modal-close" onclick="closeModal('planModal')">&times;</button>
+    <h2 style="margin-bottom:8px">Choose Your Plan</h2>
+    <p style="color:var(--muted);margin-bottom:24px" id="planModalSubtitle">Select a plan to upgrade</p>
+    
+    <div id="planError" class="error-msg" style="display:none"></div>
+    
+    <div id="selectedPlanInfo" style="background:#f8fafc;padding:20px;border-radius:12px;margin-bottom:24px;display:none">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+        <span style="font-weight:600">Plan:</span>
+        <span id="selectedPlanName">—</span>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="font-weight:600">Amount:</span>
+        <span id="selectedPlanPrice">—</span>
+      </div>
+    </div>
+    
+    <div style="margin-bottom:24px">
+      <h3 style="font-size:16px;margin-bottom:16px">Payment Method</h3>
+      
+      <div class="card" onclick="processPayment('juice')" style="cursor:pointer;margin-bottom:12px;padding:16px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="font-size:32px">💳</div>
+          <div style="flex:1">
+            <div style="font-weight:600">JUICE Mobile Payment</div>
+            <div style="font-size:13px;color:var(--muted)">Pay via JUICE mobile money</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card" onclick="processPayment('card')" style="cursor:pointer;margin-bottom:12px;padding:16px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="font-size:32px">💳</div>
+          <div>
+            <div style="font-weight:600">Credit/Debit Card</div>
+            <div style="font-size:13px;color:var(--muted)">Visa, Mastercard</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card" onclick="processPayment('paypal')" style="cursor:pointer;margin-bottom:12px;padding:16px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="font-size:32px">💰</div>
+          <div style="flex:1">
+            <div style="font-weight:600">PayPal</div>
+            <div style="font-size:13px;color:var(--muted)">Send money via PayPal</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card" onclick="processPayment('bank')" style="cursor:pointer;padding:16px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="font-size:32px">🏦</div>
+          <div>
+            <div style="font-weight:600">Bank Transfer</div>
+            <div style="font-size:13px;color:var(--muted)">Direct bank deposit</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="settingsModal" class="modal">
+  <div class="modal-content" style="max-width:700px">
+    <button class="modal-close" onclick="closeModal('settingsModal')">&times;</button>
+    <h2 style="margin-bottom:8px">Business Settings</h2>
+    <p style="color:var(--muted);margin-bottom:24px">Update your business information</p>
+    
+    <div id="settingsError" class="error-msg" style="display:none"></div>
+    <div id="settingsSuccess" class="success-msg" style="display:none"></div>
+    
+    <form id="settingsForm" onsubmit="handleUpdateSettings(event)">
+      <div class="form-group">
+        <label class="form-label">Company Name</label>
+        <input type="text" id="settingsCompanyName" class="form-input" required>
+      </div>
+      
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div class="form-group">
+          <label class="form-label">BRN</label>
+          <input type="text" id="settingsBrn" class="form-input" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">VAT</label>
+          <input type="text" id="settingsVat" class="form-input">
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Address</label>
+        <textarea id="settingsAddress" class="form-input" rows="2" required></textarea>
+      </div>
+      
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div class="form-group">
+          <label class="form-label">Phone</label>
+          <input type="tel" id="settingsPhone" class="form-input" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Currency</label>
+          <select id="settingsCurrency" class="form-select" required>
+            <option value="MUR">MUR (Rs)</option>
+            <option value="USD">USD ($)</option>
+            <option value="EUR">EUR (€)</option>
+          </select>
+        </div>
+      </div>
+      
+      <button type="submit" id="settingsBtn" class="btn primary" style="width:100%;padding:16px">Save Settings</button>
+    </form>
+  </div>
+</div>
+
+<div id="receiptModal" class="modal">
+  <div class="modal-content" style="max-width:800px">
+    <button class="modal-close" onclick="closeModal('receiptModal')">&times;</button>
+    <h2 style="margin-bottom:8px">Create New Receipt</h2>
+    <p style="color:var(--muted);margin-bottom:24px">Fill in the details to generate a receipt</p>
+    
+    <div id="receiptError" class="error-msg" style="display:none"></div>
+    
+    <form id="receiptForm" onsubmit="handleCreateReceipt(event)">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+        <div class="form-group">
+          <label class="form-label">Customer Name</label>
+          <input type="text" id="receiptCustomer" class="form-input" placeholder="John Doe" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Customer Address</label>
+          <input type="text" id="receiptCustomerAddr" class="form-input" placeholder="123 Main St">
+        </div>
+      </div>
+      
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:20px;margin-bottom:20px">
+        <div class="form-group">
+          <label class="form-label">Item/Service Description</label>
+          <input type="text" id="receiptItem" class="form-input" placeholder="Web Development Services" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Quantity</label>
+          <input type="number" id="receiptQty" class="form-input" value="1" min="1" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Unit Price</label>
+          <input type="number" id="receiptPrice" class="form-input" placeholder="1000" min="0" step="0.01" required>
+        </div>
+      </div>
+      
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+        <div class="form-group">
+          <label class="form-label">Payment Method</label>
+          <select id="receiptPayMethod" class="form-select" required>
+            <option value="Cash">Cash</option>
+            <option value="Bank Transfer">Bank Transfer</option>
+            <option value="Card">Card</option>
+            <option value="Mobile Payment">Mobile Payment</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Currency</label>
+          <select id="receiptCurrency" class="form-select" required>
+            <option value="MUR">MUR (Rs)</option>
+            <option value="USD">USD ($)</option>
+            <option value="EUR">EUR (€)</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Notes (optional)</label>
+        <textarea id="receiptNotes" class="form-input" rows="3" placeholder="Additional notes or terms"></textarea>
+      </div>
+      
+      <button type="submit" id="createReceiptBtn" class="btn primary" style="width:100%;padding:16px;font-size:16px">Create Receipt</button>
+    </form>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL='https://hppgouoexhqgecntpkei.supabase.co';
+const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhwcGdvdW9leGhxZ2VjbnRwa2VpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyMzUzMDQsImV4cCI6MjA3NDgxMTMwNH0.twfjnJ7uirm4FaQBr4wFqT9KW-cH_lrqohA66oWNFJo';
+const supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+let currentUser=null,userData=null,selectedPlanData=null;
+
+async function handleSignup(e){
+  e.preventDefault();
+  const btn=document.getElementById('signupBtn'),errorDiv=document.getElementById('signupError'),successDiv=document.getElementById('signupSuccess');
+  btn.disabled=true;btn.innerHTML='<span class="loading"></span> Creating...';
+  errorDiv.style.display='none';successDiv.style.display='none';
+  try{
+    const fd={full_name:document.getElementById('fullName').value,email:document.getElementById('email').value,phone:document.getElementById('phone').value,password:document.getElementById('password').value,company_name:document.getElementById('companyName').value,brn:document.getElementById('brn').value,vat:document.getElementById('vat').value,address:document.getElementById('address').value,currency:document.getElementById('currency').value,timezone:document.getElementById('timezone').value};
+    const {data:ad,error:ae}=await supabase.auth.signUp({email:fd.email,password:fd.password,options:{data:{full_name:fd.full_name,company_name:fd.company_name}}});
+    if(ae)throw ae;
+    
+    // Make sure profile is created with ALL fields
+    const profileData={
+      user_id:ad.user.id,
+      full_name:fd.full_name,
+      email:fd.email,
+      phone:fd.phone,
+      company_name:fd.company_name,
+      brn:fd.brn,
+      vat:fd.vat,
+      address:fd.address,
+      currency:fd.currency,
+      timezone:fd.timezone,
+      plan:'trial',
+      trial_ends:new Date(Date.now()+3*24*60*60*1000).toISOString(),
+      created_at:new Date().toISOString()
+    };
+    
+    const {error:pe}=await supabase.from('user_profiles').insert([profileData]);
+    if(pe)throw pe;
+    
+    successDiv.textContent='✅ Account created! Logging you in...';successDiv.style.display='block';
+    setTimeout(async()=>{
+      await loadUserData(ad.user);
+      closeModal('signupModal');
+      showDashboard();
+      setTimeout(()=>{
+        alert('🎉 Welcome! Your 3-day trial has started.\\n\\n✨ You can now create receipts!');
+      },800);
+    },1500);
+  }catch(error){errorDiv.textContent='❌ '+error.message;errorDiv.style.display='block';btn.disabled=false;btn.textContent='Create account'}
+}
+
+async function handleSignin(e){
+  e.preventDefault();
+  const btn=document.getElementById('signinBtn'),errorDiv=document.getElementById('signinError');
+  btn.disabled=true;btn.innerHTML='<span class="loading"></span> Signing in...';errorDiv.style.display='none';
+  try{
+    const {data,error}=await supabase.auth.signInWithPassword({email:document.getElementById('signinEmail').value,password:document.getElementById('signinPassword').value});
+    if(error)throw error;
+    await loadUserData(data.user);closeModal('signinModal');showDashboard();
+  }catch(error){errorDiv.textContent='❌ '+error.message;errorDiv.style.display='block';btn.disabled=false;btn.textContent='Sign In'}
+}
+
+async function handleSignout(){
+  await supabase.auth.signOut();currentUser=null;userData=null;showLanding();updateNav(false);
+}
+
+async function loadUserData(user){
+  currentUser=user;
+  const {data,error}=await supabase.from('user_profiles').select('*').eq('user_id',user.id).single();
+  if(error&&error.code==='PGRST116'){
+    // Profile doesn't exist - try to create it
+    console.log('Profile not found, creating...');
+    const {data:newProfile,error:createError}=await supabase.from('user_profiles').insert([{
+      user_id:user.id,
+      full_name:user.user_metadata?.full_name||user.email?.split('@')[0]||'User',
+      email:user.email,
+      plan:'trial',
+      trial_ends:new Date(Date.now()+3*24*60*60*1000).toISOString(),
+      currency:'MUR',
+      created_at:new Date().toISOString()
+    }]).select().single();
+    
+    if(!createError&&newProfile){
+      userData=newProfile;
+      console.log('Profile created successfully');
+      alert('👋 Welcome! Please complete your business profile in Settings to create receipts.');
+      setTimeout(()=>{
+        if(document.getElementById('dashboard').classList.contains('active')){
+          openModal('settingsModal');
+        }
+      },1000);
+    }else{
+      console.error('Failed to create profile:',createError);
+      alert('⚠️ Profile creation failed. Please contact support.');
+    }
+  }else if(!error&&data){
+    userData=data;
+    console.log('Profile loaded:',data.company_name||'(no company name)');
+    // Populate settings form if it exists
+    if(document.getElementById('settingsCompanyName')){
+      document.getElementById('settingsCompanyName').value=data.company_name||'';
+      document.getElementById('settingsBrn').value=data.brn||'';
+      document.getElementById('settingsVat').value=data.vat||'';
+      document.getElementById('settingsAddress').value=data.address||'';
+      document.getElementById('settingsPhone').value=data.phone||'';
+      document.getElementById('settingsCurrency').value=data.currency||'MUR';
+    }
+  }else{
+    console.error('Error loading profile:',error);
+  }
+}
+
+async function handleUpdateSettings(e){
+  e.preventDefault();
+  if(!currentUser){
+    alert('Please log in first');
+    return;
+  }
+  
+  const btn=document.getElementById('settingsBtn');
+  const errorDiv=document.getElementById('settingsError');
+  const successDiv=document.getElementById('settingsSuccess');
+  btn.disabled=true;
+  btn.innerHTML='<span class="loading"></span> Saving...';
+  errorDiv.style.display='none';
+  successDiv.style.display='none';
+  
+  try{
+    const updates={
+      full_name:userData.full_name||currentUser.email,
+      email:currentUser.email,
+      company_name:document.getElementById('settingsCompanyName').value,
+      brn:document.getElementById('settingsBrn').value,
+      vat:document.getElementById('settingsVat').value,
+      address:document.getElementById('settingsAddress').value,
+      phone:document.getElementById('settingsPhone').value,
+      currency:document.getElementById('settingsCurrency').value
+    };
+    
+    const {error}=await supabase
+      .from('user_profiles')
+      .update(updates)
+      .eq('user_id',currentUser.id);
+    
+    if(error)throw error;
+    
+    await loadUserData(currentUser);
+    successDiv.textContent='✅ Settings saved successfully!';
+    successDiv.style.display='block';
+    
+    setTimeout(()=>{
+      closeModal('settingsModal');
+    },1500);
+  }catch(error){
+    errorDiv.textContent='❌ '+error.message;
+    errorDiv.style.display='block';
+  }finally{
+    btn.disabled=false;
+    btn.textContent='Save Settings';
+  }
+}
+
+function selectPlan(planName,price){
+  if(!currentUser){
+    openModal('signupModal');
+    return;
+  }
+  selectedPlanData={name:planName,price:price};
+  document.getElementById('selectedPlanInfo').style.display='block';
+  document.getElementById('selectedPlanName').textContent=planName.charAt(0).toUpperCase()+planName.slice(1);
+  document.getElementById('selectedPlanPrice').textContent='Rs '+price.toLocaleString()+'/month';
+  document.getElementById('planModalSubtitle').textContent='You\\'re upgrading to '+planName;
+  
+  openModal('planModal');
+}
+
+async function processPayment(method){
+  if(!selectedPlanData||!currentUser)return;
+  const errorDiv=document.getElementById('planError');errorDiv.style.display='none';
+  
+  try{
+    const {error}=await supabase.from('subscriptions').insert([{user_id:currentUser.id,plan:selectedPlanData.name,amount:selectedPlanData.price,payment_method:method,status:'pending'}]);
+    if(error)throw error;
+    
+    const {error:updateError}=await supabase.from('user_profiles').update({plan:selectedPlanData.name}).eq('user_id',currentUser.id);
+    if(updateError)throw updateError;
+    
+    if(method==='juice'){
+      alert(\`✅ JUICE Payment Instructions\\n\\n📱 Open your JUICE app\\n💳 Send: Rs \${selectedPlanData.price}\\n📞 To number: +230 54960101\\n📝 Reference: \${selectedPlanData.name.toUpperCase()}-\${currentUser.id.slice(0,8)}\\n\\n⏰ Your plan will be activated once payment is confirmed.\\n\\nThank you for your business!\`);
+    }else if(method==='paypal'){
+      alert(\`✅ PayPal Payment Instructions\\n\\n💰 Go to PayPal.com or PayPal app\\n💵 Send: Rs \${selectedPlanData.price}\\n📧 To email: peeroosuhail047@gmail.com\\n📝 Note: \${selectedPlanData.name.toUpperCase()}-\${currentUser.id.slice(0,8)}\\n\\n⏰ Your plan will be activated once payment is confirmed.\\n\\nThank you for your business!\`);
+    }else if(method==='card'){
+      alert(\`✅ Card Payment\\n\\n💳 Amount: Rs \${selectedPlanData.price}\\n📦 Plan: \${selectedPlanData.name}\\n\\n🔗 In production, you would be redirected to Stripe payment gateway.\\n\\nFor demo purposes, your plan has been activated!\`);
+    }else if(method==='bank'){
+      alert(\`✅ Bank Transfer Instructions\\n\\n🏦 Bank: MCB Mauritius\\n👤 Account Name: Business Manager Pro\\n💵 Amount: Rs \${selectedPlanData.price}\\n📝 Reference: \${selectedPlanData.name.toUpperCase()}-\${currentUser.id.slice(0,8)}\\n\\n📧 Email proof to: peeroosuhail047@gmail.com\\n\\n⏰ Your plan will be activated once payment is confirmed.\\n\\nThank you for your business!\`);
+    }
+    
+    await loadUserData(currentUser);
+    document.getElementById('planStatus').textContent=selectedPlanData.name.charAt(0).toUpperCase()+selectedPlanData.name.slice(1);
+    
+    closeModal('planModal');
+  }catch(error){
+    errorDiv.textContent='❌ '+error.message;errorDiv.style.display='block';
+  }
+}
+
+async function handleCreateReceipt(e) {
+  e.preventDefault();
+  
+  // Check if user is logged in
+  const {data:{session}} = await supabase.auth.getSession();
+  if (!session) {
+    alert('Please log in to create receipts');
+    closeModal('receiptModal');
+    openModal('signinModal');
+    return;
+  }
+  
+  // Update currentUser if needed
+  if (!currentUser) {
+    currentUser = session.user;
+    await loadUserData(session.user);
+  }
+  
+  // Check if business profile is complete
+  const missing = [];
+  if(!userData) {
+    alert('❌ No business profile found!\\n\\n✨ Creating your profile and opening Settings...');
+    await loadUserData(currentUser);
+    if(!userData){
+      alert('⚠️ Could not create profile. Please contact support.');
+      return;
+    }
+    closeModal('receiptModal');
+    openModal('settingsModal');
+    return;
+  }
+  
+  if(!userData.company_name) missing.push('Company Name');
+  if(!userData.brn) missing.push('BRN');
+  if(!userData.address) missing.push('Address');
+  if(!userData.phone) missing.push('Phone');
+  
+  if(missing.length > 0){
+    alert('❌ Business profile incomplete!\\n\\n📝 Please fill in:\\n• ' + missing.join('\\n• ') + '\\n\\n✨ Opening Settings now...');
+    closeModal('receiptModal');
+    openModal('settingsModal');
+    return;
+  }
+  
+  const btn = document.getElementById('createReceiptBtn');
+  const errorDiv = document.getElementById('receiptError');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading"></span> Creating...';
+  errorDiv.style.display = 'none';
+  
+  try {
+    const receiptData = {
+      user_id: currentUser.id,
+      customer_name: document.getElementById('receiptCustomer').value,
+      customer_address: document.getElementById('receiptCustomerAddr').value || '—',
+      item_description: document.getElementById('receiptItem').value,
+      quantity: parseInt(document.getElementById('receiptQty').value),
+      unit_price: parseFloat(document.getElementById('receiptPrice').value),
+      payment_method: document.getElementById('receiptPayMethod').value,
+      currency: document.getElementById('receiptCurrency').value,
+      notes: document.getElementById('receiptNotes').value || '—',
+      reference_number: genRef(),
+      created_at: new Date().toISOString()
+    };
+    
+    receiptData.total_amount = receiptData.quantity * receiptData.unit_price;
+    
+    const { data, error } = await supabase
+      .from('receipts')
+      .insert([receiptData])
+      .select();
+    
+    if (error) throw error;
+    
+    alert('✅ Receipt created successfully! Reference: ' + receiptData.reference_number);
+    closeModal('receiptModal');
+    document.getElementById('receiptForm').reset();
+    
+    await loadUserData(currentUser);
+    
+  } catch (error) {
+    errorDiv.textContent = '❌ ' + error.message;
+    errorDiv.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Create Receipt';
+  }
+}
+
+function showDashboard(){
+  document.getElementById('landing').style.display='none';
+  document.getElementById('dashboard').classList.add('active');
+  updateNav(true);
+  if(userData){
+    document.getElementById('userName').textContent=userData.full_name;
+    document.getElementById('planStatus').textContent=userData.plan.charAt(0).toUpperCase()+userData.plan.slice(1)||'Trial';
+  }
+}
+
+function showLanding(){
+  document.getElementById('landing').style.display='block';
+  document.getElementById('dashboard').classList.remove('active');
+}
+
+function updateNav(loggedIn){
+  const navBtns=document.getElementById('navBtns');
+  if(loggedIn){
+    navBtns.innerHTML=\`<a href="#" onclick="showDashboard();return false" style="color:#e2e8f0;text-decoration:none">\${userData?.company_name||'Dashboard'}</a><button class="btn" onclick="handleSignout()">Sign Out</button>\`;
+  }else{
+    navBtns.innerHTML='<button class="btn" onclick="openModal(\\'signinModal\\')">Sign In</button><button class="btn primary" onclick="openModal(\\'signupModal\\')">Sign Up Free</button>';
+  }
+}
+
+function handleManagePlan(){
+  if(!currentUser){
+    openModal('signinModal');
+    return;
+  }
+  if(!selectedPlanData){
+    document.getElementById('landing').style.display='block';
+    document.getElementById('dashboard').classList.remove('active');
+    setTimeout(()=>{
+      document.querySelector('#pricing').scrollIntoView({behavior:'smooth'});
+    },300);
+  }else{
+    openModal('planModal');
+  }
+}
+
+function openModal(id){document.getElementById(id).classList.add('active');document.body.style.overflow='hidden'}
+function closeModal(id){document.getElementById(id).classList.remove('active');document.body.style.overflow=''}
+document.querySelectorAll('.modal').forEach(modal=>{modal.addEventListener('click',e=>{if(e.target===modal){modal.classList.remove('active');document.body.style.overflow=''}})});
+
+const $=id=>document.getElementById(id);
+const symbols={MUR:'Rs',USD:'$',EUR:'€'};
+const currencyFmt=(n,cur)=>{const num=Number(n||0);if(cur==='MUR')return symbols[cur]+' '+num.toLocaleString('en-MU',{minimumFractionDigits:2,maximumFractionDigits:2});return new Intl.NumberFormat('en',{style:'currency',currency:cur,minimumFractionDigits:2}).format(num)};
+const todayStr=()=>new Date().toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'});
+function genRef(){const now=new Date();const seed=Number(now.getFullYear().toString().slice(-2)+(now.getMonth()+1).toString().padStart(2,'0')+now.getDate().toString().padStart(2,'0'));let rnd=Math.floor(Math.random()*1e8);let x=(rnd^seed)>>>0;const a=(x%10000).toString().padStart(4,'0');const b=(Math.floor(x/10000)%10000).toString().padStart(4,'0');const sum=(a+b).split('').reduce((s,d)=>s+Number(d),0);const bChk=b.slice(0,3)+String(sum%10);return \`\${a}-\${bChk}\`}
+
+function updateFromForm(){
+  if(!$('cur'))return;
+  const cur=$('cur').value||'MUR';
+  const biz=$('biz').value||'Your Business';
+  const brn=$('brn').value||'—';
+  const vat=$('vat').value||'—';
+  const addr=$('addr').value||'—';
+  const phone=$('phone').value||'—';
+  const cust=$('cust').value||'—';
+  const custaddr=$('custaddr').value||'—';
+  const item=$('item').value||'—';
+  const qty=Math.max(1,Number($('qty').value||1));
+  const price=Number($('price').value||0);
+  const method=$('pay').value||'—';
+  const notes=$('notes').value||'—';
+  $('invoiceNo').textContent=genRef();
+  $('datePaid').textContent=todayStr();
+  $('bizName').textContent=biz;
+  $('bizAddr').textContent=addr;
+  $('bizPhone').textContent=phone;
+  $('bizBrn').textContent=brn;
+  $('bizVat').textContent=vat;
+  $('fromName').textContent=biz;
+  $('fromAddr').textContent=addr;
+  $('billName').textContent=cust;
+  $('billAddr').textContent=custaddr;
+  const amount=qty*price;
+  $('tdDesc').textContent=item;
+  $('tdQty').textContent=qty;
+  $('tdPrice').textContent=currencyFmt(price,cur);
+  $('tdAmt').textContent=currencyFmt(amount,cur);
+  $('subt').textContent=currencyFmt(amount,cur);
+  $('total').textContent=currencyFmt(amount,cur);
+  $('paid').textContent=currencyFmt(amount,cur);
+  $('payMethod').textContent=method;
+  $('notesOut').textContent=notes;
+  const url=\`\${location.origin}\${location.pathname}?cur=\${cur}&biz=\${biz}\`;
+  if(window.QRCode&&$('qr'))QRCode.toCanvas($('qr'),url,{width:80,margin:1,color:{dark:'#0f172a',light:'#f8fafc'}});
+  return url;
+}
+
+setTimeout(()=>{
+  if($('update'))$('update').addEventListener('click',updateFromForm);
+  if($('printBtn'))$('printBtn').addEventListener('click',()=>{updateFromForm();window.print()});
+  if($('shareBtn'))$('shareBtn').addEventListener('click',async()=>{const url=updateFromForm();try{await navigator.clipboard.writeText(url);const btn=$('shareBtn');const ot=btn.textContent;btn.textContent='✓ Copied!';btn.style.background='#10b981';btn.style.color='#fff';setTimeout(()=>{btn.textContent=ot;btn.style.background='';btn.style.color=''},2000)}catch(e){alert('Share link: '+url)}});
+  ['biz','brn','vat','addr','phone','cust','custaddr','item','qty','price','cur','pay','notes'].forEach(id=>{if($(id))$(id).addEventListener('input',updateFromForm)});
+},500);
+
+document.addEventListener('click', (e) => {
+  const a = e.target.closest('a[href^="#"]');
+  if (!a) return;
+  const href = a.getAttribute('href');
+  e.preventDefault();
+  if (!href || href === '#') return;
+  const target = document.querySelector(href);
+  if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+async function init(){
+  const {data:{session}}=await supabase.auth.getSession();
+  if(session){await loadUserData(session.user);showDashboard()}else{showLanding();updateNav(false)}
+  if($('cur'))updateFromForm();
+}
+
+supabase.auth.onAuthStateChange((event,session)=>{
+  if(event==='SIGNED_IN'&&session){loadUserData(session.user).then(()=>showDashboard())}
+  else if(event==='SIGNED_OUT'){currentUser=null;userData=null;showLanding();updateNav(false)}
+});
+
+init();
+console.log('✅ Business Manager Pro Ready!');
+</script>
 `;
 
 // --- 3) Your original JS from <script> ... </script> (exact) ---
@@ -162,21 +1409,7 @@ const locales={MUR:'en-MU',USD:'en-US',EUR:'fr-FR'};
 const symbols={MUR:'Rs',USD:'$',EUR:'€'};
 const currencyFmt=(n,cur)=>{const num=Number(n||0);if(cur==='MUR'){return symbols[cur]+' '+num.toLocaleString(locales[cur],{minimumFractionDigits:2,maximumFractionDigits:2})}return new Intl.NumberFormat(locales[cur],{style:'currency',currency:cur,minimumFractionDigits:2}).format(num)};
 const todayStr=()=>new Date().toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'});
-function genRef(){const now=new Date();const seed=Number(now.getFullYear().toString().slice(-2)+(now.getMonth()+1).toString().padStart(2,'0')+now.getDate().toString().padStart(2,'0'));let rnd=Math.floor(Math.random()*1e8);let x=(rnd^seed)>>>0;const a=(x%10000).toString().padStart(4,'0');const b=(Math.floor(x/10000)%10000).toString().padStart(4,'0');const sum=(a+b).split('').reduce((s,d)=>s+Number(d),0);const bChk=b.slice(0,3)+String(sum%10);return \`\${a}-\${bChk}\`;}
-function updateFromForm(){const cur=$('cur').value||'MUR';const biz=$('biz').value||'Your Business';const brn=$('brn').value||'—';const vat=$('vat').value||'—';const addr=$('addr').value||'—';const phone=$('phone').value||'—';const cust=$('cust').value||'—';const custaddr=$('custaddr').value||'—';const item=$('item').value||'—';const qty=Math.max(1,Number($('qty').value||1));const price=Number($('price').value||0);const method=$('pay').value||'—';const notes=$('notes').value||'—';
-  $('invoiceNo').textContent=genRef();$('datePaid').textContent=todayStr();$('bizName').textContent=biz;$('bizAddr').textContent=addr;$('bizPhone').textContent=phone;$('bizBrn').textContent=brn;$('bizVat').textContent=vat;$('fromName').textContent=biz;$('fromAddr').textContent=addr;$('billName').textContent=cust;$('billAddr').textContent=custaddr;
-  const amount=qty*price;$('tdDesc').textContent=item;$('tdQty').textContent=qty;$('tdPrice').textContent=currencyFmt(price,cur);$('tdAmt').textContent=currencyFmt(amount,cur);$('subt').textContent=currencyFmt(amount,cur);$('total').textContent=currencyFmt(amount,cur);$('paid').textContent=currencyFmt(amount,cur);$('payMethod').textContent=method;$('notesOut').textContent=notes;
-  const params=new URLSearchParams({cur,biz,brn,vat,addr,phone,cust,custaddr,item,qty,price,method,notes}).toString();const url=\`\${location.origin}\${location.pathname}?\${params}\`;
-  if(window.QRCode&&$('qr')){QRCode.toCanvas($('qr'),url,{width:80,margin:1,color:{dark:'#0f172a',light:'#f8fafc'}});}return url;}
-function applyFromQuery(){const q=new URLSearchParams(location.search);if(q.size===0)return;const set=(id,key)=>{if(q.has(key))$(id).value=q.get(key)};set('cur','cur');set('biz','biz');set('brn','brn');set('vat','vat');set('addr','addr');set('phone','phone');set('cust','cust');set('custaddr','custaddr');set('item','item');set('qty','qty');set('price','price');set('pay','method');set('notes','notes')}
-$('update').addEventListener('click',updateFromForm);
-$('printBtn').addEventListener('click',()=>{updateFromForm();window.print()});
-$('shareBtn').addEventListener('click',async()=>{const url=updateFromForm();try{await navigator.clipboard.writeText(url);const btn=$('shareBtn');const t=btn.textContent;btn.textContent='✓ Copied!';btn.style.background='#10b981';btn.style.color='#fff';setTimeout(()=>{btn.textContent=t;btn.style.background='';btn.style.color='';},2000)}catch(e){alert('Share link: '+url)}});
-['biz','brn','vat','addr','phone','cust','custaddr','item','qty','price','cur','pay','notes'].forEach(id=>{$(id).addEventListener('input',updateFromForm)});
-document.querySelectorAll('a[href^="#"]').forEach(anchor=>{anchor.addEventListener('click',function(e){const href=this.getAttribute('href');if(href!=='#'&&href.length>1){e.preventDefault();const target=document.querySelector(href);if(target){target.scrollIntoView({behavior:'smooth',block:'start'})}}})});
-applyFromQuery();updateFromForm();
-console.log('Business Manager Pro - Ready! 3-day free trial available.');
-`;
+function genRef(){const now=new Date();const seed=Number(now.getFullYear().toString().slice(-2)+(now.getMonth()+1).toString().padStart(2,'0')+now.getDate().toString().padStart(2,'0'));let rnd=Math.floor(Math.random()*1e8);let x=(rnd^seed)>>>0;const a=(x%10000).toString().padStart(4,'0');const b=(Math.floor(x/10000)%10000).toString().padStart(4,'0');const sum=(a+b).split('').reduce((s,d)=>s+Number(d),0);const bChk=b.slice(0,3)+String(sum%10);return \`\${a}-\${bChk}\`;
 
 export default function Page() {
   React.useEffect(() => {
