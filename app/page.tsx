@@ -1410,7 +1410,8 @@ const symbols={MUR:'Rs',USD:'$',EUR:'€'};
 const currencyFmt=(n,cur)=>{const num=Number(n||0);if(cur==='MUR'){return symbols[cur]+' '+num.toLocaleString(locales[cur],{minimumFractionDigits:2,maximumFractionDigits:2})}return new Intl.NumberFormat(locales[cur],{style:'currency',currency:cur,minimumFractionDigits:2}).format(num)};
 const todayStr=()=>new Date().toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'});
 function genRef(){const now=new Date();const seed=Number(now.getFullYear().toString().slice(-2)+(now.getMonth()+1).toString().padStart(2,'0')+now.getDate().toString().padStart(2,'0'));let rnd=Math.floor(Math.random()*1e8);let x=(rnd^seed)>>>0;const a=(x%10000).toString().padStart(4,'0');const b=(Math.floor(x/10000)%10000).toString().padStart(4,'0');const sum=(a+b).split('').reduce((s,d)=>s+Number(d),0);const bChk=b.slice(0,3)+String(sum%10);return \`\${a}-\${bChk}\`;
-
+}
+`;
 export default function Page() {
   React.useEffect(() => {
     // inject JS after first render (same as your <script> tag)
