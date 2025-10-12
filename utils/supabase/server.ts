@@ -1,16 +1,21 @@
-import { createServerClient } from "@supabase/ssr";
-import type { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
+// utils/supabase/server.ts
+import { createClient } from "@supabase/supabase-js";
 
-export function createClient(cookies?: ReadonlyRequestCookies) {
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get: (key: string) => cookies?.get(key)?.value,
-        set: () => {},
-        remove: () => {},
-      },
-    }
-  );
+/**
+ * Standard server-side Supabase client (anon).
+ * Use this for typical RLS-protected queries in route handlers.
+ */
+export function getServerSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  if (!url || !anon) {
+    throw new Error(
+      "Missing Supabase env: NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY"
+    );
+  }
+  return createClient(url, anon, { auth: { persistSession: false } });
 }
+
+/** Convenience default export (some codebases import default) */
+const supabaseServer = getServerSupabase();
+export default supabaseServer;
